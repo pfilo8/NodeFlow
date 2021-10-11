@@ -4,9 +4,7 @@ USER root
 RUN apt update
 RUN apt install -y build-essential gcc g++ git openssh-server vim htop autoconf libboost-all-dev libtiff-dev curl \
     unzip libz-dev libpng-dev libjpeg-dev libopenexr-dev wget cmake sudo
-
-RUN curl -fsSL https://deb.nodesource.com/setup_15.x | bash -
-RUN apt install -y nodejs
+RUN apt-get -y install tmux less
 
 # Install SSH
 RUN mkdir /var/run/sshd
@@ -26,6 +24,10 @@ RUN pip install -r /tmp/requirements.txt
 # Add necessary paths to $PATH
 RUN echo "export PYTHONPATH=/src:$PYTHONPATH" >> /root/.bashrc
 RUN echo "export PATH=$PATH:/usr/local/cuda/bin" >> /root/.bashrc
+
+# Create aliases
+RUN echo 'alias jn="jupyter notebook --no-browser --ip=0.0.0.0 --allow-root"' >> ~/.bashrc
+RUN echo 'alias tb="tensorboard --logdir=logs/ --host=0.0.0.0"' >> ~/.bashrc
 
 WORKDIR /src
 USER root
