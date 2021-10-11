@@ -1,0 +1,32 @@
+FROM pytorch/pytorch:1.3-cuda10.1-cudnn7-devel
+USER root
+
+RUN apt update
+RUN apt install -y build-essential gcc g++ git openssh-server vim htop autoconf libboost-all-dev libtiff-dev curl \
+    unzip libz-dev libpng-dev libjpeg-dev libopenexr-dev wget cmake sudo
+
+RUN curl -fsSL https://deb.nodesource.com/setup_15.x | bash -
+RUN apt install -y nodejs
+
+# Install SSH
+RUN mkdir /var/run/sshd
+# SSH login fix. Otherwise user is kicked off after login
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+
+# Change default port for SSH
+RUN sed -i 's/#Port 22/Port 22/' /etc/ssh/sshd_config
+RUN sed -i 's/Port 22/Port 4444/' /etc/ssh/sshd_config
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+EXPOSE 4444
+
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt
+
+# Add necessary paths to $PATH
+RUN echo "export PYTHONPATH=/src:$PYTHONPATH" >> /root/.bashrc
+RUN echo "export PATH=$PATH:/usr/local/cuda/bin" >> /root/.bashrc
+
+WORKDIR /src
+USER root
+CMD ["/usr/sbin/sshd", "-D"]
