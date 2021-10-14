@@ -3,16 +3,31 @@
 # pylint: disable=unused-argument,too-many-locals,too-many-branches,too-many-statements
 # pylint: disable=unused-variable,invalid-unary-operand-type,attribute-defined-outside-init
 # pylint: disable=redundant-keyword-arg,protected-access
+from math import log, pi
+
 import numpy as np
 from sklearn.base import clone
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils import check_array, check_random_state, check_X_y
+import torch
+import torch.optim as optim
 
-from ngboost.distns import MultivariateNormal, Normal, k_categorical
-from ngboost.learners import default_tree_learner
-from ngboost.manifold import manifold
-from ngboost.scores import LogScore
+from .distns import MultivariateNormal, Normal, k_categorical
+from .learners import default_tree_learner
+from .manifold import manifold
+from .scores import LogScore
+
+from models.flow import build_model
+
+
+def gaussian_log_likelihood(x, mean, logvar, clip=True):
+    if clip:
+        logvar = torch.clamp(logvar, min=-4, max=3)
+    a = log(2 * pi)
+    b = logvar
+    c = (x - mean) ** 2 / torch.exp(logvar)
+    return -0.5 * (a + b + c)
 
 
 class NGBoost:
@@ -51,21 +66,21 @@ class NGBoost:
     """
 
     def __init__(
-        self,
-        Dist=Normal,
-        Score=LogScore,
-        Base=default_tree_learner,
-        natural_gradient=True,
-        n_estimators=500,
-        learning_rate=0.01,
-        minibatch_frac=1.0,
-        col_sample=1.0,
-        verbose=True,
-        verbose_eval=100,
-        tol=1e-4,
-        random_state=None,
-        validation_fraction=0.1,
-        early_stopping_rounds=None,
+            self,
+            Dist=Normal,
+            Score=LogScore,
+            Base=default_tree_learner,
+            natural_gradient=True,
+            n_estimators=500,
+            learning_rate=0.01,
+            minibatch_frac=1.0,
+            col_sample=1.0,
+            verbose=True,
+            verbose_eval=100,
+            tol=1e-4,
+            random_state=None,
+            validation_fraction=0.1,
+            early_stopping_rounds=None,
     ):
         self.Dist = Dist
         self.Score = Score
@@ -93,6 +108,20 @@ class NGBoost:
             self.multi_output = self.Dist.multi_output
         else:
             self.multi_output = False
+
+        self.DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        self.flow = build_model(
+            input_dim=1,
+            hidden_dims=(100,),
+            context_dim=1,
+            conditional=True,
+            time_length=1.0,
+            batch_norm=True,
+            layer_type="concatscale"
+        ).to(self.DEVICE)
+        self.optimizer = optim.Adam(self.flow.parameters())
+        self.num_iter = n_estimators
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -126,7 +155,7 @@ class NGBoost:
         m, n = X.shape
         params = np.ones((m, self.Manifold.n_params)) * self.init_params
         for i, (models, s, col_idx) in enumerate(
-            zip(self.base_models, self.scalings, self.col_idxs)
+                zip(self.base_models, self.scalings, self.col_idxs)
         ):
             if max_iter and i == max_iter:
                 break
@@ -199,16 +228,16 @@ class NGBoost:
         return scale
 
     def fit(
-        self,
-        X,
-        Y,
-        X_val=None,
-        Y_val=None,
-        sample_weight=None,
-        val_sample_weight=None,
-        train_loss_monitor=None,
-        val_loss_monitor=None,
-        early_stopping_rounds=None,
+            self,
+            X,
+            Y,
+            X_val=None,
+            Y_val=None,
+            sample_weight=None,
+            val_sample_weight=None,
+            train_loss_monitor=None,
+            val_loss_monitor=None,
+            early_stopping_rounds=None,
     ):
         """
         Fits an NGBoost model to the data
@@ -306,39 +335,64 @@ class NGBoost:
             self.col_idxs.append(col_idx)
 
             D = self.Manifold(P_batch.T)
+            X_batch, Y_batch = torch.Tensor(X_batch).to(self.DEVICE), torch.Tensor(Y_batch).to(self.DEVICE)
+            mean = torch.Tensor(params[:, 0].reshape(-1, 1)).to(self.DEVICE)
+            mean = mean.requires_grad_(True)
+            logvar = torch.Tensor(params[:, 0].reshape(-1, 1)).to(self.DEVICE)
+            logvar = logvar.requires_grad_(True)
 
-            loss_list += [train_loss_monitor(D, Y_batch, weight_batch)]
+            self.optimizer.zero_grad()
+
+            zero = torch.zeros(Y_batch.shape[0], 1).to(self.DEVICE)
+
+            z, delta_logp = self.flow(x=Y_batch.reshape(-1, 1), context=X_batch.reshape(-1), logpx=zero)
+
+            logpz = gaussian_log_likelihood(z, mean=mean, logvar=logvar)
+            logpx = logpz - delta_logp
+
+            loss = -logpx.mean()
+
+            loss.backward()
+            self.optimizer.step()
+
+            loss_list += [loss.item()]
             loss = loss_list[-1]
-            grads = D.grad(Y_batch, natural=self.natural_gradient)
+
+            d_score = np.zeros((len(X_batch), 2))
+            d_score[:, 0] = mean.grad.cpu().numpy().reshape(-1)
+            d_score[:, 1] = logvar.grad.cpu().numpy().reshape(-1)
+            X_batch, Y_batch = X_batch.detach().cpu().numpy(), Y_batch.detach().cpu().numpy()
+
+            grads = D.grad(Y_batch, natural=self.natural_gradient, d_score=d_score)
 
             proj_grad = self.fit_base(X_batch, grads, weight_batch)
             scale = self.line_search(proj_grad, P_batch, Y_batch, weight_batch)
 
             # pdb.set_trace()
             params -= (
-                self.learning_rate
-                * scale
-                * np.array([m.predict(X[:, col_idx]) for m in self.base_models[-1]]).T
+                    self.learning_rate
+                    * scale
+                    * np.array([m.predict(X[:, col_idx]) for m in self.base_models[-1]]).T
             )
 
             val_loss = 0
             if X_val is not None and Y_val is not None:
                 val_params -= (
-                    self.learning_rate
-                    * scale
-                    * np.array(
-                        [m.predict(X_val[:, col_idx]) for m in self.base_models[-1]]
-                    ).T
+                        self.learning_rate
+                        * scale
+                        * np.array(
+                    [m.predict(X_val[:, col_idx]) for m in self.base_models[-1]]
+                ).T
                 )
                 val_loss = val_loss_monitor(self.Manifold(val_params.T), Y_val)
                 val_loss_list += [val_loss]
                 if val_loss < best_val_loss:
                     best_val_loss, self.best_val_loss_itr = val_loss, itr
                 if (
-                    early_stopping_rounds is not None
-                    and len(val_loss_list) > early_stopping_rounds
-                    and best_val_loss
-                    < np.min(np.array(val_loss_list[-early_stopping_rounds:]))
+                        early_stopping_rounds is not None
+                        and len(val_loss_list) > early_stopping_rounds
+                        and best_val_loss
+                        < np.min(np.array(val_loss_list[-early_stopping_rounds:]))
                 ):
                     if self.verbose:
                         print("== Early stopping achieved.")
@@ -348,9 +402,9 @@ class NGBoost:
                     break
 
             if (
-                self.verbose
-                and int(self.verbose_eval) > 0
-                and itr % int(self.verbose_eval) == 0
+                    self.verbose
+                    and int(self.verbose_eval) > 0
+                    and itr % int(self.verbose_eval) == 0
             ):
                 grad_norm = np.linalg.norm(grads, axis=1).mean() * scale
                 print(
@@ -390,7 +444,7 @@ class NGBoost:
         X = check_array(X, accept_sparse=True)
 
         if (
-            max_iter is not None
+                max_iter is not None
         ):  # get prediction at a particular iteration if asked for
             dist = self.staged_pred_dist(X, max_iter=max_iter)[-1]
         else:
@@ -413,7 +467,7 @@ class NGBoost:
         m, n = X.shape
         params = np.ones((m, self.Dist.n_params)) * self.init_params
         for i, (models, s, col_idx) in enumerate(
-            zip(self.base_models, self.scalings, self.col_idxs)
+                zip(self.base_models, self.scalings, self.col_idxs)
         ):
             resids = np.array([model.predict(X[:, col_idx]) for model in models]).T
             params -= self.learning_rate * resids * s

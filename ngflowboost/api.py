@@ -3,19 +3,19 @@
 from sklearn.base import BaseEstimator
 from sklearn.utils import check_array
 
-from ngboost.distns import (
+from .distns import (
     Bernoulli,
     ClassificationDistn,
     LogNormal,
     Normal,
     RegressionDistn,
 )
-from ngboost.distns.utils import SurvivalDistnClass
-from ngboost.helpers import Y_from_censored
-from ngboost.learners import default_tree_learner
-from ngboost.manifold import manifold
-from ngboost.ngboost import NGBoost
-from ngboost.scores import LogScore
+from .distns.utils import SurvivalDistnClass
+from .helpers import Y_from_censored
+from .learners import default_tree_learner
+from .manifold import manifold
+from .ngboost import NGBoost
+from .scores import LogScore
 
 
 class NGBRegressor(NGBoost, BaseEstimator):

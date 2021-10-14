@@ -5,8 +5,8 @@ class Score:
     def total_score(self, Y, sample_weight=None):
         return np.average(self.score(Y), weights=sample_weight)
 
-    def grad(self, Y, natural=True):
-        grad = self.d_score(Y)
+    def grad(self, Y, natural=True, d_score=None):
+        grad = d_score if d_score is not None else self.d_score(Y)
         if natural:
             metric = self.metric()
             grad = np.linalg.solve(metric, grad)

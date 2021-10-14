@@ -8,5 +8,3 @@ except ImportError:
 
 from .api import NGBClassifier, NGBRegressor, NGBSurvival  # NOQA
 from .ngboost import NGBoost  # NOQA
-
-__version__ = version(__name__)
