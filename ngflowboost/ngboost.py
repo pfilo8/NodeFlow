@@ -12,13 +12,12 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils import check_array, check_random_state, check_X_y
 import torch
 import torch.optim as optim
+from tqdm import tqdm
 
 from .distns import MultivariateNormal, Normal, k_categorical
 from .learners import default_tree_learner
 from .manifold import manifold
 from .scores import LogScore
-
-from models.flow import build_model
 
 
 def gaussian_log_likelihood(x, mean, logvar, clip=True):
@@ -81,6 +80,8 @@ class NGBoost:
             random_state=None,
             validation_fraction=0.1,
             early_stopping_rounds=None,
+            flow=None,
+            flow_init_iters=100
     ):
         self.Dist = Dist
         self.Score = Score
@@ -109,19 +110,15 @@ class NGBoost:
         else:
             self.multi_output = False
 
-        self.DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+        if flow is not None:
+            self.DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-        self.flow = build_model(
-            input_dim=1,
-            hidden_dims=(100,),
-            context_dim=1,
-            conditional=True,
-            time_length=1.0,
-            batch_norm=True,
-            layer_type="concatscale"
-        ).to(self.DEVICE)
-        self.optimizer = optim.Adam(self.flow.parameters())
-        self.num_iter = n_estimators
+            self.flow = flow.to(self.DEVICE)
+            self.optimizer = optim.Adam(self.flow.parameters())
+            self.flow_init_iters = flow_init_iters
+        else:
+            self.flow = None
+            self.flow_init_iters = None
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -146,10 +143,35 @@ class NGBoost:
         state_dict["Manifold"] = manifold(state_dict["Score"], state_dict["Dist"])
         self.__dict__ = state_dict
 
-    def fit_init_params_to_marginal(self, Y, sample_weight=None, iters=1000):
+    def fit_init_params_to_marginal(self, X, Y, sample_weight=None, iters=1000):
         self.init_params = self.Manifold.fit(
             Y
-        )  # would be best to put sample weights here too
+        )
+
+        params = self.pred_param(X)
+        with tqdm(range(iters)) as p_bar:
+            for _ in p_bar:
+                X_batch, Y_batch = torch.Tensor(X).to(self.DEVICE), torch.Tensor(Y).to(self.DEVICE)
+                mean = torch.Tensor(params[:, 0].reshape(-1, 1)).to(self.DEVICE)
+                mean = mean.requires_grad_(True)
+                logvar = torch.Tensor(params[:, 0].reshape(-1, 1)).to(self.DEVICE)
+                logvar = logvar.requires_grad_(True)
+
+                self.optimizer.zero_grad()
+
+                zero = torch.zeros(Y_batch.shape[0], 1).to(self.DEVICE)
+
+                z, delta_logp = self.flow(x=Y_batch.reshape(-1, 1), context=X_batch.reshape(-1), logpx=zero)
+
+                logpz = gaussian_log_likelihood(z, mean=mean, logvar=logvar)
+                logpx = logpz - delta_logp
+
+                loss = -logpx.mean()
+                p_bar.set_description(f"Loss {loss:.2f}")
+
+                loss.backward()
+                self.optimizer.step()
+
 
     def pred_param(self, X, max_iter=None):
         m, n = X.shape
@@ -302,7 +324,7 @@ class NGBoost:
         self.n_features = X.shape[1]
 
         loss_list = []
-        self.fit_init_params_to_marginal(Y)
+        self.fit_init_params_to_marginal(X, Y, iters=self.flow_init_iters)
 
         params = self.pred_param(X)
 
@@ -335,40 +357,45 @@ class NGBoost:
             self.col_idxs.append(col_idx)
 
             D = self.Manifold(P_batch.T)
-            X_batch, Y_batch = torch.Tensor(X_batch).to(self.DEVICE), torch.Tensor(Y_batch).to(self.DEVICE)
-            mean = torch.Tensor(params[:, 0].reshape(-1, 1)).to(self.DEVICE)
-            mean = mean.requires_grad_(True)
-            logvar = torch.Tensor(params[:, 0].reshape(-1, 1)).to(self.DEVICE)
-            logvar = logvar.requires_grad_(True)
 
-            self.optimizer.zero_grad()
+            if self.flow is not None:
+                X_batch, Y_batch = torch.Tensor(X_batch).to(self.DEVICE), torch.Tensor(Y_batch).to(self.DEVICE)
+                mean = torch.Tensor(params[:, 0].reshape(-1, 1)).to(self.DEVICE)
+                mean = mean.requires_grad_(True)
+                logvar = torch.Tensor(params[:, 0].reshape(-1, 1)).to(self.DEVICE)
+                logvar = logvar.requires_grad_(True)
 
-            zero = torch.zeros(Y_batch.shape[0], 1).to(self.DEVICE)
+                self.optimizer.zero_grad()
 
-            z, delta_logp = self.flow(x=Y_batch.reshape(-1, 1), context=X_batch.reshape(-1), logpx=zero)
+                zero = torch.zeros(Y_batch.shape[0], 1).to(self.DEVICE)
 
-            logpz = gaussian_log_likelihood(z, mean=mean, logvar=logvar)
-            logpx = logpz - delta_logp
+                z, delta_logp = self.flow(x=Y_batch.reshape(-1, 1), context=X_batch.reshape(-1), logpx=zero)
 
-            loss = -logpx.mean()
+                logpz = gaussian_log_likelihood(z, mean=mean, logvar=logvar)
+                logpx = logpz - delta_logp
 
-            loss.backward()
-            self.optimizer.step()
+                loss = -logpx.mean()
 
-            loss_list += [loss.item()]
-            loss = loss_list[-1]
+                loss.backward()
+                self.optimizer.step()
 
-            d_score = np.zeros((len(X_batch), 2))
-            d_score[:, 0] = mean.grad.cpu().numpy().reshape(-1)
-            d_score[:, 1] = logvar.grad.cpu().numpy().reshape(-1)
-            X_batch, Y_batch = X_batch.detach().cpu().numpy(), Y_batch.detach().cpu().numpy()
+                loss_list += [loss.item()]
+                loss = loss_list[-1]
 
-            grads = D.grad(Y_batch, natural=self.natural_gradient, d_score=d_score)
+                d_score = np.zeros((len(X_batch), 2))
+                d_score[:, 0] = mean.grad.cpu().numpy().reshape(-1)
+                d_score[:, 1] = logvar.grad.cpu().numpy().reshape(-1)
+                X_batch, Y_batch = X_batch.detach().cpu().numpy(), Y_batch.detach().cpu().numpy()
+
+                grads = D.grad(Y_batch, natural=self.natural_gradient, d_score=d_score)
+            else:
+                loss_list += [train_loss_monitor(D, Y_batch, weight_batch)]
+                loss = loss_list[-1]
+                grads = D.grad(Y_batch, natural=self.natural_gradient)
 
             proj_grad = self.fit_base(X_batch, grads, weight_batch)
             scale = self.line_search(proj_grad, P_batch, Y_batch, weight_batch)
 
-            # pdb.set_trace()
             params -= (
                     self.learning_rate
                     * scale
