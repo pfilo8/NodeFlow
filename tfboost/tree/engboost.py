@@ -58,3 +58,9 @@ class EmbeddableNGBoost(ng.NGBoost):
 
     def pred_dist_param(self, X):
         return None
+
+
+class EmbeddableNGBoost2(EmbeddableNGBoost):
+
+    def pred_dist_param(self, X):
+        return self.pred_param(X)
