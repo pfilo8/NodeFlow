@@ -37,3 +37,14 @@ class TreeFlowBoost(BaseEstimator):
         samples: np.ndarray = self.sample(X=X, num_samples=num_samples)
         y_hat: np.ndarray = samples.mean(axis=1)
         return y_hat
+
+    def embed(self, X: np.ndarray) -> np.ndarray:
+        context: np.ndarray = self.tree_model.embed(X)
+        context_e: np.ndarray = self.flow_model.embed(context)
+        return context_e
+
+    def log_prob(self, X: np.ndarray, y: np.ndarray):
+        context: np.ndarray = self.tree_model.embed(X)
+        params: np.ndarray = self.tree_model.pred_dist_param(X)
+        logpx: np.ndarray = self.flow_model.log_prob(X=y, context=context, params=params)
+        return logpx
