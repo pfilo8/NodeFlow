@@ -20,7 +20,7 @@ class ContinuousNormalizingFlow:
         self.distribution = ConditionalDiagonalNormal(shape=[1]).to(self.DEVICE)
 
     def setup_context_encoder(self, context_encoder: nn.Module):
-        self.context_encoder = context_encoder
+        self.context_encoder = context_encoder.to(self.DEVICE)
 
     def fit(
             self,
@@ -36,7 +36,7 @@ class ContinuousNormalizingFlow:
             data=params,
             dtype=torch.float,
             device=self.DEVICE
-        ) if params is not None else torch.zeros(X.shape[0], 2)  # Assuming Normal(0, 1) prior
+        ) if params is not None else torch.zeros(X.shape[0], 2, device=self.DEVICE)  # Assuming Normal(0, 1) prior
 
         # Optimizer
         self.optimizer = optim.Adam(list(self.flow.parameters()) + list(self.context_encoder.parameters()))
@@ -56,7 +56,7 @@ class ContinuousNormalizingFlow:
         return self
 
     def _log_prob(self, X: torch.Tensor, context: torch.Tensor, params: torch.Tensor) -> torch.Tensor:
-        zero: torch.Tensor = torch.zeros(X.shape[0], 1)
+        zero: torch.Tensor = torch.zeros(X.shape[0], 1, device=X.device)
         context_e: torch.Tensor = self.context_encoder(context)
         z, delta_logp = self.flow(x=X, context=context_e, logpx=zero)
 
@@ -73,7 +73,7 @@ class ContinuousNormalizingFlow:
             data=params,
             dtype=torch.float,
             device=self.DEVICE
-        ) if params is not None else torch.zeros(X.shape[0], 2)  # Assuming Normal(0, 1) prior
+        ) if params is not None else torch.zeros(X.shape[0], 2, device=self.DEVICE) # Assuming Normal(0, 1) prior
 
         logpx: torch.Tensor = self._log_prob(X=X, context=context, params=params)
         logpx: np.ndarray = logpx.detach().cpu().numpy()
@@ -86,7 +86,7 @@ class ContinuousNormalizingFlow:
             data=params,
             dtype=torch.float,
             device=self.DEVICE
-        ) if params is not None else torch.zeros(context.shape[0], 2)  # Assuming Normal(0, 1) prior
+        ) if params is not None else torch.zeros(context.shape[0], 2, device=self.DEVICE)  # Assuming Normal(0, 1) prior
 
         samples: torch.Tensor = self.distribution.sample(num_samples=num_samples, context=params)
         context_e: torch.Tensor = self.context_encoder(context)
