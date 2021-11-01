@@ -34,6 +34,7 @@ class EmbeddableNGBoost(ng.NGBoost):
         return self
 
     def apply(self, X):
+        """ Method for extracting leafs given data. """
         mu_models = [n[0] for n in self.base_models]
         logvar_models = [n[1] for n in self.base_models]
 
@@ -47,6 +48,7 @@ class EmbeddableNGBoost(ng.NGBoost):
         self._logvar_leafs_encoder = OneHotEncoder(sparse=False).fit(logvar_leafs)
 
     def embed(self, X):
+        """Method for embedding data using Tree model."""
         leafs = self.apply(X)
 
         mu_leafs, logvar_leafs = leafs
@@ -57,10 +59,28 @@ class EmbeddableNGBoost(ng.NGBoost):
         return embedding
 
     def pred_dist_param(self, X):
+        """ Method for predicting distribution parameters. """
         return None
 
 
 class EmbeddableNGBoost2(EmbeddableNGBoost):
 
     def pred_dist_param(self, X):
+        """ Method for predicting distribution parameters. """
         return self.pred_param(X)
+
+
+class EmbeddableNGBoostDecisionPath(ng.NGBoost):
+
+    def embed(self, X):
+        """Method for embedding data using Tree model."""
+        mu_models = [n[0] for n in self.base_models]
+        logvar_models = [n[1] for n in self.base_models]
+
+        mu_leafs = np.hstack([m.decision_path(X).toarray() for m in mu_models])
+        logvar_leafs = np.hstack([m.decision_path(X).toarray() for m in logvar_models])
+        return np.hstack([mu_leafs, logvar_leafs])
+
+    def pred_dist_param(self, X):
+        """ Method for predicting distribution parameters. """
+        return None

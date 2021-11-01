@@ -4,10 +4,6 @@ class EmbeddableTree:
         """Method for fitting Tree model."""
         pass
 
-    def apply(self, X):
-        """Method for extracting leafs given data."""
-        pass
-
     def embed(self, X):
         """Method for embedding data using Tree model."""
         pass
