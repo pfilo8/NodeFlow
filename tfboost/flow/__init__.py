@@ -17,24 +17,16 @@ class ContinuousNormalizingFlow:
 
         self.flow = flow.to(self.DEVICE)
         self.context_encoder = nn.Identity().to(self.DEVICE)
-        self.distribution = ConditionalDiagonalNormal(shape=[1]).to(self.DEVICE)
+        self.distribution = ConditionalDiagonalNormal(shape=[1]).to(self.DEVICE)  # Only 1D support
 
     def setup_context_encoder(self, context_encoder: nn.Module):
         self.context_encoder = context_encoder.to(self.DEVICE)
 
-    def fit(
-            self,
-            X: np.ndarray,
-            context: np.ndarray,
-            params: np.ndarray,
-            n_epochs: int = 100
-    ):
-        # Data
+    def fit(self, X: np.ndarray, context: np.ndarray, params: np.ndarray, n_epochs: int = 100):
         X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.DEVICE)
         context: torch.Tensor = torch.as_tensor(data=context, dtype=torch.float, device=self.DEVICE)
         params: torch.Tensor = torch.as_tensor(data=params, dtype=torch.float, device=self.DEVICE)
 
-        # Optimizer
         self.optimizer = optim.Adam(list(self.flow.parameters()) + list(self.context_encoder.parameters()))
 
         with tqdm(range(n_epochs)) as pbar:
