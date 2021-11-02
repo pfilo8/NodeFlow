@@ -13,8 +13,6 @@ class EmbeddableTree:
         Method for predicting distribution parameters.
 
         Distribution parameters will be later used as a prior for CNF model.
-        Possible values:
-          - None - N(0, 1) prior will be used
           - 2D array - First column should be mean and the second logstd.
         """
         pass

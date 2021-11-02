@@ -60,7 +60,7 @@ class EmbeddableNGBoost(ng.NGBoost):
 
     def pred_dist_param(self, X):
         """ Method for predicting distribution parameters. """
-        return None
+        return np.zeros(X.shape[0], 2)
 
 
 class EmbeddableNGBoost2(EmbeddableNGBoost):
@@ -83,4 +83,4 @@ class EmbeddableNGBoostDecisionPath(ng.NGBoost):
 
     def pred_dist_param(self, X):
         """ Method for predicting distribution parameters. """
-        return None
+        return np.zeros(X.shape[0], 2)

@@ -26,17 +26,13 @@ class ContinuousNormalizingFlow:
             self,
             X: np.ndarray,
             context: np.ndarray,
-            params: Union[np.ndarray, None] = None,
+            params: np.ndarray,
             n_epochs: int = 100
     ):
         # Data
         X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.DEVICE)
         context: torch.Tensor = torch.as_tensor(data=context, dtype=torch.float, device=self.DEVICE)
-        params: torch.Tensor = torch.as_tensor(
-            data=params,
-            dtype=torch.float,
-            device=self.DEVICE
-        ) if params is not None else torch.zeros(X.shape[0], 2, device=self.DEVICE)  # Assuming Normal(0, 1) prior
+        params: torch.Tensor = torch.as_tensor(data=params, dtype=torch.float, device=self.DEVICE)
 
         # Optimizer
         self.optimizer = optim.Adam(list(self.flow.parameters()) + list(self.context_encoder.parameters()))
@@ -69,24 +65,16 @@ class ContinuousNormalizingFlow:
     def log_prob(self, X: np.ndarray, context: np.ndarray, params: np.ndarray) -> np.ndarray:
         X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.DEVICE)
         context: torch.Tensor = torch.as_tensor(data=context, dtype=torch.float, device=self.DEVICE)
-        params: torch.Tensor = torch.as_tensor(
-            data=params,
-            dtype=torch.float,
-            device=self.DEVICE
-        ) if params is not None else torch.zeros(X.shape[0], 2, device=self.DEVICE) # Assuming Normal(0, 1) prior
+        params: torch.Tensor = torch.as_tensor(data=params, dtype=torch.float, device=self.DEVICE)
 
         logpx: torch.Tensor = self._log_prob(X=X, context=context, params=params)
         logpx: np.ndarray = logpx.detach().cpu().numpy()
         return logpx
 
     @torch.no_grad()
-    def sample(self, context: np.ndarray, num_samples: int = 10, params: Union[np.ndarray, None] = None) -> np.ndarray:
+    def sample(self, context: np.ndarray, params: np.ndarray, num_samples: int = 10) -> np.ndarray:
         context: torch.Tensor = torch.as_tensor(data=context, dtype=torch.float, device=self.DEVICE)
-        params: torch.Tensor = torch.as_tensor(
-            data=params,
-            dtype=torch.float,
-            device=self.DEVICE
-        ) if params is not None else torch.zeros(context.shape[0], 2, device=self.DEVICE)  # Assuming Normal(0, 1) prior
+        params: torch.Tensor = torch.as_tensor(data=params, dtype=torch.float, device=self.DEVICE)
 
         samples: torch.Tensor = self.distribution.sample(num_samples=num_samples, context=params)
         context_e: torch.Tensor = self.context_encoder(context)

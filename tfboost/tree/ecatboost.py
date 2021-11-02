@@ -1,6 +1,7 @@
 import sys
 
 import catboost
+import numpy as np
 
 from sklearn.preprocessing import OneHotEncoder
 
@@ -53,4 +54,4 @@ class EmbeddableCatBoost(catboost.CatBoostRegressor):
 
     def pred_dist_param(self, X):
         """ Method for predicting distribution parameters. """
-        return None
+        return np.zeros(X.shape[0], 2)
