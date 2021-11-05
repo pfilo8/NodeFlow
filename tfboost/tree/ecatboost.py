@@ -39,6 +39,7 @@ class EmbeddableCatBoost(catboost.CatBoostRegressor):
         )
         leafs = self.calc_leaf_indexes(X)
         self._fit_encoder(leafs)
+        self._y_dims = y.shape[1] if len(y.shape) == 2 else 1  # Improve that!
         return self
 
     def _fit_encoder(self, leafs):
@@ -54,4 +55,4 @@ class EmbeddableCatBoost(catboost.CatBoostRegressor):
 
     def pred_dist_param(self, X):
         """ Method for predicting distribution parameters. """
-        return np.zeros(X.shape[0], 2)
+        return np.zeros((X.shape[0], 2 * self._y_dims))
