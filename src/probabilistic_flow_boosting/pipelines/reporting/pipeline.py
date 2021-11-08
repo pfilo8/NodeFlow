@@ -26,33 +26,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Project pipelines."""
-from typing import Dict
+"""
+This is a boilerplate pipeline 'reporting'
+generated using Kedro 0.17.5
+"""
 
-from kedro.pipeline import pipeline, Pipeline
+from kedro.pipeline import Pipeline, pipeline, node
 
-from .pipelines.modeling import create_pipeline_train_model
-from .pipelines.reporting import create_pipeline_report_train, create_pipeline_report_test
+from .nodes import calculate_rmse, calculate_mae, calculate_nll
 
 
-def register_pipelines() -> Dict[str, Pipeline]:
-    """Register the project's pipelines.
-
-    Returns:
-        A mapping from a pipeline name to a ``Pipeline`` object.
-    """
-    pipeline_general = create_pipeline_train_model() + create_pipeline_report_train() + create_pipeline_report_test()
-
-    uci_boston_pipeline = pipeline(
-        pipeline_general,
+def create_pipeline_report_train():
+    return pipeline(
+        create_pipeline_calculate_metrics(),
         inputs={
-            "x_train": "momogp_wind_x_train",
-            "y_train": "momogp_wind_y_train",
-            "x_test": "momogp_wind_x_test",
-            "y_test": "momogp_wind_y_test"
+            "x": "x_train",
+            "y": "y_train"
+        },
+        outputs={
+            "results_rmse": "train_results_rmse",
+            "results_mae": "train_results_mae",
+            "results_nll": "train_results_nll"
         }
     )
-    return {
-        "__default__": Pipeline([]),
-        "UCI.BOSTON": uci_boston_pipeline
-    }
+
+
+def create_pipeline_report_test():
+    return pipeline(
+        create_pipeline_calculate_metrics(),
+        inputs={
+            "x": "x_test",
+            "y": "y_test"
+        },
+        outputs={
+            "results_rmse": "test_results_rmse",
+            "results_mae": "test_results_mae",
+            "results_nll": "test_results_nll"
+        }
+    )
+
+
+def create_pipeline_calculate_metrics(**kwargs):
+    return Pipeline([
+        node(
+            func=calculate_rmse,
+            inputs=["model", "x", "y"],
+            outputs=["results_rmse"]
+        ),
+        node(
+            func=calculate_mae,
+            inputs=["model", "x", "y"],
+            outputs=["results_mae"]
+        ),
+        node(
+            func=calculate_nll,
+            inputs=["model", "x", "y"],
+            outputs=["results_nll"]
+        )
+    ])

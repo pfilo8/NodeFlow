@@ -25,34 +25,13 @@
 #
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+This is a boilerplate pipeline 'modeling'
+generated using Kedro 0.17.5
+"""
 
-"""Project pipelines."""
-from typing import Dict
+from .pipeline import create_pipeline_train_model
 
-from kedro.pipeline import pipeline, Pipeline
-
-from .pipelines.modeling import create_pipeline_train_model
-from .pipelines.reporting import create_pipeline_report_train, create_pipeline_report_test
-
-
-def register_pipelines() -> Dict[str, Pipeline]:
-    """Register the project's pipelines.
-
-    Returns:
-        A mapping from a pipeline name to a ``Pipeline`` object.
-    """
-    pipeline_general = create_pipeline_train_model() + create_pipeline_report_train() + create_pipeline_report_test()
-
-    uci_boston_pipeline = pipeline(
-        pipeline_general,
-        inputs={
-            "x_train": "momogp_wind_x_train",
-            "y_train": "momogp_wind_y_train",
-            "x_test": "momogp_wind_x_test",
-            "y_test": "momogp_wind_y_test"
-        }
-    )
-    return {
-        "__default__": Pipeline([]),
-        "UCI.BOSTON": uci_boston_pipeline
-    }
+__all__ = [
+    "create_pipeline_train_model"
+]

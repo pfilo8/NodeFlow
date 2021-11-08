@@ -25,34 +25,18 @@
 #
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+This is a boilerplate pipeline 'modeling'
+generated using Kedro 0.17.5
+"""
+from typing import Any, Dict
 
-"""Project pipelines."""
-from typing import Dict
+import pandas as pd
 
-from kedro.pipeline import pipeline, Pipeline
-
-from .pipelines.modeling import create_pipeline_train_model
-from .pipelines.reporting import create_pipeline_report_train, create_pipeline_report_test
+from ...tfboost.tfboost import TreeFlowBoost
 
 
-def register_pipelines() -> Dict[str, Pipeline]:
-    """Register the project's pipelines.
-
-    Returns:
-        A mapping from a pipeline name to a ``Pipeline`` object.
-    """
-    pipeline_general = create_pipeline_train_model() + create_pipeline_report_train() + create_pipeline_report_test()
-
-    uci_boston_pipeline = pipeline(
-        pipeline_general,
-        inputs={
-            "x_train": "momogp_wind_x_train",
-            "y_train": "momogp_wind_y_train",
-            "x_test": "momogp_wind_x_test",
-            "y_test": "momogp_wind_y_test"
-        }
-    )
-    return {
-        "__default__": Pipeline([]),
-        "UCI.BOSTON": uci_boston_pipeline
-    }
+def train_model(x_train: pd.DataFrame, y_train: pd.DataFrame, params: Dict[Any, Any]):
+    m = TreeFlowBoost(**params)
+    m.fit(x_train, y_train)
+    return m
