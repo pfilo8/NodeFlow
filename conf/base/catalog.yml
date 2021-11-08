@@ -2,3 +2,101 @@
 #
 # Documentation for this file format can be found in "The Data Catalog"
 # Link: https://kedro.readthedocs.io/en/stable/05_data/01_data_catalog.html
+
+###############################################
+# MOMoGP Datasets for Multi-output Regression #
+###############################################
+
+#### Energy ####
+
+momogp_energy_x_train:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/energy/x_train.csv
+
+momogp_energy_y_train:
+    type: pandas.CSVDataSet
+    filepath: data/01_raw/MOMoGP/energy/y_train.csv
+
+momogp_energy_x_test:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/energy/x_test.csv
+
+momogp_energy_y_test:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/energy/y_test.csv
+
+#### Parkinsons ####
+
+momogp_parkinsons_x_train:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/Parkinsons/x_train.csv
+
+momogp_parkinsons_y_train:
+    type: pandas.CSVDataSet
+    filepath: data/01_raw/MOMoGP/Parkinsons/y_train.csv
+
+momogp_parkinsons_x_test:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/Parkinsons/x_test.csv
+
+momogp_parkinsons_y_test:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/Parkinsons/y_test.csv
+
+#### scm20d ####
+
+momogp_scm20d_x_train:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/scm20d/x_train.csv
+
+momogp_scm20d_y_train:
+    type: pandas.CSVDataSet
+    filepath: data/01_raw/MOMoGP/scm20d/y_train.csv
+
+momogp_scm20d_x_test:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/scm20d/x_test.csv
+
+momogp_scm20d_y_test:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/scm20d/y_test.csv
+
+#### US flight ####
+
+momogp_usflight_x_train:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/usflight/x_train.csv
+
+momogp_usflight_y_train:
+    type: pandas.CSVDataSet
+    filepath: data/01_raw/MOMoGP/usflight/y_train.csv
+
+momogp_usflight_x_test:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/usflight/x_test.csv
+
+momogp_usflight_y_test:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/usflight/y_test.csv
+
+#### Wind ####
+
+momogp_wind_x_train:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/wind/x_train.csv
+
+momogp_wind_y_train:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/wind/y_train.csv
+
+momogp_wind_x_test:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/wind/x_test.csv
+
+momogp_wind_y_test:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/MOMoGP/energy/y_test.csv
+
+#############################################
+# UCI Datasets for Single-output Regression #
+#############################################
