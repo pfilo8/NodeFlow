@@ -29,7 +29,6 @@
 This is a boilerplate pipeline 'reporting'
 generated using Kedro 0.17.5
 """
-import numpy as np
 import pandas as pd
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -37,7 +36,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 def calculate_rmse(model, x, y):
     y_hat = model.predict(x)
-    return np.sqrt(mean_squared_error(y, y_hat))
+    return mean_squared_error(y, y_hat, squared=False)
 
 
 def calculate_mae(model, x, y):
