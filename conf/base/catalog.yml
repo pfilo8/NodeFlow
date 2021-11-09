@@ -25,6 +25,10 @@ momogp_energy.y_test:
   type: pandas.CSVDataSet
   filepath: data/01_raw/MOMoGP/energy/y_test.csv
 
+momogp_energy.summary:
+  type: pandas.CSVDataSet
+  filepath: data/08_reporting/MOMoGP/energy/summary.csv
+
 #### Parkinsons ####
 
 momogp_parkinsons.x_train:
@@ -42,6 +46,10 @@ momogp_parkinsons.x_test:
 momogp_parkinsons.y_test:
   type: pandas.CSVDataSet
   filepath: data/01_raw/MOMoGP/Parkinsons/y_test.csv
+
+momogp_parkinsons.summary:
+  type: pandas.CSVDataSet
+  filepath: data/08_reporting/MOMoGP/Parkinsons/summary.csv
 
 #### scm20d ####
 
@@ -61,6 +69,10 @@ momogp_scm20d.y_test:
   type: pandas.CSVDataSet
   filepath: data/01_raw/MOMoGP/scm20d/y_test.csv
 
+momogp_scm20d.summary:
+  type: pandas.CSVDataSet
+  filepath: data/08_reporting/MOMoGP/scm20d/summary.csv
+
 #### US flight ####
 
 momogp_usflight.x_train:
@@ -79,6 +91,10 @@ momogp_usflighy.y_est:
   type: pandas.CSVDataSet
   filepath: data/01_raw/MOMoGP/usflight/y_test.csv
 
+momogp_usflighy.summary:
+  type: pandas.CSVDataSet
+  filepath: data/08_reporting/MOMoGP/usflight/summary.csv
+
 #### Wind ####
 
 momogp_wind.x_train:
@@ -95,7 +111,11 @@ momogp_wind.x_test:
 
 momogp_wind.y_test:
   type: pandas.CSVDataSet
-  filepath: data/01_raw/MOMoGP/energy/y_test.csv
+  filepath: data/01_raw/MOMoGP/wind/y_test.csv
+
+momogp_wind.summary:
+  type: pandas.CSVDataSet
+  filepath: data/08_reporting/MOMoGP/wind/summary.csv
 
 #############################################
 # UCI Datasets for Single-output Regression #
