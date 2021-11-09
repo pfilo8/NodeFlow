@@ -35,24 +35,35 @@ from .pipelines.modeling import create_pipeline_train_model
 from .pipelines.reporting import create_pipeline_report
 
 
+def create_general_pipeline(namespace):
+    pipeline_general = create_pipeline_train_model() + create_pipeline_report()
+
+    p = pipeline(
+        pipeline_general,
+        namespace=namespace
+    )
+    return p
+
+
 def register_pipelines() -> Dict[str, Pipeline]:
     """Register the project's pipelines.
 
     Returns:
         A mapping from a pipeline name to a ``Pipeline`` object.
     """
-    pipeline_general = create_pipeline_train_model() + create_pipeline_report()
+    momogp_datasets = [
+        "momogp_enery",
+        "momogp_parkinsons",
+        "momogp_scm20d",
+        "momogp_usflight",
+        "momogp_wind"
+    ]
 
-    uci_boston_pipeline = pipeline(
-        pipeline_general,
-        inputs={
-            "x_train": "momogp_wind_x_train",
-            "y_train": "momogp_wind_y_train",
-            "x_test": "momogp_wind_x_test",
-            "y_test": "momogp_wind_y_test"
-        }
-    )
+    momogp_pipelines = {
+        d: create_general_pipeline(d) for d in momogp_datasets
+    }
+
     return {
         "__default__": Pipeline([]),
-        "UCI.BOSTON": uci_boston_pipeline
+        **momogp_pipelines
     }
