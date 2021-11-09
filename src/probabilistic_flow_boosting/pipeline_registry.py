@@ -52,7 +52,7 @@ def register_pipelines() -> Dict[str, Pipeline]:
         A mapping from a pipeline name to a ``Pipeline`` object.
     """
     momogp_datasets = [
-        "momogp_enery",
+        "momogp_energy",
         "momogp_parkinsons",
         "momogp_scm20d",
         "momogp_usflight",
