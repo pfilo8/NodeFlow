@@ -33,7 +33,26 @@ generated using Kedro 0.17.5
 
 from kedro.pipeline import Pipeline, pipeline, node
 
-from .nodes import calculate_rmse, calculate_mae, calculate_nll
+from .nodes import calculate_rmse, calculate_mae, calculate_nll, summary
+
+
+def create_pipeline_report():
+    return Pipeline([
+        create_pipeline_report_train(),
+        create_pipeline_report_test(),
+        node(
+            func=summary,
+            inputs=[
+                "train_results_rmse",
+                "train_results_mae",
+                "train_results_nll",
+                "test_results_rmse",
+                "test_results_mae",
+                "test_results_nll"
+            ],
+            outputs=["summary"]
+        )
+    ])
 
 
 def create_pipeline_report_train():

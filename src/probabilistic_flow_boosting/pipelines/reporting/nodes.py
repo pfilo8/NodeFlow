@@ -29,6 +29,7 @@
 This is a boilerplate pipeline 'reporting'
 generated using Kedro 0.17.5
 """
+import pandas as pd
 
 
 def calculate_rmse(model, x, y):
@@ -41,3 +42,25 @@ def calculate_mae(model, x, y):
 
 def calculate_nll(model, x, y):
     return None
+
+
+def summary(
+        train_results_rmse: float,
+        train_results_mae: float,
+        train_results_nll: float,
+        test_results_rmse: float,
+        test_results_mae: float,
+        test_results_nll: float
+):
+    return pd.DataFrame([
+        ['train', 'rmse', train_results_rmse],
+        ['train', 'mae', train_results_mae],
+        ['train', 'nll', train_results_nll],
+        ['test', 'rmse', test_results_rmse],
+        ['test', 'mae', test_results_mae],
+        ['test', 'nll', test_results_nll],
+    ],
+        columns=[
+            'set', 'metric', 'value'
+        ]
+    )

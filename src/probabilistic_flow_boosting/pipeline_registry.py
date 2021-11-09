@@ -32,7 +32,7 @@ from typing import Dict
 from kedro.pipeline import pipeline, Pipeline
 
 from .pipelines.modeling import create_pipeline_train_model
-from .pipelines.reporting import create_pipeline_report_train, create_pipeline_report_test
+from .pipelines.reporting import create_pipeline_report
 
 
 def register_pipelines() -> Dict[str, Pipeline]:
@@ -41,7 +41,7 @@ def register_pipelines() -> Dict[str, Pipeline]:
     Returns:
         A mapping from a pipeline name to a ``Pipeline`` object.
     """
-    pipeline_general = create_pipeline_train_model() + create_pipeline_report_train() + create_pipeline_report_test()
+    pipeline_general = create_pipeline_train_model() + create_pipeline_report()
 
     uci_boston_pipeline = pipeline(
         pipeline_general,
