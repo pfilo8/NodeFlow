@@ -32,7 +32,7 @@ from typing import Dict
 from kedro.pipeline import pipeline, Pipeline
 
 from .pipelines.modeling import create_pipeline_train_model
-from .pipelines.reporting import create_pipeline_report
+from .pipelines.reporting import create_pipeline_report, create_pipeline_aggregated_report
 
 
 def create_general_pipeline(namespace):
@@ -43,6 +43,16 @@ def create_general_pipeline(namespace):
         namespace=namespace
     )
     return p
+
+
+def create_general_uci_pipeline(namespace, n):
+    return Pipeline([
+        *[create_general_pipeline(f"{namespace}_{i}") for i in range(n)],
+        create_pipeline_aggregated_report(
+            inputs=[f"{namespace}_{i}.summary" for i in range(n)],
+            outputs=f"{namespace}.aggregated_summary"
+        )
+    ])
 
 
 def register_pipelines() -> Dict[str, Pipeline]:
@@ -66,5 +76,5 @@ def register_pipelines() -> Dict[str, Pipeline]:
     return {
         "__default__": Pipeline([]),
         **momogp_pipelines,
-        "boston0": create_general_pipeline("uci_boston_0")
+        "boston": create_general_uci_pipeline("uci_boston", n=20)
     }

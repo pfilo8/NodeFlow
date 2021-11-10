@@ -33,7 +33,7 @@ generated using Kedro 0.17.5
 
 from kedro.pipeline import Pipeline, pipeline, node
 
-from .nodes import calculate_rmse, calculate_mae, calculate_nll, summary
+from .nodes import calculate_rmse, calculate_mae, calculate_nll, summary, aggregated_report
 
 
 def create_pipeline_report():
@@ -101,5 +101,15 @@ def create_pipeline_calculate_metrics(**kwargs):
             func=calculate_nll,
             inputs=["model", "x", "y"],
             outputs=["results_nll"]
+        )
+    ])
+
+
+def create_pipeline_aggregated_report(inputs, outputs):
+    return Pipeline([
+        node(
+            func=aggregated_report,
+            inputs=inputs,
+            outputs=outputs
         )
     ])

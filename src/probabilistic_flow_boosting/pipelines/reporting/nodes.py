@@ -29,6 +29,7 @@
 This is a boilerplate pipeline 'reporting'
 generated using Kedro 0.17.5
 """
+import numpy as np
 import pandas as pd
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -68,3 +69,8 @@ def summary(
             'set', 'metric', 'value'
         ]
     )
+
+
+def aggregated_report(*inputs):
+    df = pd.concat(inputs)
+    return df.groupby(['set', 'metric']).agg({"mean": np.mean, "std": np.std})
