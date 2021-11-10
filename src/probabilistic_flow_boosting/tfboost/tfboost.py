@@ -1,3 +1,4 @@
+import joblib
 import numpy as np
 import torch.nn as nn
 
@@ -48,3 +49,15 @@ class TreeFlowBoost(BaseEstimator):
         params: np.ndarray = self.tree_model.pred_dist_param(X)
         logpx: np.ndarray = self.flow_model.log_prob(X=y, context=context, params=params)
         return logpx
+
+    def save(self, filename):
+        joblib.dump(self, f"{filename}-tfboost")
+        joblib.dump(self.tree_model._leafs_encoder, f"{filename}-leafs_encoder")
+        joblib.dump(self.tree_model._y_dims, f"{filename}-y-dims")
+
+    @classmethod
+    def load(cls, filename):
+        model = joblib.load(f"{filename}-tfboost")
+        model.tree_model._leafs_encoder = joblib.load(f"{filename}-leafs_encoder")
+        model.tree_model._y_dims = joblib.load(f"{filename}-y-dims")
+        return model

@@ -55,7 +55,7 @@ class ContinuousNormalizingFlow:
         )
         self.flow = self.flow.to(self.DEVICE)
         self.context_encoder = nn.Identity().to(self.DEVICE)
-        self.distribution = ConditionalDiagonalNormal(shape=[input_dim]).to(self.DEVICE)
+        self.distribution = ConditionalDiagonalNormal(shape=[input_dim], context_encoder=nn.Identity()).to(self.DEVICE)
 
     @staticmethod
     def build_model(

@@ -40,7 +40,6 @@ class EmbeddableCatBoost(catboost.CatBoostRegressor):
         leafs = self.calc_leaf_indexes(X)
         self._fit_encoder(leafs)
         self._y_dims = y.shape[1] if len(y.shape) == 2 else 1  # Improve that!
-        return self
 
     def _fit_encoder(self, leafs):
         self._leafs_encoder = OneHotEncoder(
@@ -48,9 +47,12 @@ class EmbeddableCatBoost(catboost.CatBoostRegressor):
             sparse=False
         ).fit(leafs)
 
+    def _transform_encoder(self, leafs):
+        return self._leafs_encoder.transform(leafs)
+
     def embed(self, X):
         leafs = self.calc_leaf_indexes(X)
-        embeddings = self._leafs_encoder.transform(leafs)
+        embeddings = self._transform_encoder(leafs)
         return embeddings
 
     def pred_dist_param(self, X):
