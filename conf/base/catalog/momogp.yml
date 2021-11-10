@@ -82,7 +82,7 @@ momogp_usflight.x_test:
   type: pandas.CSVDataSet
   filepath: data/01_raw/MOMoGP/usflight/x_test.csv
 
-momogp_usflighy.y_est:
+momogp_usflighy.y_test:
   type: pandas.CSVDataSet
   filepath: data/01_raw/MOMoGP/usflight/y_test.csv
 

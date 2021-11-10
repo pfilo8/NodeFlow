@@ -65,5 +65,6 @@ def register_pipelines() -> Dict[str, Pipeline]:
 
     return {
         "__default__": Pipeline([]),
-        **momogp_pipelines
+        **momogp_pipelines,
+        "boston0": create_general_pipeline("uci_boston_0")
     }

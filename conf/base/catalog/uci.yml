@@ -1,3 +1,32 @@
 #############################################
 # UCI Datasets for Single-output Regression #
 #############################################
+{% for i in range(20) %}
+uci_boston_{{i}}.x_train:
+  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
+  filepath_data: data/01_raw/UCI/bostonHousing/data.txt
+  filepath_index_columns: data/01_raw/UCI/bostonHousing/index_features.txt
+  filepath_index_rows: data/01_raw/UCI/bostonHousing/index_train_{{i}}.txt
+
+uci_boston_{{i}}.y_train:
+  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
+  filepath_data: data/01_raw/UCI/bostonHousing/data.txt
+  filepath_index_columns: data/01_raw/UCI/bostonHousing/index_target.txt
+  filepath_index_rows: data/01_raw/UCI/bostonHousing/index_train_{{i}}.txt
+
+uci_boston_{{i}}.x_test:
+  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
+  filepath_data: data/01_raw/UCI/bostonHousing/data.txt
+  filepath_index_columns: data/01_raw/UCI/bostonHousing/index_features.txt
+  filepath_index_rows: data/01_raw/UCI/bostonHousing/index_test_{{i}}.txt
+
+uci_boston_{{i}}.y_test:
+  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
+  filepath_data: data/01_raw/UCI/bostonHousing/data.txt
+  filepath_index_columns: data/01_raw/UCI/bostonHousing/index_target.txt
+  filepath_index_rows: data/01_raw/UCI/bostonHousing/index_test_{{i}}.txt
+
+{% endfor %}
+uci_boston.aggregated_summary:
+  type: pandas.CSVDataSet
+  filepath: data/08_reporting/UCI/bostonHousing/summary.csv
