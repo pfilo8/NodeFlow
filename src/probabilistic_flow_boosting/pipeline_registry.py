@@ -73,8 +73,25 @@ def register_pipelines() -> Dict[str, Pipeline]:
         d: create_general_pipeline(d) for d in momogp_datasets
     }
 
+    uci_datasets = [
+        ("uci_boston", 20),
+        ("uci_concrete", 20),
+        ("uci_energy", 20),
+        ("uci_kin8nm", 20),
+        ("uci_naval", 20),
+        ("uci_power_plant", 20),
+        ("uci_protein", 5),
+        ("uci_wine_quality", 20),
+        ("uci_yacht", 20),
+        ("uci_year_prediction_msd", 1)
+    ]
+
+    uci_pipelines = {
+        d: create_general_uci_pipeline(d, n) for d, n in uci_datasets
+    }
+
     return {
         "__default__": Pipeline([]),
         **momogp_pipelines,
-        "boston": create_general_uci_pipeline("uci_boston", n=20)
+        **uci_pipelines
     }
