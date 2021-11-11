@@ -156,3 +156,6 @@ venv.bak/
 
 # CatBoost
 catboost_info/
+
+# MLFlow
+mlruns
