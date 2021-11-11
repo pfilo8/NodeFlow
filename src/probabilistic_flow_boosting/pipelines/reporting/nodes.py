@@ -29,24 +29,36 @@
 This is a boilerplate pipeline 'reporting'
 generated using Kedro 0.17.5
 """
+from typing import Tuple
+
 import numpy as np
 import pandas as pd
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
+from ...tfboost.tfboost import TreeFlowBoost
 
-def calculate_rmse(model, x, y):
-    y_hat = model.predict(x)
+
+def calculate_rmse(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+
+    y_hat: np.ndarray = model.predict(x)
     return mean_squared_error(y, y_hat, squared=False)
 
 
-def calculate_mae(model, x, y):
-    y_hat = model.predict(x)
+def calculate_mae(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+
+    y_hat: np.ndarray = model.predict(x)
     return mean_absolute_error(y, y_hat)
 
 
-def calculate_nll(model, x, y):
-    return model.log_prob(x, y)
+def calculate_nll(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+    return model.log_prob(x, y).mean()
 
 
 def summary(
@@ -71,6 +83,9 @@ def summary(
     )
 
 
-def aggregated_report(*inputs):
+def aggregated_report(*inputs: Tuple[pd.DataFrame]) -> pd.DataFrame:
     df = pd.concat(inputs)
-    return df.groupby(['set', 'metric']).agg({"mean": np.mean, "std": np.std})
+    results = df.groupby(['set', 'metric']).agg([np.mean, np.std])
+    results = results.reset_index()
+    results.columns = ['set', 'metric', 'mean', 'std']
+    return results

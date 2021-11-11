@@ -50,7 +50,7 @@ def create_pipeline_report():
                 "test_results_mae",
                 "test_results_nll"
             ],
-            outputs=["summary"]
+            outputs="summary"
         )
     ])
 
@@ -90,17 +90,17 @@ def create_pipeline_calculate_metrics(**kwargs):
         node(
             func=calculate_rmse,
             inputs=["model", "x", "y"],
-            outputs=["results_rmse"]
+            outputs="results_rmse"
         ),
         node(
             func=calculate_mae,
             inputs=["model", "x", "y"],
-            outputs=["results_mae"]
+            outputs="results_mae"
         ),
         node(
             func=calculate_nll,
             inputs=["model", "x", "y"],
-            outputs=["results_nll"]
+            outputs="results_nll"
         )
     ])
 

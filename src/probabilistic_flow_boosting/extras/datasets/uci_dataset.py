@@ -1,11 +1,12 @@
 from typing import Any, Dict
 
 import numpy as np
+import pandas as pd
 
-from kedro.io import AbstractVersionedDataSet
+from kedro.io import AbstractDataSet
 
 
-class UCIDataSet(AbstractVersionedDataSet):
+class UCIDataSet(AbstractDataSet):
 
     def __init__(self, filepath_data: str, filepath_index_columns: str, filepath_index_rows: str):
         """Creates a new instance of UCIDataSet to load / save image data at the given filepath.
@@ -21,9 +22,11 @@ class UCIDataSet(AbstractVersionedDataSet):
 
     def _load(self) -> np.ndarray:
         data = np.loadtxt(self._filepath_data)
-        index_columns = np.loadtxt(self._filepath_index_columns)
-        index_rows = np.loadtxt(self._filepath_index_rows)
-        return data[index_rows, index_columns]
+        data = pd.DataFrame(data)
+        index_columns = np.loadtxt(self._filepath_index_columns, dtype=np.int32)
+        index_columns = index_columns.reshape(-1)  # Issues when loading target column
+        index_rows = np.loadtxt(self._filepath_index_rows, dtype=np.int32)
+        return data.iloc[index_rows, index_columns]
 
     def _save(self, data: np.ndarray) -> None:
         raise ValueError("Saving not supported.")

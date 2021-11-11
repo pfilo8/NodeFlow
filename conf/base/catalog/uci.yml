@@ -26,7 +26,12 @@ uci_boston_{{i}}.y_test:
   filepath_index_columns: data/01_raw/UCI/bostonHousing/index_target.txt
   filepath_index_rows: data/01_raw/UCI/bostonHousing/index_test_{{i}}.txt
 
+uci_boston_{{i}}.model:
+  type: probabilistic_flow_boosting.extras.datasets.tfboost_dataset.TFBoostDataSet
+  filepath: data/06_models/UCI/bostonHousing/model
+
 {% endfor %}
+
 uci_boston.aggregated_summary:
   type: pandas.CSVDataSet
   filepath: data/08_reporting/UCI/bostonHousing/summary.csv
