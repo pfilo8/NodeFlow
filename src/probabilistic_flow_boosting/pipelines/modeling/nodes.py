@@ -29,8 +29,6 @@
 This is a boilerplate pipeline 'modeling'
 generated using Kedro 0.17.5
 """
-from typing import Any, Dict
-
 import pandas as pd
 
 from ...tfboost.flow import ContinuousNormalizingFlow
@@ -41,7 +39,7 @@ from ...tfboost.tfboost import TreeFlowBoost
 def train_model(x_train: pd.DataFrame, y_train: pd.DataFrame):
     flow = ContinuousNormalizingFlow(
         input_dim=1,
-        hidden_dims=(80, 40),
+        hidden_dims=(40, 40, 40),
         context_dim=100,
         conditional=True,
     )
@@ -49,5 +47,5 @@ def train_model(x_train: pd.DataFrame, y_train: pd.DataFrame):
     tree = EmbeddableCatBoost(max_depth=3)
 
     m = TreeFlowBoost(flow_model=flow, tree_model=tree, embedding_size=100)
-    m = m.fit(x_train.values, y_train.values, n_epochs=10)
+    m = m.fit(x_train.values, y_train.values, n_epochs=300)
     return m

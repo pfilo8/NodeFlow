@@ -29,20 +29,9 @@
 """Project pipelines."""
 from typing import Dict
 
-from kedro.pipeline import pipeline, Pipeline
+from kedro.pipeline import Pipeline
 
-from .pipelines.modeling import create_pipeline_train_model
-from .pipelines.reporting import create_pipeline_report, create_pipeline_aggregated_report
-
-
-def create_general_pipeline(namespace):
-    pipeline_general = create_pipeline_train_model() + create_pipeline_report()
-
-    p = pipeline(
-        pipeline_general,
-        namespace=namespace
-    )
-    return p
+from .pipelines import create_general_pipeline, create_pipeline_aggregated_report
 
 
 def create_general_uci_pipeline(namespace, n):
@@ -50,6 +39,16 @@ def create_general_uci_pipeline(namespace, n):
         *[create_general_pipeline(f"{namespace}_{i}") for i in range(n)],
         create_pipeline_aggregated_report(
             inputs=[f"{namespace}_{i}.summary" for i in range(n)],
+            outputs=f"{namespace}.aggregated_summary"
+        )
+    ])
+
+
+def create_general_momogp_pipeline(namespace):
+    return Pipeline([
+        create_general_pipeline(namespace),
+        create_pipeline_aggregated_report(
+            inputs=[f"{namespace}.summary"],
             outputs=f"{namespace}.aggregated_summary"
         )
     ])
@@ -70,7 +69,7 @@ def register_pipelines() -> Dict[str, Pipeline]:
     ]
 
     momogp_pipelines = {
-        d: create_general_pipeline(d) for d in momogp_datasets
+        d: create_general_momogp_pipeline(d) for d in momogp_datasets
     }
 
     uci_datasets = [

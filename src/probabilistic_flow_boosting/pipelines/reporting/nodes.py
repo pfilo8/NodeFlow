@@ -31,6 +31,7 @@ generated using Kedro 0.17.5
 """
 from typing import Tuple
 
+import mlflow
 import numpy as np
 import pandas as pd
 
@@ -88,4 +89,9 @@ def aggregated_report(*inputs: Tuple[pd.DataFrame]) -> pd.DataFrame:
     results = df.groupby(['set', 'metric']).agg([np.mean, np.std])
     results = results.reset_index()
     results.columns = ['set', 'metric', 'mean', 'std']
+
+    # MLFlow
+    results["set-metric"] = results["set"] + "_" + results["metric"]
+    mlflow.log_metrics({f"{k}_mean": v for k, v in zip(results["set-metric"].values, results["mean"].values)})
+    mlflow.log_metrics({f"{k}_std": v for k, v in zip(results["set-metric"].values, results["std"].values)})
     return results
