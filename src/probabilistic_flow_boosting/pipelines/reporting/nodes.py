@@ -58,7 +58,7 @@ def calculate_mae(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
 def calculate_nll(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
     x: np.ndarray = x.values
     y: np.ndarray = y.values
-    return model.log_prob(x, y).mean()
+    return -model.log_prob(x, y).mean()
 
 
 def summary(
