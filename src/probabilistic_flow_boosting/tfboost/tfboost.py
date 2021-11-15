@@ -13,7 +13,7 @@ class TreeFlowBoost(BaseEstimator):
 
         self.embedding_size = embedding_size
 
-    def fit(self, X: np.ndarray, y: np.ndarray, n_epochs=100):
+    def fit(self, X: np.ndarray, y: np.ndarray, n_epochs: int = 100, batch_size: int = 1000):
         self.tree_model.fit(X, y)
 
         context: np.ndarray = self.tree_model.embed(X)
@@ -25,29 +25,30 @@ class TreeFlowBoost(BaseEstimator):
         params: np.ndarray = self.tree_model.pred_dist_param(X)
         y: np.ndarray = y if len(y.shape) == 2 else y.reshape(-1, 1)
 
-        self.flow_model.fit(y, context, params, n_epochs=n_epochs)
+        self.flow_model.fit(y, context, params, n_epochs=n_epochs, batch_size=batch_size)
         return self
 
-    def sample(self, X: np.ndarray, num_samples: int = 10) -> np.ndarray:
+    def sample(self, X: np.ndarray, num_samples: int = 10, batch_size: int = 1000) -> np.ndarray:
         context: np.ndarray = self.tree_model.embed(X)
         params: np.ndarray = self.tree_model.pred_dist_param(X)
-        samples: np.ndarray = self.flow_model.sample(num_samples=num_samples, context=context, params=params)
+        samples: np.ndarray = self.flow_model.sample(num_samples=num_samples, context=context, params=params,
+                                                     batch_size=batch_size)
         return samples
 
-    def predict(self, X: np.ndarray, num_samples: int = 10) -> np.ndarray:
-        samples: np.ndarray = self.sample(X=X, num_samples=num_samples)
+    def predict(self, X: np.ndarray, num_samples: int = 10, batch_size: int = 1000) -> np.ndarray:
+        samples: np.ndarray = self.sample(X=X, num_samples=num_samples, batch_size=batch_size)
         y_hat: np.ndarray = samples.mean(axis=1)
         return y_hat
 
-    def embed(self, X: np.ndarray) -> np.ndarray:
+    def embed(self, X: np.ndarray, batch_size: int = 1000) -> np.ndarray:
         context: np.ndarray = self.tree_model.embed(X)
-        context_e: np.ndarray = self.flow_model.embed(context)
+        context_e: np.ndarray = self.flow_model.embed(context, batch_size=batch_size)
         return context_e
 
-    def log_prob(self, X: np.ndarray, y: np.ndarray):
+    def log_prob(self, X: np.ndarray, y: np.ndarray, batch_size: int = 1000):
         context: np.ndarray = self.tree_model.embed(X)
         params: np.ndarray = self.tree_model.pred_dist_param(X)
-        logpx: np.ndarray = self.flow_model.log_prob(X=y, context=context, params=params)
+        logpx: np.ndarray = self.flow_model.log_prob(X=y, context=context, params=params, batch_size=batch_size)
         return logpx
 
     def save(self, filename):

@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -6,6 +8,7 @@ import torch.optim as optim
 from tqdm import tqdm
 
 from nflows.distributions import ConditionalDiagonalNormal
+from torch.utils.data import DataLoader, TensorDataset
 
 from .odefunc import ODEfunc, ODEnet
 from .normalization import MovingBatchNorm1d
@@ -113,28 +116,42 @@ class ContinuousNormalizingFlow:
     def setup_context_encoder(self, context_encoder: nn.Module):
         self.context_encoder = context_encoder.to(self.DEVICE)
 
-    def fit(self, X: np.ndarray, context: np.ndarray, params: np.ndarray, n_epochs: int = 100):
+    def fit(self, X: np.ndarray, context: np.ndarray, params: np.ndarray, n_epochs: int = 100, batch_size: int = 1000):
         X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.DEVICE)
         context: torch.Tensor = torch.as_tensor(data=context, dtype=torch.float, device=self.DEVICE)
         params: torch.Tensor = torch.as_tensor(data=params, dtype=torch.float, device=self.DEVICE)
+
+        dataset: DataLoader = DataLoader(
+            dataset=TensorDataset(X, context, params),
+            shuffle=True,
+            batch_size=batch_size
+        )
 
         self.optimizer = optim.Adam(list(self.flow.parameters()) + list(self.context_encoder.parameters()))
 
         with tqdm(range(n_epochs)) as pbar:
             for _ in pbar:
-                self.optimizer.zero_grad()
+                for x, c, p in dataset:
+                    self.optimizer.zero_grad()
 
-                logpx = self._log_prob(X, context, params)
-                loss = -logpx.mean()
+                    logpx = self._log_prob(x, c, p)
+                    loss = -logpx.mean()
 
-                loss.backward()
-                self.optimizer.step()
+                    loss.backward()
+                    self.optimizer.step()
 
-                pbar.set_description(str(loss.item()))
+                    pbar.set_description(str(loss.item()))
 
         return self
 
     def _log_prob(self, X: torch.Tensor, context: torch.Tensor, params: torch.Tensor) -> torch.Tensor:
+        """
+        Calculate log probability on data batch.
+        :param X: 
+        :param context: 
+        :param params: 
+        :return: 
+        """
         zero: torch.Tensor = torch.zeros(X.shape[0], 1, device=X.device)
         context_e: torch.Tensor = self.context_encoder(context)
         z, delta_logp = self.flow(x=X, context=context_e, logpx=zero)
@@ -145,29 +162,66 @@ class ContinuousNormalizingFlow:
         return logpx
 
     @torch.no_grad()
-    def log_prob(self, X: np.ndarray, context: np.ndarray, params: np.ndarray) -> np.ndarray:
+    def log_prob(self, X: np.ndarray, context: np.ndarray, params: np.ndarray, batch_size: int = 1000) -> np.ndarray:
+        """
+        Calculate log probability of sample given data, context and prior distribution parameters.
+        :param X: Data.
+        :param context: Data context (Conditioning to flow).
+        :param params: Prior distribution parameters.
+        :param batch_size: Batch size.
+        :return: Log probability of sample given data, context and prior distribution parameters.
+        """
         X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.DEVICE)
         context: torch.Tensor = torch.as_tensor(data=context, dtype=torch.float, device=self.DEVICE)
         params: torch.Tensor = torch.as_tensor(data=params, dtype=torch.float, device=self.DEVICE)
 
-        logpx: torch.Tensor = self._log_prob(X=X, context=context, params=params)
+        dataset: DataLoader = DataLoader(
+            dataset=TensorDataset(X, context, params),
+            shuffle=False,
+            batch_size=batch_size
+        )
+
+        logpxs: List[torch.Tensor] = [self._log_prob(X=x, context=c, params=p) for x, c, p in dataset]
+        logpx: torch.Tensor = torch.cat(logpxs, dim=0)
         logpx: np.ndarray = logpx.detach().cpu().numpy()
         return logpx
 
     @torch.no_grad()
-    def sample(self, context: np.ndarray, params: np.ndarray, num_samples: int = 10) -> np.ndarray:
+    def sample(self, context: np.ndarray, params: np.ndarray, num_samples: int = 10,
+               batch_size: int = 1000) -> np.ndarray:
         context: torch.Tensor = torch.as_tensor(data=context, dtype=torch.float, device=self.DEVICE)
         params: torch.Tensor = torch.as_tensor(data=params, dtype=torch.float, device=self.DEVICE)
 
-        samples: torch.Tensor = self.distribution.sample(num_samples=num_samples, context=params)
-        context_e: torch.Tensor = self.context_encoder(context)
-        samples: torch.Tensor = self.flow(x=samples, context=context_e, reverse=True)
+        dataset: DataLoader = DataLoader(
+            dataset=TensorDataset(context, params),
+            shuffle=False,
+            batch_size=batch_size
+        )
+
+        all_samples: List[torch.Tensor] = []
+
+        for c, p in dataset:
+            samples: torch.Tensor = self.distribution.sample(num_samples=num_samples, context=p)
+            context_e: torch.Tensor = self.context_encoder(c)
+            samples: torch.Tensor = self.flow(x=samples, context=context_e, reverse=True)
+
+            all_samples.append(samples)
+
+        samples: torch.Tensor = torch.cat(all_samples, dim=0)
         samples: np.ndarray = samples.detach().cpu().numpy()
         return samples
 
     @torch.no_grad()
-    def embed(self, context: np.ndarray) -> np.ndarray:
+    def embed(self, context: np.ndarray, batch_size: int = 1000) -> np.ndarray:
         context: torch.Tensor = torch.as_tensor(data=context, dtype=torch.float, device=self.DEVICE)
-        context_e: torch.Tensor = self.context_encoder(context)
+
+        dataset: DataLoader = DataLoader(
+            dataset=TensorDataset(context),
+            shuffle=False,
+            batch_size=batch_size
+        )
+
+        context_e: List[torch.Tensor] = [self.context_encoder(c) for c in dataset]
+        context_e: torch.Tensor = torch.cat(context_e, dim=0)
         context_e: np.ndarray = context_e.detach().cpu().numpy()
         return context_e
