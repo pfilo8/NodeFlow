@@ -36,16 +36,12 @@ from ...tfboost.tree import EmbeddableCatBoost
 from ...tfboost.tfboost import TreeFlowBoost
 
 
-def train_model(x_train: pd.DataFrame, y_train: pd.DataFrame):
-    flow = ContinuousNormalizingFlow(
-        input_dim=1,
-        hidden_dims=(40, 40, 40),
-        context_dim=100,
-        conditional=True,
-    )
+def train_model(x_train: pd.DataFrame, y_train: pd.DataFrame, flow_params, tree_params, n_epochs: int = 100,
+                batch_size: int = 1000):
+    flow_params["hidden_dims"] = tuple(flow_params["hidden_dims"])
+    flow = ContinuousNormalizingFlow(conditional=True, **flow_params)
+    tree = EmbeddableCatBoost(**tree_params)
 
-    tree = EmbeddableCatBoost(max_depth=3)
-
-    m = TreeFlowBoost(flow_model=flow, tree_model=tree, embedding_size=100)
-    m = m.fit(x_train.values, y_train.values, n_epochs=300)
+    m = TreeFlowBoost(flow_model=flow, tree_model=tree, embedding_size=flow_params["context_dim"])
+    m = m.fit(x_train.values, y_train.values, n_epochs=n_epochs, batch_size=batch_size)
     return m

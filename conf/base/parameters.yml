@@ -1,0 +1,14 @@
+#### Models ####
+
+flow_params:
+  input_dim: 1
+  hidden_dims: [80, 40, 40]
+  context_dim: 100
+
+tree_params:
+  max_depth: 3
+
+#### Training ####
+n_epochs: 3
+batch_size: 1000
+num_samples: 200

@@ -89,17 +89,17 @@ def create_pipeline_calculate_metrics(**kwargs):
     return Pipeline([
         node(
             func=calculate_rmse,
-            inputs=["model", "x", "y"],
+            inputs=["model", "x", "y", "params:num_samples", "params:batch_size"],
             outputs="results_rmse"
         ),
         node(
             func=calculate_mae,
-            inputs=["model", "x", "y"],
+            inputs=["model", "x", "y", "params:num_samples", "params:batch_size"],
             outputs="results_mae"
         ),
         node(
             func=calculate_nll,
-            inputs=["model", "x", "y"],
+            inputs=["model", "x", "y", "params:batch_size"],
             outputs="results_nll"
         )
     ])

@@ -40,26 +40,26 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 from ...tfboost.tfboost import TreeFlowBoost
 
 
-def calculate_rmse(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
+def calculate_rmse(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
     x: np.ndarray = x.values
     y: np.ndarray = y.values
 
-    y_hat: np.ndarray = model.predict(x)
+    y_hat: np.ndarray = model.predict(x, num_samples=num_samples, batch_size=batch_size)
     return mean_squared_error(y, y_hat, squared=False)
 
 
-def calculate_mae(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
+def calculate_mae(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
     x: np.ndarray = x.values
     y: np.ndarray = y.values
 
-    y_hat: np.ndarray = model.predict(x)
+    y_hat: np.ndarray = model.predict(x, num_samples=num_samples, batch_size=batch_size)
     return mean_absolute_error(y, y_hat)
 
 
-def calculate_nll(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
+def calculate_nll(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, batch_size: int):
     x: np.ndarray = x.values
     y: np.ndarray = y.values
-    return -model.log_prob(x, y).mean()
+    return -model.log_prob(x, y, batch_size=batch_size).mean()
 
 
 def summary(
