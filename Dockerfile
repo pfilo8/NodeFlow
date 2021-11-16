@@ -20,6 +20,8 @@ EXPOSE 4444
 
 COPY src/requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
+# Doesn't work in requirements
+RUN pip install kedro-mlflow
 
 # Add necessary paths to $PATH
 RUN echo "export PYTHONPATH=/src:$PYTHONPATH" >> /root/.bashrc
