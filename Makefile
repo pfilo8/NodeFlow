@@ -3,6 +3,7 @@ project_name := $(shell echo $(project_dir) | tr A-Z a-z)
 container_ssh_port := 1428
 container_jupyter_port := 1429
 container_tensorboard_port := 1430
+container_mlflow_port := 1431
 
 username := $(shell whoami)
 
@@ -32,6 +33,7 @@ run:
 		--publish ${container_ssh_port}:4444 \
 		--publish ${container_jupyter_port}:8888 \
 		--publish ${container_tensorboard_port}:6006 \
+		--publish ${container_mlflow_port}:5000 \
 		--volume ${src_dir}:/src \
 		${project_name}:latest
 
