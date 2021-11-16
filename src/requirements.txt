@@ -11,6 +11,7 @@ kedro-mlflow==0.7.6
 kedro-telemetry~=0.1.0
 nbstripout~=0.4
 nflows
+ngboost==0.3.12
 plotly==4.14.3
 pytest-cov~=2.5
 pytest-mock>=1.7.1, <2.0
