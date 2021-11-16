@@ -68,7 +68,7 @@ uci_concrete_{{i}}.y_test:
 
 uci_concrete_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.tfboost_dataset.TFBoostDataSet
-  filepath: data/06_models/UCI/concrete/model_{{i}}
+  filepath: data/06_models/UCI/concrete/model_{{i}}_{{i}}
 
 {% endfor %}
 
@@ -105,7 +105,7 @@ uci_energy_{{i}}.y_test:
 
 uci_energy_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.tfboost_dataset.TFBoostDataSet
-  filepath: data/06_models/UCI/energy/model_{{i}}
+  filepath: data/06_models/UCI/energy/model_{{i}}_{{i}}
 
 {% endfor %}
 
@@ -142,7 +142,7 @@ uci_kin8nm_{{i}}.y_test:
 
 uci_kin8nm_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.tfboost_dataset.TFBoostDataSet
-  filepath: data/06_models/UCI/kin8nm/model_{{i}}
+  filepath: data/06_models/UCI/kin8nm/model_{{i}}_{{i}}
 
 {% endfor %}
 
@@ -179,7 +179,7 @@ uci_naval_{{i}}.y_test:
 
 uci_naval_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.tfboost_dataset.TFBoostDataSet
-  filepath: data/06_models/UCI/naval-propulsion-plant/model_{{i}}
+  filepath: data/06_models/UCI/naval-propulsion-plant/model_{{i}}_{{i}}
 
 {% endfor %}
 
@@ -216,7 +216,7 @@ uci_power_plant_{{i}}.y_test:
 
 uci_power_plant_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.tfboost_dataset.TFBoostDataSet
-  filepath: data/06_models/UCI/power-plant/model_{{i}}
+  filepath: data/06_models/UCI/power-plant/model_{{i}}_{{i}}
 
 {% endfor %}
 
@@ -226,7 +226,7 @@ uci_power_plant.aggregated_summary:
 
 #### Protein Tertiary Structure ####
 
-{% for i in range(20) %}
+{% for i in range(5) %}
 uci_protein_{{i}}.x_train:
   type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
   filepath_data: data/01_raw/UCI/protein-tertiary-structure/data.txt
@@ -253,7 +253,7 @@ uci_protein_{{i}}.y_test:
 
 uci_protein_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.tfboost_dataset.TFBoostDataSet
-  filepath: data/06_models/UCI/protein-tertiary-structure/model_{{i}}
+  filepath: data/06_models/UCI/protein-tertiary-structure/model_{{i}}_{{i}}
 
 {% endfor %}
 
@@ -290,7 +290,7 @@ uci_wine_quality_{{i}}.y_test:
 
 uci_wine_quality_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.tfboost_dataset.TFBoostDataSet
-  filepath: data/06_models/UCI/wine-quality-red/model_{{i}}
+  filepath: data/06_models/UCI/wine-quality-red/model_{{i}}_{{i}}
 
 {% endfor %}
 
@@ -327,7 +327,7 @@ uci_yacht_{{i}}.y_test:
 
 uci_yacht_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.tfboost_dataset.TFBoostDataSet
-  filepath: data/06_models/UCI/yacht/model_{{i}}
+  filepath: data/06_models/UCI/yacht/model_{{i}}_{{i}}
 
 {% endfor %}
 
@@ -337,7 +337,7 @@ uci_yacht.aggregated_summary:
 
 #### Year Prediction MSD ####
 
-{% for i in range(20) %}
+{% for i in range(1) %}
 uci_year_prediction_msd_{{i}}.x_train:
   type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
   filepath_data: data/01_raw/UCI/year-prediction-msd/data.txt
@@ -364,7 +364,7 @@ uci_year_prediction_msd_{{i}}.y_test:
 
 uci_year_prediction_msd_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.tfboost_dataset.TFBoostDataSet
-  filepath: data/06_models/UCI/year-prediction-msd/model_{{i}}
+  filepath: data/06_models/UCI/year-prediction-msd/model_{{i}}_{{i}}
 
 {% endfor %}
 
