@@ -343,24 +343,32 @@ uci_year_prediction_msd_{{i}}.x_train:
   filepath_data: data/01_raw/UCI/year-prediction-msd/data.txt
   filepath_index_columns: data/01_raw/UCI/year-prediction-msd/index_features.txt
   filepath_index_rows: data/01_raw/UCI/year-prediction-msd/index_train_{{i}}.txt
+  load_args:
+    data_delimiter: ","
 
 uci_year_prediction_msd_{{i}}.y_train:
   type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
   filepath_data: data/01_raw/UCI/year-prediction-msd/data.txt
   filepath_index_columns: data/01_raw/UCI/year-prediction-msd/index_target.txt
   filepath_index_rows: data/01_raw/UCI/year-prediction-msd/index_train_{{i}}.txt
+  load_args:
+    data_delimiter: ","
 
 uci_year_prediction_msd_{{i}}.x_test:
   type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
   filepath_data: data/01_raw/UCI/year-prediction-msd/data.txt
   filepath_index_columns: data/01_raw/UCI/year-prediction-msd/index_features.txt
   filepath_index_rows: data/01_raw/UCI/year-prediction-msd/index_test_{{i}}.txt
+  load_args:
+    data_delimiter: ","
 
 uci_year_prediction_msd_{{i}}.y_test:
   type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
   filepath_data: data/01_raw/UCI/year-prediction-msd/data.txt
   filepath_index_columns: data/01_raw/UCI/year-prediction-msd/index_target.txt
   filepath_index_rows: data/01_raw/UCI/year-prediction-msd/index_test_{{i}}.txt
+  load_args:
+    data_delimiter: ","
 
 uci_year_prediction_msd_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.tfboost_dataset.TFBoostDataSet
