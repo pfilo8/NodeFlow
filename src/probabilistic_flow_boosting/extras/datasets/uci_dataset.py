@@ -20,7 +20,7 @@ class UCIDataSet(AbstractDataSet):
         self._filepath_data = filepath_data
         self._filepath_index_columns = filepath_index_columns
         self._filepath_index_rows = filepath_index_rows
-        self._load_args = load_args
+        self._load_args = load_args if load_args is not None else {}
 
     def _load(self) -> np.ndarray:
         data = np.loadtxt(self._filepath_data, delimiter=self._load_args.get("data_delimiter"))
