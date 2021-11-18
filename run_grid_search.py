@@ -33,7 +33,7 @@ for p, m, d, t, c, h in itertools.product(data, model_types, depths, num_trees, 
                 "batch_size": 512,
                 "num_samples": 100,
                 "random_seed": 42,
-                "tree_model": m,
+                "tree_model_type": m,
                 "tree_params":
                     {
                         "max_depth": d,
