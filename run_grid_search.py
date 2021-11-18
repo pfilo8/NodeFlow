@@ -7,8 +7,15 @@ import pyaml
 datasets_option = int(sys.argv[1])
 
 datasets = {
-    0: ["uci_boston", "uci_concrete", "uci_energy"],
-    1: ["uci_wine_quality", "uci_yacht"],
+    0: [
+        "uci_boston",
+        "uci_concrete",
+        "uci_energy"
+    ],
+    1: [
+        "uci_wine_quality",
+        "uci_yacht"
+    ],
 }
 
 depths = [2, 3, 4]
