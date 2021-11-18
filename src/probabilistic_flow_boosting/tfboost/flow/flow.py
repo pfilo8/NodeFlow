@@ -5,8 +5,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from tqdm import tqdm
-
 from nflows.distributions import ConditionalDiagonalNormal
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -129,18 +127,15 @@ class ContinuousNormalizingFlow:
 
         self.optimizer = optim.Adam(list(self.flow.parameters()) + list(self.context_encoder.parameters()))
 
-        with tqdm(range(n_epochs)) as pbar:
-            for _ in pbar:
-                for x, c, p in dataset:
-                    self.optimizer.zero_grad()
+        for _ in range(n_epochs):
+            for x, c, p in dataset:
+                self.optimizer.zero_grad()
 
-                    logpx = self._log_prob(x, c, p)
-                    loss = -logpx.mean()
+                logpx = self._log_prob(x, c, p)
+                loss = -logpx.mean()
 
-                    loss.backward()
-                    self.optimizer.step()
-
-                    pbar.set_description(str(loss.item()))
+                loss.backward()
+                self.optimizer.step()
 
         return self
 
