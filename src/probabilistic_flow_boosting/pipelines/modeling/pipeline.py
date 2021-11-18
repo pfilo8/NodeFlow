@@ -41,7 +41,7 @@ def create_pipeline_train_model(**kwargs):
         node(
             func=train_model,
             inputs=["x_train", "y_train", "params:flow_params", "params:tree_params", "params:n_epochs",
-                    "params:batch_size"],
+                    "params:batch_size", "params:random_seed"],
             outputs="model"
         )
     ])

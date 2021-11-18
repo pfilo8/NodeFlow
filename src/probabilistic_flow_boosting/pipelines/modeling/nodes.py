@@ -29,18 +29,30 @@
 This is a boilerplate pipeline 'modeling'
 generated using Kedro 0.17.5
 """
+import random
+
+import numpy as np
 import pandas as pd
+import torch
 
 from ...tfboost.flow import ContinuousNormalizingFlow
 from ...tfboost.tree import EmbeddableCatBoost
 from ...tfboost.tfboost import TreeFlowBoost
 
 
+def setup_random_seed(random_seed):
+    random.seed(random_seed)
+    np.random.seed(random_seed)
+    torch.manual_seed(random_seed)
+
+
 def train_model(x_train: pd.DataFrame, y_train: pd.DataFrame, flow_params, tree_params, n_epochs: int = 100,
-                batch_size: int = 1000):
+                batch_size: int = 1000, random_seed: int = 42):
+    setup_random_seed(random_seed)
+
     flow_params["hidden_dims"] = tuple(flow_params["hidden_dims"])
     flow = ContinuousNormalizingFlow(conditional=True, **flow_params)
-    tree = EmbeddableCatBoost(**tree_params)
+    tree = EmbeddableCatBoost(**tree_params, random_seed=random_seed)
 
     m = TreeFlowBoost(flow_model=flow, tree_model=tree, embedding_size=flow_params["context_dim"])
     m = m.fit(x_train.values, y_train.values, n_epochs=n_epochs, batch_size=batch_size)

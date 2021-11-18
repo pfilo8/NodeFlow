@@ -2,15 +2,17 @@
 
 flow_params:
   input_dim: 1
-  hidden_dims: [80]
-  context_dim: 100
+  hidden_dims: [40]
+  context_dim: 40
 
 tree_params:
-  max_depth: 3
+  max_depth: 2
+  num_trees: 200
   loss_function: "RMSEWithUncertainty"
   silent: True
 
 #### Training ####
-n_epochs: 500
-batch_size: 1000
-num_samples: 250
+n_epochs: 100
+batch_size: 512
+num_samples: 100
+random_seed: 42
