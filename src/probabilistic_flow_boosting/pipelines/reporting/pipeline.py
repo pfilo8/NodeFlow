@@ -33,7 +33,8 @@ generated using Kedro 0.17.5
 
 from kedro.pipeline import Pipeline, pipeline, node
 
-from .nodes import calculate_rmse, calculate_mae, calculate_nll, summary, aggregated_report
+from .nodes import calculate_rmse, calculate_mae, calculate_nll, calculate_rmse_tree, calculate_mae_tree, \
+    calculate_nll_tree, summary, aggregated_report
 
 
 def create_pipeline_report():
@@ -46,9 +47,15 @@ def create_pipeline_report():
                 "train_results_rmse",
                 "train_results_mae",
                 "train_results_nll",
+                "train_results_rmse_tree",
+                "train_results_mae_tree",
+                "train_results_nll_tree",
                 "test_results_rmse",
                 "test_results_mae",
-                "test_results_nll"
+                "test_results_nll",
+                "test_results_rmse_tree",
+                "test_results_mae_tree",
+                "test_results_nll_tree"
             ],
             outputs="summary"
         )
@@ -65,7 +72,10 @@ def create_pipeline_report_train():
         outputs={
             "results_rmse": "train_results_rmse",
             "results_mae": "train_results_mae",
-            "results_nll": "train_results_nll"
+            "results_nll": "train_results_nll",
+            "results_rmse_tree": "train_results_rmse_tree",
+            "results_mae_tree": "train_results_mae_tree",
+            "results_nll_tree": "train_results_nll_tree",
         }
     )
 
@@ -80,7 +90,10 @@ def create_pipeline_report_test():
         outputs={
             "results_rmse": "test_results_rmse",
             "results_mae": "test_results_mae",
-            "results_nll": "test_results_nll"
+            "results_nll": "test_results_nll",
+            "results_rmse_tree": "test_results_rmse_tree",
+            "results_mae_tree": "test_results_mae_tree",
+            "results_nll_tree": "test_results_nll_tree",
         }
     )
 
@@ -101,7 +114,22 @@ def create_pipeline_calculate_metrics(**kwargs):
             func=calculate_nll,
             inputs=["model", "x", "y", "params:batch_size"],
             outputs="results_nll"
-        )
+        ),
+        node(
+            func=calculate_mae_tree,
+            inputs=["model", "x", "y"],
+            outputs="results_mae_tree"
+        ),
+        node(
+            func=calculate_rmse_tree,
+            inputs=["model", "x", "y"],
+            outputs="results_rmse_tree"
+        ),
+        node(
+            func=calculate_nll_tree,
+            inputs=["model", "x", "y"],
+            outputs="results_nll_tree"
+        ),
     ])
 
 

@@ -36,6 +36,7 @@ import numpy as np
 import pandas as pd
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error
+from nflows.distributions import ConditionalDiagonalNormal
 
 from ...tfboost.tfboost import TreeFlowBoost
 
@@ -62,21 +63,62 @@ def calculate_nll(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, batch_
     return -model.log_prob(x, y, batch_size=batch_size).mean()
 
 
+def calculate_rmse_tree(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+
+    y_hat: np.ndarray = model.predict_tree(x)
+    y_hat: np.ndarray = y_hat[:, 0]  # Only get mean
+    return mean_squared_error(y, y_hat, squared=False)
+
+
+def calculate_mae_tree(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+
+    y_hat: np.ndarray = model.predict_tree(x)
+    y_hat: np.ndarray = y_hat[:, 0]  # Only get mean
+    return mean_absolute_error(y, y_hat)
+
+
+def calculate_nll_tree(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+
+    y_hat_tree = model.predict_tree(x)
+    y_hat_tree[:, 1] = np.log(np.sqrt(y_hat_tree[:, 1]))  # Transform var to log std / CatBoost RMSEWithUncertainty
+
+    distribution = ConditionalDiagonalNormal(shape=[1])  # Assume 1D distribution
+    return -distribution.log_prob(y, y_hat_tree).numpy().mean()
+
+
 def summary(
         train_results_rmse: float,
         train_results_mae: float,
         train_results_nll: float,
+        train_results_rmse_tree: float,
+        train_results_mae_tree: float,
+        train_results_nll_tree: float,
         test_results_rmse: float,
         test_results_mae: float,
-        test_results_nll: float
+        test_results_nll: float,
+        test_results_rmse_tree: float,
+        test_results_mae_tree: float,
+        test_results_nll_tree: float
 ):
     return pd.DataFrame([
         ['train', 'rmse', train_results_rmse],
         ['train', 'mae', train_results_mae],
         ['train', 'nll', train_results_nll],
+        ['train', 'rmse_tree', train_results_rmse_tree],
+        ['train', 'mae_tree', train_results_mae_tree],
+        ['train', 'nll_tree', train_results_nll_tree],
         ['test', 'rmse', test_results_rmse],
         ['test', 'mae', test_results_mae],
         ['test', 'nll', test_results_nll],
+        ['test', 'rmse_tree', test_results_rmse_tree],
+        ['test', 'mae_tree', test_results_mae_tree],
+        ['test', 'nll_tree', test_results_nll_tree],
     ],
         columns=[
             'set', 'metric', 'value'

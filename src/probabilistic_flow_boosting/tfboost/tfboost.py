@@ -40,6 +40,9 @@ class TreeFlowBoost(BaseEstimator):
         y_hat: np.ndarray = samples.mean(axis=1)
         return y_hat
 
+    def predict_tree(self, X: np.ndarray) -> np.ndarray:
+        return self.tree_model.predict(X)
+
     def embed(self, X: np.ndarray, batch_size: int = 1000) -> np.ndarray:
         context: np.ndarray = self.tree_model.embed(X)
         context_e: np.ndarray = self.flow_model.embed(context, batch_size=batch_size)
