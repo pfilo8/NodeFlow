@@ -13,6 +13,7 @@ nbstripout~=0.4
 nflows
 ngboost==0.3.12
 plotly==4.14.3
+pyaml
 pytest-cov~=2.5
 pytest-mock>=1.7.1, <2.0
 pytest~=6.2
