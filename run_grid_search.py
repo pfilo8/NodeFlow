@@ -24,6 +24,7 @@ for p, d, t, c, h in itertools.product(data, depths, num_trees, context_dims, hi
                 "n_epochs": 100,
                 "batch_size": 512,
                 "num_samples": 100,
+                "random_seed": 42,
                 "tree_params":
                     {
                         "max_depth": d,
