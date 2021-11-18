@@ -16,3 +16,5 @@ n_epochs: 100
 batch_size: 512
 num_samples: 100
 random_seed: 42
+
+tree_model: "CatBoostPriorNormal"

@@ -8,23 +8,24 @@ datasets_option = int(sys.argv[1])
 
 datasets = {
     0: [
-        "uci_boston",
+        # "uci_boston",
         "uci_concrete",
         "uci_energy"
     ],
     1: [
-        "uci_wine_quality",
+        # "uci_wine_quality",
         "uci_yacht"
     ],
 }
 
-depths = [2, 3, 4]
-num_trees = [100, 200, 300, 400, 500]
-context_dims = [40, 80, 100]
-hidden_dims = [[40], [80], [100], [80, 40], [40, 40]]
+depths = [2, 3]
+num_trees = [100, 300, 500]
+context_dims = [40, 80]
+hidden_dims = [[40], [100], [40, 40]]
+model_types = ["CatBoostPriorNormal", "CatBoostPriorPredicted", "CatBoostPriorAveraged"]
 data = datasets[datasets_option]
 
-for p, d, t, c, h in itertools.product(data, depths, num_trees, context_dims, hidden_dims):
+for p, m, d, t, c, h in itertools.product(data, model_types, depths, num_trees, context_dims, hidden_dims):
     params = {
         "run": {
             "params": {
@@ -32,6 +33,7 @@ for p, d, t, c, h in itertools.product(data, depths, num_trees, context_dims, hi
                 "batch_size": 512,
                 "num_samples": 100,
                 "random_seed": 42,
+                "tree_model": m,
                 "tree_params":
                     {
                         "max_depth": d,
@@ -52,7 +54,7 @@ for p, d, t, c, h in itertools.product(data, depths, num_trees, context_dims, hi
 
     }
 
-    filename = f"/tmp/params_{p}_{d}_{t}_{c}_{h}.yml"
+    filename = f"/tmp/params_{p}_{m}_{d}_{t}_{c}_{h}.yml"
 
     with open(filename, 'w') as f:
         pyaml.dump(params, f)

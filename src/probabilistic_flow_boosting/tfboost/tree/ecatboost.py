@@ -55,6 +55,39 @@ class EmbeddableCatBoost(catboost.CatBoostRegressor):
         embeddings = self._transform_encoder(leafs)
         return embeddings
 
+
+class EmbeddableCatBoostPriorNormal(EmbeddableCatBoost):
+    """
+    Embeddable CatBoost with N(0, 1) prior.
+    """
+
     def pred_dist_param(self, X):
         """ Method for predicting distribution parameters. """
         return np.zeros((X.shape[0], 2 * self._y_dims))
+
+
+class EmbeddableCatBoostPriorPredicted(EmbeddableCatBoost):
+    """
+    Embeddable CatBoost with N(mu(x), sigma(x)) prior.
+    """
+
+    def pred_dist_param(self, X):
+        params = self.predict(X)
+        params[:, 1] = np.log(np.sqrt(params[:, 1]))
+        return params
+
+
+class EmbeddableCatBoostPriorAveraged(EmbeddableCatBoost):
+    """
+    Embeddable CatBoost with N(mean(mu(x)), mean(sigma(x)) prior.
+    """
+
+    def pred_dist_param(self, X):
+        params = self.predict(X)
+        params[:, 1] = np.log(np.sqrt(params[:, 1]))
+
+        return np.repeat(
+            params.mean(axis=0, keepdims=True),
+            params.shape[0],
+            axis=0
+        )
