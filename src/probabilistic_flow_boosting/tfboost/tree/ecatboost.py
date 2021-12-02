@@ -44,6 +44,7 @@ class EmbeddableCatBoost(catboost.CatBoostRegressor):
     def _fit_encoder(self, leafs):
         self._leafs_encoder = OneHotEncoder(
             categories=[range(leafs.max() + 1) for _ in range(leafs.shape[1])],
+            drop='if_binary',
             sparse=False
         ).fit(leafs)
 
