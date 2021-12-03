@@ -72,10 +72,10 @@ def train_model(x_train: pd.DataFrame, y_train: pd.DataFrame, tree_model_type, f
 
     results = []
 
-    depths = [1]
-    num_trees = [100, 500]
-    context_dims = [40]
-    hidden_dims = [(40,)]
+    depths = [1, 2]
+    num_trees = [100, 300]
+    context_dims = [40, 100]
+    hidden_dims = [(80, 40), (80, 80, 40), (80, 80, 80, 40)]
 
     for tree_d, tree_nt, flow_cd, flow_hd in itertools.product(depths, num_trees, context_dims, hidden_dims):
         flow = ContinuousNormalizingFlow(conditional=True, context_dim=flow_cd, hidden_dims=flow_hd, **flow_params)
@@ -111,6 +111,6 @@ def train_model(x_train: pd.DataFrame, y_train: pd.DataFrame, tree_model_type, f
         **tree_params
     )
 
-    m = TreeFlowBoost(flow_model=flow, tree_model=tree, embedding_size=flow_cd)
+    m = TreeFlowBoost(flow_model=flow, tree_model=tree, embedding_size=best_params['context_dim'])
     m = m.fit(x_train.values, y_train.values, n_epochs=n_epochs, batch_size=batch_size)
     return m
