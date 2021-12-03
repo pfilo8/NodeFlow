@@ -38,6 +38,8 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from nflows.distributions import ConditionalDiagonalNormal
 
+from ..utils import log_dataframe_artifact
+
 from ...tfboost.tfboost import TreeFlowBoost
 
 
@@ -106,7 +108,7 @@ def summary(
         test_results_mae_tree: float,
         test_results_nll_tree: float
 ):
-    return pd.DataFrame([
+    results = pd.DataFrame([
         ['train', 'rmse', train_results_rmse],
         ['train', 'mae', train_results_mae],
         ['train', 'nll', train_results_nll],
@@ -124,6 +126,8 @@ def summary(
             'set', 'metric', 'value'
         ]
     )
+    log_dataframe_artifact(results, "test_results")
+    return results
 
 
 def aggregated_report(*inputs: Tuple[pd.DataFrame]) -> pd.DataFrame:

@@ -29,15 +29,15 @@
 This is a boilerplate pipeline 'modeling'
 generated using Kedro 0.17.5
 """
-import datetime
+
 import itertools
 import random
 
-import mlflow
 import numpy as np
 import pandas as pd
 import torch
 
+from ..utils import log_dataframe_artifact
 from ..reporting.nodes import calculate_nll
 
 from ...tfboost.flow import ContinuousNormalizingFlow
@@ -49,12 +49,6 @@ def setup_random_seed(random_seed):
     random.seed(random_seed)
     np.random.seed(random_seed)
     torch.manual_seed(random_seed)
-
-
-def log_grid_search_artifacts(results):
-    path = f'/tmp/grid_search_results-{str(datetime.datetime.now()).replace(" ", "-")}.csv'
-    results.to_csv(path, index=False)
-    mlflow.log_artifact(path)
 
 
 def split_data(x_train, y_train, split_size=0.8):
@@ -94,7 +88,7 @@ def train_model(x_train: pd.DataFrame, y_train: pd.DataFrame, tree_model_type, f
         columns=['depth', 'num_trees', 'context_dim', 'hidden_dim', 'log_prob_train', 'log_prob_val']
     )
     results = results.sort_values('log_prob_val', ascending=True)
-    log_grid_search_artifacts(results)
+    log_dataframe_artifact(results, 'grid_search_results')
 
     best_params = results.iloc[0].to_dict()
 
