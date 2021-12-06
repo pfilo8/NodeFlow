@@ -70,7 +70,9 @@ def calculate_rmse_tree(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
     y: np.ndarray = y.values
 
     y_hat: np.ndarray = model.predict_tree(x)
-    y_hat: np.ndarray = y_hat[:, 0]  # Only get mean
+
+    if y.shape[1] == 1:
+        y_hat: np.ndarray = y_hat[:, 0]  # Only get mean
     return mean_squared_error(y, y_hat, squared=False)
 
 
@@ -79,13 +81,17 @@ def calculate_mae_tree(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
     y: np.ndarray = y.values
 
     y_hat: np.ndarray = model.predict_tree(x)
-    y_hat: np.ndarray = y_hat[:, 0]  # Only get mean
+    if y.shape[1] == 1:
+        y_hat: np.ndarray = y_hat[:, 0]  # Only get mean
     return mean_absolute_error(y, y_hat)
 
 
 def calculate_nll_tree(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
     x: np.ndarray = x.values
     y: np.ndarray = y.values
+
+    if y.shape[1] > 1:
+        return np.nan
 
     y_hat_tree = model.predict_tree(x)
     y_hat_tree[:, 1] = np.log(np.sqrt(y_hat_tree[:, 1]))  # Transform var to log std / CatBoost RMSEWithUncertainty
