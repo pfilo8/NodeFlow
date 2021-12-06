@@ -94,15 +94,15 @@ momogp_usflight.x_test:
   type: pandas.CSVDataSet
   filepath: data/01_raw/MOMoGP/usflight/x_test.csv
 
-momogp_usflighy.y_test:
+momogp_usflight.y_test:
   type: pandas.CSVDataSet
   filepath: data/01_raw/MOMoGP/usflight/y_test.csv
 
-momogp_usflighy.model:
+momogp_usflight.model:
   type: probabilistic_flow_boosting.extras.datasets.tfboost_dataset.TFBoostDataSet
   filepath: data/06_models/MOMoGP/usflight/model
 
-momogp_usflighy.summary:
+momogp_usflight.summary:
   type: pandas.CSVDataSet
   filepath: data/08_reporting/MOMoGP/usflight/summary.csv
 
