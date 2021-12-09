@@ -67,12 +67,15 @@ def train_model(x_train: pd.DataFrame, y_train: pd.DataFrame, tree_model_type, f
     results = []
 
     depths = [1, 2]
-    num_trees = [100, 300]
-    context_dims = [40, 100]
-    hidden_dims = [(80, 40), (80, 80, 40), (80, 80, 80, 40)]
+    num_trees = [100, 300, 500]
+    context_dims = [40, 80, 120]
+    hidden_dims = [(80, 80, 40), (80, 80, 80, 40), (200, 100, 100, 50)]
+    num_blocks = [3, 4, 5]
 
-    for tree_d, tree_nt, flow_cd, flow_hd in itertools.product(depths, num_trees, context_dims, hidden_dims):
-        flow = ContinuousNormalizingFlow(conditional=True, context_dim=flow_cd, hidden_dims=flow_hd, **flow_params)
+    for tree_d, tree_nt, flow_cd, flow_hd, flow_block in itertools.product(depths, num_trees, context_dims, hidden_dims,
+                                                                           num_blocks):
+        flow = ContinuousNormalizingFlow(conditional=True, context_dim=flow_cd, hidden_dims=flow_hd,
+                                         num_blocks=flow_block, **flow_params)
         tree = MODELS[tree_model_type](**tree_params, depth=tree_d, num_trees=tree_nt, random_seed=random_seed)
 
         m = TreeFlowBoost(flow_model=flow, tree_model=tree, embedding_size=flow_cd)
@@ -81,11 +84,11 @@ def train_model(x_train: pd.DataFrame, y_train: pd.DataFrame, tree_model_type, f
         result_train = calculate_nll(m, x_tr, y_tr, batch_size=batch_size)
         result_val = calculate_nll(m, x_val, y_val, batch_size=batch_size)
 
-        results.append([tree_d, tree_nt, flow_cd, flow_hd, result_train, result_val])
+        results.append([tree_d, tree_nt, flow_cd, flow_hd, flow_block, result_train, result_val])
 
     results = pd.DataFrame(
         results,
-        columns=['depth', 'num_trees', 'context_dim', 'hidden_dim', 'log_prob_train', 'log_prob_val']
+        columns=['depth', 'num_trees', 'context_dim', 'hidden_dim', 'num_blocks', 'log_prob_train', 'log_prob_val']
     )
     results = results.sort_values('log_prob_val', ascending=True)
     log_dataframe_artifact(results, 'grid_search_results')
@@ -96,6 +99,7 @@ def train_model(x_train: pd.DataFrame, y_train: pd.DataFrame, tree_model_type, f
         conditional=True,
         context_dim=best_params['context_dim'],
         hidden_dims=best_params['hidden_dim'],
+        num_blocks=best_params['num_blocks'],
         **flow_params
     )
     tree = MODELS[tree_model_type](
