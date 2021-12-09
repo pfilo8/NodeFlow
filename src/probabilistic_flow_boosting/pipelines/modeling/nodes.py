@@ -33,6 +33,8 @@ generated using Kedro 0.17.5
 import itertools
 import random
 
+from typing import Dict
+
 import numpy as np
 import pandas as pd
 import torch
@@ -58,57 +60,62 @@ def split_data(x_train, y_train, split_size=0.8):
     return x_train, x_val, y_train, y_val
 
 
-def train_model(x_train: pd.DataFrame, y_train: pd.DataFrame, tree_model_type, flow_params, tree_params,
-                split_size=0.8, n_epochs: int = 100, batch_size: int = 1000, random_seed: int = 42):
+def generate_params_for_grid_search(param_grid):
+    return [dict(zip(param_grid.keys(), v)) for v in itertools.product(*param_grid.values())]
+
+
+def train_model(x_train, y_train, flow_p, flow_params, tree_p, tree_params, tree_model_type, n_epochs: int = 100,
+                batch_size: int = 1000, random_seed: int = 42):
+    """
+    Train a TreeFlow model.
+    :param x_train: Training data.
+    :param y_train: Training labels.
+    :param flow_p: Flow parameters from grid search.
+    :param flow_params: Flow parameters.
+    :param tree_p: Tree parameters from grid search.
+    :param tree_params: Tree parameters.
+    :param tree_model_type: Type of the Tree model (see tfboost.tree package).
+    :param n_epochs: Number of epochs.
+    :param batch_size: Batch size for Flow model.
+    :param random_seed: Random seed.
+    :return:
+    """
+    flow = ContinuousNormalizingFlow(conditional=True, **flow_p, **flow_params)
+    tree = MODELS[tree_model_type](**tree_params, **tree_p, random_seed=random_seed)
+
+    m = TreeFlowBoost(flow_model=flow, tree_model=tree, embedding_size=flow_p['context_dim'])
+    m = m.fit(x_train.values, y_train.values, n_epochs=n_epochs, batch_size=batch_size)
+    return m
+
+
+def modeling(x_train: pd.DataFrame, y_train: pd.DataFrame, tree_model_type, flow_params, tree_params,
+             flow_hyperparams, tree_hyperparams, split_size=0.8, n_epochs: int = 100, batch_size: int = 1000,
+             random_seed: int = 42):
     setup_random_seed(random_seed)
 
     x_tr, x_val, y_tr, y_val = split_data(x_train=x_train, y_train=y_train, split_size=split_size)
 
+    flow_hyperparams['hidden_dims'] = map(tuple, flow_hyperparams['hidden_dims'])
     results = []
 
-    depths = [1, 2]
-    num_trees = [100, 300, 500]
-    context_dims = [40, 80, 120]
-    hidden_dims = [(80, 80, 40), (80, 80, 80, 40), (200, 100, 100, 50)]
-    num_blocks = [3, 4, 5]
+    for flow_p in generate_params_for_grid_search(flow_hyperparams):
+        for tree_p in generate_params_for_grid_search(tree_hyperparams):
+            m = train_model(x_tr, y_tr, flow_p, flow_params, tree_p, tree_params, tree_model_type,
+                            n_epochs, batch_size, random_seed)
 
-    for tree_d, tree_nt, flow_cd, flow_hd, flow_block in itertools.product(depths, num_trees, context_dims, hidden_dims,
-                                                                           num_blocks):
-        flow = ContinuousNormalizingFlow(conditional=True, context_dim=flow_cd, hidden_dims=flow_hd,
-                                         num_blocks=flow_block, **flow_params)
-        tree = MODELS[tree_model_type](**tree_params, depth=tree_d, num_trees=tree_nt, random_seed=random_seed)
+            result_train = calculate_nll(m, x_tr, y_tr, batch_size=batch_size)
+            result_val = calculate_nll(m, x_val, y_val, batch_size=batch_size)
 
-        m = TreeFlowBoost(flow_model=flow, tree_model=tree, embedding_size=flow_cd)
-        m = m.fit(x_tr.values, y_tr.values, n_epochs=n_epochs, batch_size=batch_size)
+            results.append([flow_p, tree_p, result_train, result_val])
 
-        result_train = calculate_nll(m, x_tr, y_tr, batch_size=batch_size)
-        result_val = calculate_nll(m, x_val, y_val, batch_size=batch_size)
-
-        results.append([tree_d, tree_nt, flow_cd, flow_hd, flow_block, result_train, result_val])
-
-    results = pd.DataFrame(
-        results,
-        columns=['depth', 'num_trees', 'context_dim', 'hidden_dim', 'num_blocks', 'log_prob_train', 'log_prob_val']
-    )
+    results = pd.DataFrame(results, columns=['flow_p', 'tree_p', 'log_prob_train', 'log_prob_val'])
     results = results.sort_values('log_prob_val', ascending=True)
     log_dataframe_artifact(results, 'grid_search_results')
 
     best_params = results.iloc[0].to_dict()
+    best_flow_p = best_params['flow_p']
+    best_tree_p = best_params['tree_p']
 
-    flow = ContinuousNormalizingFlow(
-        conditional=True,
-        context_dim=best_params['context_dim'],
-        hidden_dims=best_params['hidden_dim'],
-        num_blocks=best_params['num_blocks'],
-        **flow_params
-    )
-    tree = MODELS[tree_model_type](
-        depth=best_params['depth'],
-        num_trees=best_params['num_trees'],
-        random_seed=random_seed,
-        **tree_params
-    )
-
-    m = TreeFlowBoost(flow_model=flow, tree_model=tree, embedding_size=best_params['context_dim'])
-    m = m.fit(x_train.values, y_train.values, n_epochs=n_epochs, batch_size=batch_size)
+    m = train_model(x_train, y_train, best_flow_p, flow_params, best_tree_p, tree_params, tree_model_type,
+                    n_epochs, batch_size, random_seed)
     return m

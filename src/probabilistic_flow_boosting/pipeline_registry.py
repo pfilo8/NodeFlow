@@ -92,5 +92,5 @@ def register_pipelines() -> Dict[str, Pipeline]:
     return {
         "__default__": Pipeline([]),
         **momogp_pipelines,
-        #**uci_pipelines
+        **uci_pipelines
     }

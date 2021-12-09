@@ -33,15 +33,16 @@ generated using Kedro 0.17.5
 
 from kedro.pipeline import Pipeline, node
 
-from .nodes import train_model
+from .nodes import modeling
 
 
 def create_pipeline_train_model(**kwargs):
     return Pipeline([
         node(
-            func=train_model,
+            func=modeling,
             inputs=["x_train", "y_train", "params:tree_model_type", "params:flow_params", "params:tree_params",
-                    "params:split_size", "params:n_epochs", "params:batch_size", "params:random_seed"],
+                    "params:flow_hyperparams", "params:tree_hyperparams", "params:split_size", "params:n_epochs",
+                    "params:batch_size", "params:random_seed"],
             outputs="model"
         )
     ])
