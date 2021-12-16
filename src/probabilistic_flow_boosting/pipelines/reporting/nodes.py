@@ -32,6 +32,7 @@ generated using Kedro 0.17.5
 from typing import Tuple
 
 import mlflow
+import ngboost
 import numpy as np
 import pandas as pd
 
@@ -100,6 +101,15 @@ def calculate_nll_tree(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
     return -distribution.log_prob(y, y_hat_tree).numpy().mean()
 
 
+def calculate_nll_ngboost(model: ngboost.NGBoost, x: pd.DataFrame, y: pd.DataFrame) -> float:
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+
+    y_dists = model.pred_dist(x).scipy_distribution()
+    nlls = [-y_dists[i].logpdf(y[i, :]) for i in range(y.shape[0])]
+    return np.mean(nlls)
+
+
 def summary(
         train_results_rmse: float,
         train_results_mae: float,
@@ -127,6 +137,22 @@ def summary(
         ['test', 'rmse_tree', test_results_rmse_tree],
         ['test', 'mae_tree', test_results_mae_tree],
         ['test', 'nll_tree', test_results_nll_tree],
+    ],
+        columns=[
+            'set', 'metric', 'value'
+        ]
+    )
+    log_dataframe_artifact(results, "test_results")
+    return results
+
+
+def summary_ngboost(
+        train_results_nll: float,
+        test_results_nll: float,
+):
+    results = pd.DataFrame([
+        ['train', 'nll', train_results_nll],
+        ['test', 'nll', test_results_nll],
     ],
         columns=[
             'set', 'metric', 'value'

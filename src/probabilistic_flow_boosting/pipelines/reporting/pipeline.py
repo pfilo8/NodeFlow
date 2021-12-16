@@ -34,7 +34,7 @@ generated using Kedro 0.17.5
 from kedro.pipeline import Pipeline, pipeline, node
 
 from .nodes import calculate_rmse, calculate_mae, calculate_nll, calculate_rmse_tree, calculate_mae_tree, \
-    calculate_nll_tree, summary, aggregated_report
+    calculate_nll_tree, calculate_nll_ngboost, summary, summary_ngboost, aggregated_report
 
 
 def create_pipeline_report():
@@ -139,5 +139,56 @@ def create_pipeline_aggregated_report(inputs, outputs):
             func=aggregated_report,
             inputs=inputs,
             outputs=outputs
+        )
+    ])
+
+
+def create_pipeline_calculate_metrics_ngboost(**kwargs):
+    return Pipeline([
+        node(
+            func=calculate_nll_ngboost,
+            inputs=["model", "x", "y"],
+            outputs="results_nll"
+        ),
+    ])
+
+
+def create_pipeline_report_train_ngboost():
+    return pipeline(
+        create_pipeline_calculate_metrics_ngboost(),
+        inputs={
+            "x": "x_train",
+            "y": "y_train"
+        },
+        outputs={
+            "results_nll": "train_results_nll",
+        }
+    )
+
+
+def create_pipeline_report_test_ngboost():
+    return pipeline(
+        create_pipeline_calculate_metrics_ngboost(),
+        inputs={
+            "x": "x_test",
+            "y": "y_test"
+        },
+        outputs={
+            "results_nll": "test_results_nll",
+        }
+    )
+
+
+def create_pipeline_report_ngboost():
+    return Pipeline([
+        create_pipeline_report_train_ngboost(),
+        create_pipeline_report_test_ngboost(),
+        node(
+            func=summary_ngboost,
+            inputs=[
+                "train_results_nll",
+                "test_results_nll",
+            ],
+            outputs="summary"
         )
     ])

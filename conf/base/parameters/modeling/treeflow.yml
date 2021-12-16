@@ -1,0 +1,26 @@
+#### Models ####
+
+flow_params:
+  input_dim: 1
+  # input_dim: 2
+
+flow_hyperparams:
+  context_dim: [40, 80, 120]
+  hidden_dims: [[80, 80, 40], [80, 80, 80, 40], [200, 100, 100, 50]]
+  num_blocks: [3, 4, 5]
+
+tree_params:
+  loss_function: "RMSEWithUncertainty"
+  # loss_function: "MultiRMSE"
+  silent: True
+
+tree_hyperparams:
+  depth: [1, 2]
+  num_trees: [100, 300, 500]
+
+tree_model_type: "CatBoostPriorNormal"
+#### Training ####
+
+n_epochs: 1
+batch_size: 512
+num_samples: 200

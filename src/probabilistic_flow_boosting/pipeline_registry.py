@@ -31,7 +31,7 @@ from typing import Dict
 
 from kedro.pipeline import Pipeline
 
-from .pipelines import create_general_pipeline, create_pipeline_aggregated_report
+from .pipelines import create_general_pipeline, create_general_pipeline_ngboost, create_pipeline_aggregated_report
 
 
 def create_general_uci_pipeline(namespace, n):
@@ -47,6 +47,16 @@ def create_general_uci_pipeline(namespace, n):
 def create_general_momogp_pipeline(namespace):
     return Pipeline([
         create_general_pipeline(namespace),
+        create_pipeline_aggregated_report(
+            inputs=[f"{namespace}.summary"],
+            outputs=f"{namespace}.aggregated_summary"
+        )
+    ])
+
+
+def create_general_momogp_ngboost_pipeline(namespace):
+    return Pipeline([
+        create_general_pipeline_ngboost(namespace),
         create_pipeline_aggregated_report(
             inputs=[f"{namespace}.summary"],
             outputs=f"{namespace}.aggregated_summary"
@@ -72,6 +82,10 @@ def register_pipelines() -> Dict[str, Pipeline]:
         d: create_general_momogp_pipeline(d) for d in momogp_datasets
     }
 
+    momogp_ngboost_pipelines = {
+        f"{d}_ngboost": create_general_momogp_ngboost_pipeline(f"{d}_ngboost") for d in momogp_datasets
+    }
+
     uci_datasets = [
         ("uci_boston", 20),
         ("uci_concrete", 20),
@@ -91,6 +105,7 @@ def register_pipelines() -> Dict[str, Pipeline]:
 
     return {
         "__default__": Pipeline([]),
-        **momogp_pipelines,
-        **uci_pipelines
+        #**momogp_pipelines,
+        **momogp_ngboost_pipelines,
+        #**uci_pipelines
     }
