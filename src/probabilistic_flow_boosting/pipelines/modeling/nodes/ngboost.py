@@ -19,9 +19,6 @@ def train_ngboost(x_train, y_train, ngboost_p, ngboost_params, tree_p, tree_para
     :param ngboost_params: NGBoost parameters.
     :param tree_p: Tree parameters from grid search.
     :param tree_params: Tree parameters.
-    :param tree_model_type: Type of the Tree model (see tfboost.tree package).
-    :param n_epochs: Number of epochs.
-    :param batch_size: Batch size for Flow model.
     :param random_seed: Random seed.
     :return:
     """
