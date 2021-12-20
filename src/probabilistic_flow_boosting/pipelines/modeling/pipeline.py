@@ -53,8 +53,8 @@ def create_pipeline_train_model_ngboost(**kwargs):
         node(
             func=modeling_ngboost,
             inputs=["x_train", "y_train", "params:ngboost_params", "params:base_tree_params",
-                    "params:ngboost_hyperparams", "params:base_tree_hyperparams", "params:split_size",
-                    "params:random_seed"],
+                    "params:ngboost_hyperparams", "params:base_tree_hyperparams", "params:independent",
+                    "params:split_size", "params:random_seed"],
             outputs="model"
         )
     ])

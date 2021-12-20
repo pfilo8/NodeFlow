@@ -14,3 +14,4 @@ ngboost_params:
 ngboost_hyperparams:
   n_estimators: [100]
 
+independent: True

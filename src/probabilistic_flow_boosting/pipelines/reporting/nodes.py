@@ -29,7 +29,7 @@
 This is a boilerplate pipeline 'reporting'
 generated using Kedro 0.17.5
 """
-from typing import Tuple
+from typing import Tuple, Union
 
 import mlflow
 import ngboost
@@ -42,6 +42,7 @@ from nflows.distributions import ConditionalDiagonalNormal
 from ..utils import log_dataframe_artifact
 
 from ...tfboost.tfboost import TreeFlowBoost
+from ...independent_ngboost import IndependentNGBoost
 
 
 def calculate_rmse(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
@@ -101,11 +102,15 @@ def calculate_nll_tree(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
     return -distribution.log_prob(y, y_hat_tree).numpy().mean()
 
 
-def calculate_nll_ngboost(model: ngboost.NGBoost, x: pd.DataFrame, y: pd.DataFrame) -> float:
+def calculate_nll_ngboost(model: Union[ngboost.NGBoost, IndependentNGBoost], x: pd.DataFrame, y: pd.DataFrame,
+                          independent=False) -> float:
     x: np.ndarray = x.values
     y: np.ndarray = y.values
 
-    y_dists = model.pred_dist(x).scipy_distribution()
+    if independent:
+        y_dists = model.scipy_distribution(x)
+    else:
+        y_dists = model.pred_dist(x).scipy_distribution()
     nlls = [-y_dists[i].logpdf(y[i, :]) for i in range(y.shape[0])]
     return np.mean(nlls)
 

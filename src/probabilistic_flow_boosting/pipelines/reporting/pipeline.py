@@ -147,7 +147,7 @@ def create_pipeline_calculate_metrics_ngboost(**kwargs):
     return Pipeline([
         node(
             func=calculate_nll_ngboost,
-            inputs=["model", "x", "y"],
+            inputs=["model", "x", "y", "params:independent"],
             outputs="results_nll"
         ),
     ])
