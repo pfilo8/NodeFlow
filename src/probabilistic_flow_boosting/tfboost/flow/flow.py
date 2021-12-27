@@ -1,5 +1,7 @@
 from typing import List, Union
 
+import uuid
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -131,6 +133,7 @@ class ContinuousNormalizingFlow:
 
         self.optimizer = optim.Adam(list(self.flow.parameters()) + list(self.context_encoder.parameters()))
 
+        mid = uuid.uuid4()  # To be able to run multiple experiments in parallel.
         loss_best = np.inf
 
         for i in range(n_epochs):
@@ -147,15 +150,15 @@ class ContinuousNormalizingFlow:
 
             if X_val is not None and context_val is not None and params_val is not None:
                 loss_val = self._log(X_val, context_val, params_val, mode="val", batch_size=batch_size,
-                                      verbose=verbose)
+                                     verbose=verbose)
                 # Save model if better
                 if loss_val < loss_best:
                     self.epoch_best = i
                     loss_best = loss_val
-                    self._save_temp(i)
+                    self._save_temp(i, mid)
 
         if X_val is not None and context_val is not None and params_val is not None:
-            return self._load_temp(self.epoch_best)
+            return self._load_temp(self.epoch_best, mid)
         return self
 
     def _log_prob(self, X: torch.Tensor, context: torch.Tensor, params: torch.Tensor) -> torch.Tensor:
@@ -248,9 +251,9 @@ class ContinuousNormalizingFlow:
         self.losses[mode].append(loss)
         return loss
 
-    def _save_temp(self, epoch):
-        torch.save(self, f"/tmp/model_{epoch}.pt")
+    def _save_temp(self, epoch, mid):
+        torch.save(self, f"/tmp/model_{mid}_{epoch}.pt")
 
-    def _load_temp(self, epoch):
+    def _load_temp(self, epoch, mid):
         print(f"Loading model from epoch {epoch}.")
-        return torch.load(f"/tmp/model_{epoch}.pt")
+        return torch.load(f"/tmp/model_{mid}_{epoch}.pt")
