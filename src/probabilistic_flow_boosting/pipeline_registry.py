@@ -107,5 +107,5 @@ def register_pipelines() -> Dict[str, Pipeline]:
         "__default__": Pipeline([]),
         #**momogp_pipelines,
         **momogp_ngboost_pipelines,
-        #**uci_pipelines
+        **uci_pipelines
     }

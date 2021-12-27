@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 import numpy as np
 import torch
@@ -57,6 +57,8 @@ class ContinuousNormalizingFlow:
         self.flow = self.flow.to(self.DEVICE)
         self.context_encoder = nn.Identity().to(self.DEVICE)
         self.distribution = ConditionalDiagonalNormal(shape=[input_dim], context_encoder=nn.Identity()).to(self.DEVICE)
+        self.losses = {"train": [], "val": []}
+        self.epoch_best = -1
 
     @staticmethod
     def build_model(
@@ -114,20 +116,24 @@ class ContinuousNormalizingFlow:
     def setup_context_encoder(self, context_encoder: nn.Module):
         self.context_encoder = context_encoder.to(self.DEVICE)
 
-    def fit(self, X: np.ndarray, context: np.ndarray, params: np.ndarray, n_epochs: int = 100, batch_size: int = 1000):
-        X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.DEVICE)
-        context: torch.Tensor = torch.as_tensor(data=context, dtype=torch.float, device=self.DEVICE)
-        params: torch.Tensor = torch.as_tensor(data=params, dtype=torch.float, device=self.DEVICE)
+    def fit(self, X: np.ndarray, context: np.ndarray, params: np.ndarray, X_val: Union[np.ndarray, None] = None,
+            context_val: Union[np.ndarray, None] = None, params_val: Union[np.ndarray, None] = None,
+            n_epochs: int = 100, batch_size: int = 1000, verbose: bool = False):
+        X_t: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.DEVICE)
+        context_t: torch.Tensor = torch.as_tensor(data=context, dtype=torch.float, device=self.DEVICE)
+        params_t: torch.Tensor = torch.as_tensor(data=params, dtype=torch.float, device=self.DEVICE)
 
         dataset: DataLoader = DataLoader(
-            dataset=TensorDataset(X, context, params),
+            dataset=TensorDataset(X_t, context_t, params_t),
             shuffle=True,
             batch_size=batch_size
         )
 
         self.optimizer = optim.Adam(list(self.flow.parameters()) + list(self.context_encoder.parameters()))
 
-        for _ in range(n_epochs):
+        loss_best = np.inf
+
+        for i in range(n_epochs):
             for x, c, p in dataset:
                 self.optimizer.zero_grad()
 
@@ -137,6 +143,19 @@ class ContinuousNormalizingFlow:
                 loss.backward()
                 self.optimizer.step()
 
+            self._log(X, context, params, mode="train", batch_size=batch_size, verbose=verbose)
+
+            if X_val is not None and context_val is not None and params_val is not None:
+                loss_val = self._log(X_val, context_val, params_val, mode="val", batch_size=batch_size,
+                                      verbose=verbose)
+                # Save model if better
+                if loss_val < loss_best:
+                    self.epoch_best = i
+                    loss_best = loss_val
+                    self._save_temp(i)
+
+        if X_val is not None and context_val is not None and params_val is not None:
+            return self._load_temp(self.epoch_best)
         return self
 
     def _log_prob(self, X: torch.Tensor, context: torch.Tensor, params: torch.Tensor) -> torch.Tensor:
@@ -220,3 +239,18 @@ class ContinuousNormalizingFlow:
         context_e: torch.Tensor = torch.cat(context_e, dim=0)
         context_e: np.ndarray = context_e.detach().cpu().numpy()
         return context_e
+
+    def _log(self, X: np.ndarray, context: np.ndarray, params: np.ndarray, mode: str, batch_size: int = 1000,
+             verbose: bool = False):
+        loss = -self.log_prob(X, context, params, batch_size=batch_size).mean()
+        if verbose:
+            print(f"{mode} loss: {loss}")
+        self.losses[mode].append(loss)
+        return loss
+
+    def _save_temp(self, epoch):
+        torch.save(self, f"/tmp/model_{epoch}.pt")
+
+    def _load_temp(self, epoch):
+        print(f"Loading model from epoch {epoch}.")
+        return torch.load(f"/tmp/model_{epoch}.pt")

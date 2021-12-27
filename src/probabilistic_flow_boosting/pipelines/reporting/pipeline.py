@@ -34,13 +34,18 @@ generated using Kedro 0.17.5
 from kedro.pipeline import Pipeline, pipeline, node
 
 from .nodes import calculate_rmse, calculate_mae, calculate_nll, calculate_rmse_tree, calculate_mae_tree, \
-    calculate_nll_tree, calculate_nll_ngboost, summary, summary_ngboost, aggregated_report
+    calculate_nll_tree, calculate_nll_ngboost, plot_loss_function, summary, summary_ngboost, aggregated_report
 
 
 def create_pipeline_report():
     return Pipeline([
         create_pipeline_report_train(),
         create_pipeline_report_test(),
+        node(
+            func=plot_loss_function,
+            inputs="model",
+            outputs=None
+        ),
         node(
             func=summary,
             inputs=[
@@ -129,7 +134,7 @@ def create_pipeline_calculate_metrics(**kwargs):
             func=calculate_nll_tree,
             inputs=["model", "x", "y"],
             outputs="results_nll_tree"
-        ),
+        )
     ])
 
 

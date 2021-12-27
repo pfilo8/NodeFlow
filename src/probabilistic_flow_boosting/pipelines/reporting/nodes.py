@@ -31,6 +31,9 @@ generated using Kedro 0.17.5
 """
 from typing import Tuple, Union
 
+import datetime
+
+import matplotlib.pyplot as plt
 import mlflow
 import ngboost
 import numpy as np
@@ -100,6 +103,17 @@ def calculate_nll_tree(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
 
     distribution = ConditionalDiagonalNormal(shape=[1])  # Assume 1D distribution
     return -distribution.log_prob(y, y_hat_tree).numpy().mean()
+
+
+def plot_loss_function(model: TreeFlowBoost):
+    losses = model.flow_model.losses
+    x = range(len(losses["train"]))
+
+    fig, ax = plt.subplots(1, 1)
+    ax.plot(x, losses["train"])
+    if len(losses["val"]) > 0:
+        ax.plot(x, losses["val"])
+    mlflow.log_figure(fig, f'losses-{str(datetime.datetime.now()).replace(" ", "-")}.png')
 
 
 def calculate_nll_ngboost(model: Union[ngboost.NGBoost, IndependentNGBoost], x: pd.DataFrame, y: pd.DataFrame,

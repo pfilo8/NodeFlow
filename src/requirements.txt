@@ -9,6 +9,7 @@ jupyterlab~=3.0
 kedro==0.17.5
 kedro-mlflow==0.7.6
 kedro-telemetry~=0.1.0
+mlflow==1.22.0
 nbstripout~=0.4
 nflows
 ngboost==0.3.12
