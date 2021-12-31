@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from ngboost import NGBRegressor
@@ -56,12 +57,15 @@ def modeling_ngboost(x_train: pd.DataFrame, y_train: pd.DataFrame, ngboost_param
 
     for ngboost_p in generate_params_for_grid_search(ngboost_hyperparams):
         for tree_p in generate_params_for_grid_search(tree_hyperparams):
-            m = train_ngboost(x_tr, y_tr, ngboost_p, ngboost_params, tree_p, tree_params, independent, random_seed)
+            try:
+                m = train_ngboost(x_tr, y_tr, ngboost_p, ngboost_params, tree_p, tree_params, independent, random_seed)
 
-            result_train = calculate_nll_ngboost(m, x_tr, y_tr, independent=independent)
-            result_val = calculate_nll_ngboost(m, x_val, y_val, independent=independent)
+                result_train = calculate_nll_ngboost(m, x_tr, y_tr, independent=independent)
+                result_val = calculate_nll_ngboost(m, x_val, y_val, independent=independent)
 
-            results.append([ngboost_p, tree_p, result_train, result_val])
+                results.append([ngboost_p, tree_p, result_train, result_val])
+            except:
+                results.append([ngboost_p, tree_p, np.nan, np.nan])
 
     results = pd.DataFrame(results, columns=['ngboost_p', 'tree_p', 'log_prob_train', 'log_prob_val'])
     results = results.sort_values('log_prob_val', ascending=True)
