@@ -1,2 +1,2 @@
-from .ngboost import modeling_ngboost
+from .multivariate import modeling_multivariate
 from .treeflow import modeling_treeflow
