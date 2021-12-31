@@ -1,1 +1,0 @@
-from .independent_ngboost import IndependentNGBoost

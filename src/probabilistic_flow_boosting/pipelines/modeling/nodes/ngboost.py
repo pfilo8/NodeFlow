@@ -9,7 +9,7 @@ from sklearn.tree import DecisionTreeRegressor
 from ..utils import generate_params_for_grid_search, setup_random_seed, split_data
 from ...utils import log_dataframe_artifact
 from ...reporting.nodes import calculate_nll_ngboost
-from ....independent_ngboost import IndependentNGBoost
+from ....independent_multivariate_boosting import IndependentNGBoost
 
 
 def train_ngboost(x_train, y_train, ngboost_p, ngboost_params, tree_p, tree_params, independent=False,

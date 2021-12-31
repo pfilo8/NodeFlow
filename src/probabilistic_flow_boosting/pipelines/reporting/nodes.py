@@ -45,7 +45,7 @@ from nflows.distributions import ConditionalDiagonalNormal
 from ..utils import log_dataframe_artifact
 
 from ...tfboost.tfboost import TreeFlowBoost
-from ...independent_ngboost import IndependentNGBoost
+from ...independent_multivariate_boosting import IndependentNGBoost
 
 
 def calculate_rmse(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
