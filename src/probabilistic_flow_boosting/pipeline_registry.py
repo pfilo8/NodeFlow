@@ -86,6 +86,10 @@ def register_pipelines() -> Dict[str, Pipeline]:
         f"{d}_ngboost": create_general_momogp_ngboost_pipeline(f"{d}_ngboost") for d in momogp_datasets
     }
 
+    oceanographic_pipelines = {
+        "oceanographic": create_general_uci_pipeline("oceanographic", 20)
+    }
+
     uci_datasets = [
         ("uci_boston", 20),
         ("uci_concrete", 20),
@@ -105,7 +109,8 @@ def register_pipelines() -> Dict[str, Pipeline]:
 
     return {
         "__default__": Pipeline([]),
-        #**momogp_pipelines,
+        **momogp_pipelines,
         **momogp_ngboost_pipelines,
-        **uci_pipelines
+        **uci_pipelines,
+        **oceanographic_pipelines
     }
