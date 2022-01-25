@@ -238,7 +238,7 @@ class ContinuousNormalizingFlow:
             batch_size=batch_size
         )
 
-        context_e: List[torch.Tensor] = [self.context_encoder(c) for c in dataset]
+        context_e: List[torch.Tensor] = [self.context_encoder(c[0]) for c in dataset]
         context_e: torch.Tensor = torch.cat(context_e, dim=0)
         context_e: np.ndarray = context_e.detach().cpu().numpy()
         return context_e
