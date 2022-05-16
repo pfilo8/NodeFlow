@@ -11,13 +11,16 @@ class IndependentNGBoost:
         self.params_ngboost = params_ngboost
         self.models = []
 
-    def fit(self, x, y):
+    def fit(self, x, y, x_val, y_val, early_stopping_rounds=50):
         for i in range(y.shape[1]):
             base = DecisionTreeRegressor(**self.params_tree)
             self.models.append(ngboost.NGBoost(Base=base, **self.params_ngboost))
             self.models[i].fit(
                 X=x,
-                Y=y[:, i]
+                Y=y[:, i],
+                X_val=x_val,
+                Y_val=y_val,
+                early_stopping_rounds=early_stopping_rounds
             )
         return self
 

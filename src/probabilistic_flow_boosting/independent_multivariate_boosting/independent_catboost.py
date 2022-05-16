@@ -10,12 +10,13 @@ class IndependentCatBoost:
         self.params_ngboost = params_ngboost
         self.models = []
 
-    def fit(self, x, y):
+    def fit(self, x, y, x_val, y_val, early_stopping_rounds=50):
         for i in range(y.shape[1]):
             self.models.append(catboost.CatBoostRegressor(**self.params_ngboost))
             self.models[i].fit(
                 X=x,
-                y=y[:, i]
+                y=y[:, i],
+                eval_set=(x_val, y_val)
             )
         return self
 

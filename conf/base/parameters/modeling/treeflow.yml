@@ -5,8 +5,8 @@ flow_params:
   input_dim: 2
 
 flow_hyperparams:
-  context_dim: [40]
-  hidden_dims: [[80, 80, 40]]
+  context_dim: [50, 100]
+  hidden_dims: [[50, 50]]
   num_blocks: [1]
 
 tree_params:
@@ -16,11 +16,11 @@ tree_params:
 
 tree_hyperparams:
   depth: [1]
-  num_trees: [100]
+  num_trees: [300, 500, 750]
 
 tree_model_type: "CatBoostPriorNormal"
 #### Training ####
 
-n_epochs: 1
-batch_size: 512
+n_epochs: 30
+batch_size: 128
 num_samples: 200

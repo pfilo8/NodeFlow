@@ -12,7 +12,7 @@ from ...reporting.nodes import calculate_nll_ngboost
 from ....independent_multivariate_boosting import IndependentCatBoost, IndependentNGBoost
 
 
-def train_multivariate(x_train, y_train, ngboost_p, ngboost_params, tree_p, tree_params, independent=False,
+def train_multivariate(x_train, y_train, x_val, y_val, ngboost_p, ngboost_params, tree_p, tree_params, independent=False,
                        independent_model_type: str = "NGBoost", random_seed: int = 42):
     """
     Train a NGBoost model.
@@ -55,7 +55,7 @@ def train_multivariate(x_train, y_train, ngboost_p, ngboost_params, tree_p, tree
             **ngboost_p,
             **ngboost_params
         )
-    model.fit(x_train.values, y_train.values)
+    model.fit(x_train.values, y_train.values, x_val.values, y_val.values, early_stopping_rounds=50)
     return model
 
 
@@ -71,8 +71,8 @@ def modeling_multivariate(x_train: pd.DataFrame, y_train: pd.DataFrame, ngboost_
     for ngboost_p in generate_params_for_grid_search(ngboost_hyperparams):
         for tree_p in generate_params_for_grid_search(tree_hyperparams):
             try:
-                m = train_multivariate(x_tr, y_tr, ngboost_p, ngboost_params, tree_p, tree_params, independent,
-                                       independent_model_type, random_seed)
+                m = train_multivariate(x_tr, y_tr, x_val, y_val, ngboost_p, ngboost_params, tree_p, tree_params,
+                                       independent, independent_model_type, random_seed)
 
                 result_train = calculate_nll_ngboost(m, x_tr, y_tr, independent=independent)
                 result_val = calculate_nll_ngboost(m, x_val, y_val, independent=independent)
@@ -89,6 +89,6 @@ def modeling_multivariate(x_train: pd.DataFrame, y_train: pd.DataFrame, ngboost_
     best_ngboost_p = best_params['ngboost_p']
     best_tree_p = best_params['tree_p']
 
-    m = train_multivariate(x_train, y_train, best_ngboost_p, ngboost_params, best_tree_p, tree_params, independent,
-                           independent_model_type, random_seed)
+    m = train_multivariate(x_train, y_train, x_val, y_val, best_ngboost_p, ngboost_params, best_tree_p, tree_params,
+                           independent, independent_model_type, random_seed)
     return m

@@ -51,12 +51,12 @@ def modeling_treeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, tree_model_t
     for flow_p in generate_params_for_grid_search(flow_hyperparams):
         for tree_p in generate_params_for_grid_search(tree_hyperparams):
             m, best_epoch = train_treeflow(x_tr, y_tr, x_val, y_val, flow_p, flow_params, tree_p, tree_params,
-                                           tree_model_type,
-                                           n_epochs, batch_size, random_seed)
+                                           tree_model_type, n_epochs, batch_size, random_seed)
 
             result_train = calculate_nll(m, x_tr, y_tr, batch_size=batch_size)
             result_val = calculate_nll(m, x_val, y_val, batch_size=batch_size)
 
+            print(flow_p, tree_p, result_train, result_val, best_epoch)
             results.append([flow_p, tree_p, result_train, result_val, best_epoch])
 
     results = pd.DataFrame(results, columns=['flow_p', 'tree_p', 'log_prob_train', 'log_prob_val', 'best_epoch'])
@@ -66,8 +66,7 @@ def modeling_treeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, tree_model_t
     best_params = results.iloc[0].to_dict()
     best_flow_p = best_params['flow_p']
     best_tree_p = best_params['tree_p']
-    best_epoch = best_params['best_epoch']
 
-    m, _ = train_treeflow(x_train, y_train, None, None, best_flow_p, flow_params, best_tree_p, tree_params,
-                          tree_model_type, best_epoch, batch_size, random_seed)
+    m, _ = train_treeflow(x_tr, y_tr, x_val, y_val, best_flow_p, flow_params, best_tree_p, tree_params,
+                          tree_model_type, n_epochs, batch_size, random_seed)
     return m
