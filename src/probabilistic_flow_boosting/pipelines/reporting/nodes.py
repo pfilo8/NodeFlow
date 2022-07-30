@@ -33,6 +33,7 @@ from typing import Tuple, Union
 
 import datetime
 
+import catboost
 import matplotlib.pyplot as plt
 import mlflow
 import ngboost
@@ -129,6 +130,37 @@ def calculate_nll_tree(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
 
     distribution = ConditionalDiagonalNormal(shape=[1])  # Assume 1D distribution
     return -distribution.log_prob(y, y_hat_tree).numpy().mean()
+
+
+def calculate_nll_catboost(model: catboost.CatBoostRegressor, x: pd.DataFrame, y: pd.DataFrame):
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+
+    if y.shape[1] > 1:
+        return np.nan
+
+    y_hat_tree = model.predict(x)
+    y_hat_tree[:, 1] = np.log(np.sqrt(y_hat_tree[:, 1]))  # Transform var to log std / CatBoost RMSEWithUncertainty
+
+    distribution = ConditionalDiagonalNormal(shape=[1])  # Assume 1D distribution
+    return -distribution.log_prob(y, y_hat_tree).numpy().mean()
+
+
+def calculate_crps_catboost(model: catboost.CatBoostRegressor, x: pd.DataFrame, y: pd.DataFrame):
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+
+    if y.shape[1] > 1:
+        return np.nan
+
+    y_hat_tree = model.predict(x)
+    y_hat_tree[:, 1] = np.sqrt(y_hat_tree[:, 1])  # Transform var to log std / CatBoost RMSEWithUncertainty
+
+    return ps.crps_gaussian(
+        y.reshape(-1),
+        y_hat_tree[:, 0],
+        y_hat_tree[:, 1]
+    ).mean()
 
 
 def plot_loss_function(model: TreeFlowBoost):
