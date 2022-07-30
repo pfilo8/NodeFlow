@@ -38,6 +38,7 @@ import mlflow
 import ngboost
 import numpy as np
 import pandas as pd
+import properscoring as ps
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from nflows.distributions import ConditionalDiagonalNormal
@@ -68,6 +69,31 @@ def calculate_nll(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, batch_
     x: np.ndarray = x.values
     y: np.ndarray = y.values
     return -model.log_prob(x, y, batch_size=batch_size).mean()
+
+
+def calculate_crps(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
+    def batch(iterable, n=1):
+        l = len(iterable)
+        for ndx in range(0, l, n):
+            yield iterable[ndx:min(ndx + n, l)]
+
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+    y = y.reshape(-1)
+
+    samples = []
+    for i in batch(range(num_samples), 100):
+        samples.append(model.sample(x, num_samples=len(i), batch_size=batch_size).squeeze(-1))
+    samples = np.concatenate(samples, axis=1)
+
+    crpss = []
+    for o, f in zip(batch(y, 100), batch(samples, 100)):
+        crpss.append(ps.crps_ensemble(
+            observations=o,
+            forecasts=f
+        ))
+    crpss = np.concatenate(crpss)
+    return crpss.mean()
 
 
 def calculate_rmse_tree(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
