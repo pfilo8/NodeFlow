@@ -4,6 +4,7 @@ from typing import Iterable, List, Union
 
 import numpy as np
 import torch
+import torch.nn as nn
 import torch.optim as optim
 
 from sklearn.base import BaseEstimator
@@ -14,7 +15,7 @@ from .shallow_feature_extractor import ShallowFeatureExtractor
 from .soft_decision_tree import SoftDecisionTree
 
 
-class SoftTreeFlow(BaseEstimator):
+class SoftTreeFlow(BaseEstimator, nn.Module):
 
     def __init__(
             self,
@@ -42,6 +43,8 @@ class SoftTreeFlow(BaseEstimator):
         :param flow_layer_type: Continuous Normalizing Flow layer type.
         :param flow_nonlinearity : Continuous Normalizing Flow nonlinearity function.
         """
+        nn.Module.__init__(self)
+
         if device:
             self.device = device
         elif torch.cuda.is_available():
