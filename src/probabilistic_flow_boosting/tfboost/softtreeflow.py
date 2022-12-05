@@ -176,6 +176,7 @@ class SoftTreeFlow(BaseEstimator, nn.Module):
 
         for i in range(n_epochs):
             print(i)
+            self.train()
             for x_batch, y_batch in dataset_loader_train:
                 self.optimizer.zero_grad()
 
@@ -186,6 +187,7 @@ class SoftTreeFlow(BaseEstimator, nn.Module):
                 loss.backward()
                 self.optimizer.step()
 
+            self.eval()
             if X_val is not None and y_val is not None:
                 loss_val = -self.log_prob(X_val, y_val, batch_size=batch_size).mean().item()
                 print(f'Loss validation {loss_val}')
