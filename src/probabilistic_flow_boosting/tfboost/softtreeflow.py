@@ -1,3 +1,5 @@
+import uuid
+
 from typing import Iterable, List, Union
 
 import numpy as np
@@ -93,7 +95,7 @@ class SoftTreeFlow(BaseEstimator):
         return x
 
     @torch.no_grad()
-    def log_prob(self, X: torch.Tensor, y: torch.Tensor, batch_size: int = 128):
+    def log_prob(self, X: torch.Tensor, y: torch.Tensor, batch_size: int = 128) -> torch.Tensor:
         """ Calculate the log probability of the model."""
         dataset_loader: DataLoader = DataLoader(
             dataset=TensorDataset(X, y),
@@ -103,7 +105,7 @@ class SoftTreeFlow(BaseEstimator):
 
         logpxs: List[torch.Tensor] = [self._log_prob(X=x_batch, y=y_batch) for x_batch, y_batch in dataset_loader]
         logpx: torch.Tensor = torch.cat(logpxs, dim=0)
-        logpx: np.ndarray = logpx.detach().cpu().numpy()
+        logpx: np.ndarray = logpx.detach().cpu()
         return logpx
 
     @torch.no_grad()
@@ -115,6 +117,7 @@ class SoftTreeFlow(BaseEstimator):
 
     @torch.no_grad()
     def sample(self, X: torch.Tensor, num_samples: int = 10, batch_size: int = 128) -> torch.Tensor:
+        """Sample from the model."""
         dataset_loader: DataLoader = DataLoader(
             dataset=TensorDataset(X),
             shuffle=False,
@@ -141,6 +144,10 @@ class SoftTreeFlow(BaseEstimator):
             batch_size: int = 128,
             verbose: bool = False
     ):
+        """ Fit SoftTreeFlow model.
+
+        Method supports the best epoch model selection if validation dataset is available.
+        """
         self.optimizer = optim.Adam([
             *self.tree_model.parameters(),
             *self.shallow_feature_extractor.parameters(),
@@ -160,6 +167,8 @@ class SoftTreeFlow(BaseEstimator):
             batch_size=batch_size
         )
 
+        epoch_best = 0
+        mid = uuid.uuid4()  # To be able to run multiple experiments in parallel.
         loss_best = np.inf
 
         for i in range(n_epochs):
@@ -180,7 +189,17 @@ class SoftTreeFlow(BaseEstimator):
 
                 # Save model if better
                 if loss_val < loss_best:
-                    self.epoch_best = i
+                    epoch_best = i
                     loss_best = loss_val
+                    self._save_temp(i, mid)
 
+        if X_val is not None and y_val is not None:
+            return self._load_temp(epoch_best, mid)
         return self
+
+    def _save_temp(self, epoch, mid):
+        torch.save(self, f"/tmp/model_{mid}_{epoch}.pt")
+
+    def _load_temp(self, epoch, mid):
+        print(f"Loading model from epoch {epoch}.")
+        return torch.load(f"/tmp/model_{mid}_{epoch}.pt")

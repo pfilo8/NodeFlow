@@ -1,11 +1,8 @@
-from typing import List
-
-import numpy as np
 import torch
 import torch.nn as nn
 
 from nflows.distributions import StandardNormal
-from torch.utils.data import DataLoader, TensorDataset
+from nflows.utils.torchutils import repeat_rows, split_leading_dim
 
 from .odefunc import ODEfunc, ODEnet
 from .normalization import MovingBatchNorm1d
@@ -112,13 +109,7 @@ class ContinuousNormalizingFlow(nn.Module):
         return model
 
     def log_prob(self, X: torch.Tensor, context: torch.Tensor) -> torch.Tensor:
-        """
-        Calculate log probability on data (usually batch).
-        :param X: 
-        :param context: 
-        :param params: 
-        :return: 
-        """
+        """Calculate log probability on data (usually batch)."""
         zero: torch.Tensor = torch.zeros(X.shape[0], 1, device=X.device)
         z, delta_logp = self.flow(x=X, context=context, logpx=zero)
 
@@ -129,12 +120,13 @@ class ContinuousNormalizingFlow(nn.Module):
 
     @torch.no_grad()
     def sample(self, context: torch.Tensor, num_samples: int = 10) -> torch.Tensor:
+        """Sample from the model (usually batch)."""
         context_shape = context.shape
 
         context: torch.Tensor = torch.as_tensor(data=context, dtype=torch.float, device=context.device)
-        context: torch.Tensor = torch.repeat_interleave(context, num_samples, dim=0)
+        context: torch.Tensor = repeat_rows(context, num_reps=num_samples)
         base_dist_samples: torch.Tensor = self.distribution.sample(num_samples=context.shape[0])
 
         samples: torch.Tensor = self.flow(x=base_dist_samples, context=context, reverse=True)
-        samples: torch.Tensor = samples.reshape(context_shape[0], num_samples)
+        samples: torch.Tensor = split_leading_dim(samples, [context_shape[0], num_samples])
         return samples
