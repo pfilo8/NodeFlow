@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, RegressorMixin
 from torch.utils.data import DataLoader, TensorDataset
 
 from .flow.flow2 import ContinuousNormalizingFlow
@@ -15,7 +15,7 @@ from .shallow_feature_extractor import ShallowFeatureExtractor
 from .soft_decision_tree import SoftDecisionTree
 
 
-class SoftTreeFlow(BaseEstimator, nn.Module):
+class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
 
     def __init__(
             self,
@@ -88,7 +88,7 @@ class SoftTreeFlow(BaseEstimator, nn.Module):
         )
 
     def _log_prob(self, X: torch.Tensor, y: torch.Tensor, return_penalty=False):
-        """ Calculate the log probability of the model (batch)."""
+        """ Calculate the log probability of the model (batch). Internal method used for training."""
         x, penalty = self.tree_model.forward_leaves(X)
         x = self.shallow_feature_extractor(x)
         x = self.flow_model.log_prob(y, x)
@@ -137,16 +137,8 @@ class SoftTreeFlow(BaseEstimator, nn.Module):
         samples: torch.Tensor = samples.detach().cpu()
         return samples
 
-    def fit(
-            self,
-            X: np.ndarray,
-            y: np.ndarray,
-            X_val: Union[np.ndarray, None] = None,
-            y_val: Union[np.ndarray, None] = None,
-            n_epochs: int = 100,
-            batch_size: int = 128,
-            verbose: bool = False
-    ):
+    def fit(self, X: torch.Tensor, y: torch.Tensor, X_val: Union[torch.Tensor, None] = None,
+            y_val: Union[torch.Tensor, None] = None, n_epochs: int = 100, batch_size: int = 128, verbose: bool = False):
         """ Fit SoftTreeFlow model.
 
         Method supports the best epoch model selection if validation dataset is available.
@@ -201,6 +193,13 @@ class SoftTreeFlow(BaseEstimator, nn.Module):
         if X_val is not None and y_val is not None:
             return self._load_temp(epoch_best, mid)
         return self
+
+    def predict(self, X):
+        pass
+
+    def predict_tree_path(self, X):
+        """ Method for predicting the tree path from Soft Decision Tree component."""
+        return self.tree_model.forward_leaves(X)
 
     def _save_temp(self, epoch, mid):
         torch.save(self, f"/tmp/model_{mid}_{epoch}.pt")
