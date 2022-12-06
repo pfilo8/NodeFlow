@@ -21,7 +21,6 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
             self,
             input_dim: int,
             output_dim: int,
-            sfe_context_dim: int = 40,
             tree_depth: int = 5,
             tree_lambda: float = 1e-3,
             flow_hidden_dims: Iterable[int] = (80, 40),
@@ -35,7 +34,6 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
 
         :param input_dim: X data dimensionality.
         :param output_dim: Y data dimensionality.
-        :param sfe_context_dim: Shallow Feature Extractor dimensionality.
         :param tree_depth: Soft Decision Tree depth parameter.
         :param tree_lambda: Soft Decision Tree lambda parameter.
         :param flow_hidden_dims: Continuous Normalizing Flow hidden dimensionality.
@@ -54,7 +52,6 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
 
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.sfe_context_dim = sfe_context_dim
         self.tree_depth = tree_depth
         self.tree_lambda = tree_lambda
         self.flow_hidden_dims = flow_hidden_dims
@@ -70,16 +67,10 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
             device=self.device
         )
 
-        self.shallow_feature_extractor = ShallowFeatureExtractor(
-            input_dim=2 ** tree_depth,
-            output_dim=sfe_context_dim,
-            device=self.device
-        )
-
         self.flow_model = ContinuousNormalizingFlow(
             input_dim=output_dim,
             hidden_dims=flow_hidden_dims,
-            context_dim=sfe_context_dim,
+            context_dim=2 ** tree_depth,
             num_blocks=flow_num_blocks,
             conditional=True,  # It must be true as we are using Conditional CNF model for SoftTreeFlow.
             layer_type=flow_layer_type,
@@ -90,7 +81,6 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
     def _log_prob(self, X: torch.Tensor, y: torch.Tensor, return_penalty=False):
         """ Calculate the log probability of the model (batch). Internal method used for training."""
         x, penalty = self.tree_model.forward_leaves(X)
-        x = self.shallow_feature_extractor(x)
         x = self.flow_model.log_prob(y, x)
 
         if return_penalty:
@@ -114,7 +104,6 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
     @torch.no_grad()
     def _sample(self, X: torch.Tensor, num_samples: int) -> torch.Tensor:
         x, penalty = self.tree_model.forward_leaves(X)
-        x = self.shallow_feature_extractor(x)
         x = self.flow_model.sample(x, num_samples=num_samples)
         return x
 
@@ -145,7 +134,6 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
         """
         self.optimizer = optim.Adam([
             *self.tree_model.parameters(),
-            *self.shallow_feature_extractor.parameters(),
             *self.flow_model.parameters()
         ])
 
@@ -199,7 +187,8 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
 
     def predict_tree_path(self, X):
         """ Method for predicting the tree path from Soft Decision Tree component."""
-        return self.tree_model.forward_leaves(X)
+        paths, _ = self.tree_model.forward_leaves(X)
+        return paths
 
     def _save_temp(self, epoch, mid):
         torch.save(self, f"/tmp/model_{mid}_{epoch}.pt")
