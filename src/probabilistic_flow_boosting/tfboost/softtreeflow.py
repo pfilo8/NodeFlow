@@ -1,5 +1,6 @@
 import uuid
 
+from tqdm import tqdm
 from typing import Iterable, List, Union
 
 import numpy as np
@@ -11,7 +12,6 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from torch.utils.data import DataLoader, TensorDataset
 
 from .flow.flow2 import ContinuousNormalizingFlow
-from .shallow_feature_extractor import ShallowFeatureExtractor
 from .soft_decision_tree import SoftDecisionTree
 
 
@@ -127,22 +127,17 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
         return samples
 
     def fit(self, X: torch.Tensor, y: torch.Tensor, X_val: Union[torch.Tensor, None] = None,
-            y_val: Union[torch.Tensor, None] = None, n_epochs: int = 100, batch_size: int = 128, verbose: bool = False):
+            y_val: Union[torch.Tensor, None] = None, n_epochs: int = 100, batch_size: int = 128, max_patience: int = 50,
+            verbose: bool = False):
         """ Fit SoftTreeFlow model.
 
-        Method supports the best epoch model selection if validation dataset is available.
+        Method supports the best epoch model selection and early stopping (max_patience param)
+        if validation dataset is available.
         """
         self.optimizer = optim.Adam([
             *self.tree_model.parameters(),
             *self.flow_model.parameters()
         ])
-
-        X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.device)
-        y: torch.Tensor = torch.as_tensor(data=y, dtype=torch.float, device=self.device)
-
-        if X_val is not None and y_val is not None:
-            X_val: torch.Tensor = torch.as_tensor(data=X_val, dtype=torch.float, device=self.device)
-            y_val: torch.Tensor = torch.as_tensor(data=y_val, dtype=torch.float, device=self.device)
 
         dataset_loader_train: DataLoader = DataLoader(
             dataset=TensorDataset(X, y),
@@ -150,19 +145,17 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
             batch_size=batch_size
         )
 
-        epoch_best = 0
+        patience = 0
         mid = uuid.uuid4()  # To be able to run multiple experiments in parallel.
         loss_best = np.inf
 
-        for i in range(n_epochs):
-            print(i)
+        for _ in tqdm(range(n_epochs)):
             self.train()
             for x_batch, y_batch in dataset_loader_train:
                 self.optimizer.zero_grad()
 
                 logpx, penalty = self._log_prob(x_batch, y_batch, return_penalty=True)
                 loss = -logpx.mean() + penalty
-                print(f'Loss {loss}')
 
                 loss.backward()
                 self.optimizer.step()
@@ -170,29 +163,42 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
             self.eval()
             if X_val is not None and y_val is not None:
                 loss_val = -self.log_prob(X_val, y_val, batch_size=batch_size).mean().item()
-                print(f'Loss validation {loss_val}')
 
                 # Save model if better
                 if loss_val < loss_best:
-                    epoch_best = i
                     loss_best = loss_val
-                    self._save_temp(i, mid)
+                    self._save_temp(mid)
+                    patience = 0
+
+                else:
+                    patience += 1
+
+                if patience > max_patience:
+                    break
 
         if X_val is not None and y_val is not None:
-            return self._load_temp(epoch_best, mid)
+            return self._load_temp(mid)
         return self
 
-    def predict(self, X):
-        pass
+    @torch.no_grad()
+    def predict(self, X: torch.Tensor, method: str = 'mean', num_samples: int = 1000, batch_size: int = 128,
+                **kwargs) -> torch.Tensor:
+        samples = self.sample(X=X, num_samples=num_samples, batch_size=batch_size)
 
-    def predict_tree_path(self, X):
+        if method == 'mean':
+            y_pred = samples.mean(axis=1).squeeze()
+        return y_pred
+
+    def crps(self, X: torch.Tensor, y: torch.Tensor):
+        return None
+
+    def predict_tree_path(self, X: torch.Tensor):
         """ Method for predicting the tree path from Soft Decision Tree component."""
         paths, _ = self.tree_model.forward_leaves(X)
         return paths
 
-    def _save_temp(self, epoch, mid):
-        torch.save(self, f"/tmp/model_{mid}_{epoch}.pt")
+    def _save_temp(self, mid):
+        torch.save(self, f"/tmp/model_{mid}.pt")
 
-    def _load_temp(self, epoch, mid):
-        print(f"Loading model from epoch {epoch}.")
-        return torch.load(f"/tmp/model_{mid}_{epoch}.pt")
+    def _load_temp(self, mid):
+        return torch.load(f"/tmp/model_{mid}.pt")
