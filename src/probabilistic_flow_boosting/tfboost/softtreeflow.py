@@ -88,8 +88,12 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
         return x
 
     @torch.no_grad()
-    def log_prob(self, X: torch.Tensor, y: torch.Tensor, batch_size: int = 128) -> torch.Tensor:
+    def log_prob(self, X: Union[np.ndarray, torch.Tensor], y: Union[np.ndarray, torch.Tensor],
+                 batch_size: int = 128) -> np.ndarray:
         """ Calculate the log probability of the model."""
+        X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.device)
+        y: torch.Tensor = torch.as_tensor(data=y, dtype=torch.float, device=self.device)
+
         dataset_loader: DataLoader = DataLoader(
             dataset=TensorDataset(X, y),
             shuffle=False,
@@ -98,7 +102,7 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
 
         logpxs: List[torch.Tensor] = [self._log_prob(X=x_batch, y=y_batch) for x_batch, y_batch in dataset_loader]
         logpx: torch.Tensor = torch.cat(logpxs, dim=0)
-        logpx: np.ndarray = logpx.detach().cpu()
+        logpx: np.ndarray = logpx.detach().cpu().numpy()
         return logpx
 
     @torch.no_grad()
@@ -108,8 +112,9 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
         return x
 
     @torch.no_grad()
-    def sample(self, X: torch.Tensor, num_samples: int = 10, batch_size: int = 128) -> torch.Tensor:
+    def sample(self, X: Union[np.ndarray, torch.Tensor], num_samples: int = 10, batch_size: int = 128) -> np.ndarray:
         """Sample from the model."""
+        X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.device)
         dataset_loader: DataLoader = DataLoader(
             dataset=TensorDataset(X),
             shuffle=False,
@@ -124,16 +129,24 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
 
         samples: torch.Tensor = torch.cat(all_samples, dim=0)
         samples: torch.Tensor = samples.detach().cpu()
+        samples: np.ndarray = samples.numpy()
         return samples
 
-    def fit(self, X: torch.Tensor, y: torch.Tensor, X_val: Union[torch.Tensor, None] = None,
-            y_val: Union[torch.Tensor, None] = None, n_epochs: int = 100, batch_size: int = 128, max_patience: int = 50,
-            verbose: bool = False):
+    def fit(self, X: Union[np.ndarray, torch.Tensor], y: Union[np.ndarray, torch.Tensor],
+            X_val: Union[np.ndarray, torch.Tensor, None] = None, y_val: Union[np.ndarray, torch.Tensor, None] = None,
+            n_epochs: int = 100, batch_size: int = 128, max_patience: int = 50, verbose: bool = False):
         """ Fit SoftTreeFlow model.
 
         Method supports the best epoch model selection and early stopping (max_patience param)
         if validation dataset is available.
         """
+        X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.device)
+        y: torch.Tensor = torch.as_tensor(data=y, dtype=torch.float, device=self.device)
+
+        if X_val is not None and y_val is not None:
+            X_val: torch.Tensor = torch.as_tensor(data=X_val, dtype=torch.float, device=self.device)
+            y_val: torch.Tensor = torch.as_tensor(data=y_val, dtype=torch.float, device=self.device)
+
         self.optimizer = optim.Adam([
             *self.tree_model.parameters(),
             *self.flow_model.parameters()
@@ -145,9 +158,9 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
             batch_size=batch_size
         )
 
-        patience = 0
-        mid = uuid.uuid4()  # To be able to run multiple experiments in parallel.
-        loss_best = np.inf
+        patience: int = 0
+        mid: str = uuid.uuid4()  # To be able to run multiple experiments in parallel.
+        loss_best: float = np.inf
 
         for _ in tqdm(range(n_epochs)):
             self.train()
@@ -162,7 +175,7 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
 
             self.eval()
             if X_val is not None and y_val is not None:
-                loss_val = -self.log_prob(X_val, y_val, batch_size=batch_size).mean().item()
+                loss_val: float = -self.log_prob(X_val, y_val, batch_size=batch_size).mean().item()
 
                 # Save model if better
                 if loss_val < loss_best:
@@ -181,15 +194,20 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
         return self
 
     @torch.no_grad()
-    def predict(self, X: torch.Tensor, method: str = 'mean', num_samples: int = 1000, batch_size: int = 128,
-                **kwargs) -> torch.Tensor:
-        samples = self.sample(X=X, num_samples=num_samples, batch_size=batch_size)
+    def predict(self, X: Union[np.ndarray, torch.Tensor], method: str = 'mean', num_samples: int = 1000,
+                batch_size: int = 128, **kwargs) -> np.ndarray:
+        X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.device)
+        samples: np.ndarray = self.sample(X=X, num_samples=num_samples, batch_size=batch_size)
 
         if method == 'mean':
-            y_pred = samples.mean(axis=1).squeeze()
+            y_pred: np.ndarray = samples.mean(axis=1).squeeze()
+        else:
+            raise ValueError(f'Method {method} not supported.')
+
+        y_pred: np.ndarray = np.array(y_pred)
         return y_pred
 
-    def crps(self, X: torch.Tensor, y: torch.Tensor):
+    def crps(self, X: Union[np.ndarray, torch.Tensor], y: Union[np.ndarray, torch.Tensor]):
         return None
 
     def predict_tree_path(self, X: torch.Tensor):
@@ -197,8 +215,8 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
         paths, _ = self.tree_model.forward_leaves(X)
         return paths
 
-    def _save_temp(self, mid):
+    def _save_temp(self, mid: str):
         torch.save(self, f"/tmp/model_{mid}.pt")
 
-    def _load_temp(self, mid):
+    def _load_temp(self, mid: str):
         return torch.load(f"/tmp/model_{mid}.pt")
