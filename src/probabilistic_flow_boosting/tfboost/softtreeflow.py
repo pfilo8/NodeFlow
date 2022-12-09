@@ -102,7 +102,8 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
 
         logpxs: List[torch.Tensor] = [self._log_prob(X=x_batch, y=y_batch) for x_batch, y_batch in dataset_loader]
         logpx: torch.Tensor = torch.cat(logpxs, dim=0)
-        logpx: np.ndarray = logpx.detach().cpu().numpy()
+        logpx: torch.Tensor = logpx.detach().cpu()
+        logpx: np.ndarray = logpx.numpy()
         return logpx
 
     @torch.no_grad()
@@ -128,7 +129,7 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
             all_samples.append(sample)
 
         samples: torch.Tensor = torch.cat(all_samples, dim=0)
-        samples: torch.Tensor = samples.detach().cpu()
+        samples: torch.Tensor = samples.detach().cpu().squeeze()
         samples: np.ndarray = samples.numpy()
         return samples
 
@@ -147,10 +148,7 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
             X_val: torch.Tensor = torch.as_tensor(data=X_val, dtype=torch.float, device=self.device)
             y_val: torch.Tensor = torch.as_tensor(data=y_val, dtype=torch.float, device=self.device)
 
-        self.optimizer = optim.Adam([
-            *self.tree_model.parameters(),
-            *self.flow_model.parameters()
-        ])
+        self.optimizer_ = optim.Adam(self.parameters())
 
         dataset_loader_train: DataLoader = DataLoader(
             dataset=TensorDataset(X, y),
@@ -165,17 +163,17 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
         for _ in tqdm(range(n_epochs)):
             self.train()
             for x_batch, y_batch in dataset_loader_train:
-                self.optimizer.zero_grad()
+                self.optimizer_.zero_grad()
 
                 logpx, penalty = self._log_prob(x_batch, y_batch, return_penalty=True)
                 loss = -logpx.mean() + penalty
 
                 loss.backward()
-                self.optimizer.step()
+                self.optimizer_.step()
 
             self.eval()
             if X_val is not None and y_val is not None:
-                loss_val: float = -self.log_prob(X_val, y_val, batch_size=batch_size).mean().item()
+                loss_val: float = self.nll(X_val, y_val)
 
                 # Save model if better
                 if loss_val < loss_best:
@@ -200,19 +198,26 @@ class SoftTreeFlow(BaseEstimator, RegressorMixin, nn.Module):
         samples: np.ndarray = self.sample(X=X, num_samples=num_samples, batch_size=batch_size)
 
         if method == 'mean':
-            y_pred: np.ndarray = samples.mean(axis=1).squeeze()
+            y_pred: np.ndarray = samples.mean(axis=1)
         else:
             raise ValueError(f'Method {method} not supported.')
 
         y_pred: np.ndarray = np.array(y_pred)
         return y_pred
 
-    def crps(self, X: Union[np.ndarray, torch.Tensor], y: Union[np.ndarray, torch.Tensor]):
+    @torch.no_grad()
+    def nll(self, X: Union[np.ndarray, torch.Tensor], y: Union[np.ndarray, torch.Tensor]) -> float:
+        return - self.log_prob(X, y).mean()
+
+    @torch.no_grad()
+    def crps(self, X: Union[np.ndarray, torch.Tensor], y: Union[np.ndarray, torch.Tensor]) -> float:
         return None
 
-    def predict_tree_path(self, X: torch.Tensor):
+    def predict_tree_path(self, X: np.ndarray):
         """ Method for predicting the tree path from Soft Decision Tree component."""
+        X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.device)
         paths, _ = self.tree_model.forward_leaves(X)
+        paths: np.ndarray = paths.detach().cpu().numpy()
         return paths
 
     def _save_temp(self, mid: str):
