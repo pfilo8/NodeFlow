@@ -29,7 +29,7 @@
 This is a boilerplate pipeline 'reporting'
 generated using Kedro 0.17.5
 """
-from typing import Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import datetime
 
@@ -41,9 +41,11 @@ import numpy as np
 import pandas as pd
 import properscoring as ps
 
+from scipy import signal
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from nflows.distributions import ConditionalDiagonalNormal
 
+from .utils import batch, KDE
 from ..utils import log_dataframe_artifact
 
 from ...tfboost.tfboost import TreeFlowBoost
@@ -72,12 +74,70 @@ def calculate_nll(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, batch_
     return -model.log_prob(x, y, batch_size=batch_size).mean()
 
 
-def calculate_crps(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
-    def batch(iterable, n=1):
-        l = len(iterable)
-        for ndx in range(0, l, n):
-            yield iterable[ndx:min(ndx + n, l)]
+def _calculate_rmse_at_k(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int,
+                         k: int = 2, find_peaks_parameters: Dict[Any, Any] = None):
+    def calculate_treeflow_peaks(samples: np.ndarray, find_peaks_parameters: Dict[Any, Any] = None):
+        if find_peaks_parameters is None:
+            find_peaks_parameters = {}
 
+        def calculate_peaks(sample, find_peaks_parameters):
+            kde = KDE()
+            density, support = kde(sample)
+
+            peaks_id, _ = signal.find_peaks(density, **find_peaks_parameters)
+            peaks = support[peaks_id]
+            peaks_order = np.argsort(-density[peaks_id])  # Sort in descending order.
+            return peaks[peaks_order]
+
+        results = []
+
+        for sample in samples:
+            peaks = calculate_peaks(sample, find_peaks_parameters)
+            results.append(peaks)
+
+        return results
+
+    def rmse_at_k(y_true: np.ndarray, y_score: List[np.ndarray]):
+        results = []
+
+        for i in range(y_true.shape[0]):
+            results.append(np.min((y_score[i] - y_true[i]) ** 2))  # Take closer prediction
+
+        return np.sqrt(np.average(results))
+
+    if find_peaks_parameters is None:
+        find_peaks_parameters = {"height": 0.1}  # Proposed default
+
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+
+    samples = []
+    for i in batch(range(num_samples), 100):
+        samples.append(model.sample(x, num_samples=len(i), batch_size=batch_size).squeeze(-1))
+    samples = np.concatenate(samples, axis=1)
+
+    y_test_treeflow_peaks = calculate_treeflow_peaks(samples, find_peaks_parameters)
+    y_test_treeflow_peaks = [s[:k] for s in y_test_treeflow_peaks]
+
+    return rmse_at_k(y, y_test_treeflow_peaks)
+
+
+def calculate_rmse_at_1(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
+    return _calculate_rmse_at_k(model=model, x=x, y=y, num_samples=num_samples, batch_size=batch_size, k=1,
+                                find_peaks_parameters={"height": 0.1})
+
+
+def calculate_rmse_at_2(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
+    return _calculate_rmse_at_k(model=model, x=x, y=y, num_samples=num_samples, batch_size=batch_size, k=2,
+                                find_peaks_parameters={"height": 0.1})
+
+
+def calculate_rmse_at_3(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
+    return _calculate_rmse_at_k(model=model, x=x, y=y, num_samples=num_samples, batch_size=batch_size, k=3,
+                                find_peaks_parameters={"height": 0.1})
+
+
+def calculate_crps(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
     x: np.ndarray = x.values
     y: np.ndarray = y.values
     y = y.reshape(-1)

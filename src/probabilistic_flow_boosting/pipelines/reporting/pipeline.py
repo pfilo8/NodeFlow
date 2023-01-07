@@ -30,11 +30,24 @@
 This is a boilerplate pipeline 'reporting'
 generated using Kedro 0.17.5
 """
-
 from kedro.pipeline import Pipeline, pipeline, node
 
-from .nodes import calculate_rmse, calculate_mae, calculate_nll, calculate_rmse_tree, calculate_mae_tree, \
-    calculate_nll_tree, calculate_nll_ngboost, plot_loss_function, summary, summary_ngboost, aggregated_report
+from .nodes import (
+    calculate_rmse,
+    calculate_mae,
+    calculate_nll,
+    calculate_rmse_tree,
+    calculate_mae_tree,
+    calculate_nll_tree,
+    calculate_rmse_at_1,
+    calculate_rmse_at_2,
+    calculate_rmse_at_3,
+    calculate_nll_ngboost,
+    plot_loss_function,
+    summary,
+    summary_ngboost,
+    aggregated_report
+)
 
 
 def create_pipeline_report():
@@ -52,12 +65,18 @@ def create_pipeline_report():
                 "train_results_rmse",
                 "train_results_mae",
                 "train_results_nll",
+                "train_results_rmse_at_1",
+                "train_results_rmse_at_2",
+                "train_results_rmse_at_3",
                 "train_results_rmse_tree",
                 "train_results_mae_tree",
                 "train_results_nll_tree",
                 "test_results_rmse",
                 "test_results_mae",
                 "test_results_nll",
+                "test_results_rmse_at_1",
+                "test_results_rmse_at_2",
+                "test_results_rmse_at_3",
                 "test_results_rmse_tree",
                 "test_results_mae_tree",
                 "test_results_nll_tree"
@@ -78,6 +97,9 @@ def create_pipeline_report_train():
             "results_rmse": "train_results_rmse",
             "results_mae": "train_results_mae",
             "results_nll": "train_results_nll",
+            "results_rmse_at_1": "train_results_rmse_at_1",
+            "results_rmse_at_2": "train_results_rmse_at_2",
+            "results_rmse_at_3": "train_results_rmse_at_3",
             "results_rmse_tree": "train_results_rmse_tree",
             "results_mae_tree": "train_results_mae_tree",
             "results_nll_tree": "train_results_nll_tree",
@@ -96,6 +118,9 @@ def create_pipeline_report_test():
             "results_rmse": "test_results_rmse",
             "results_mae": "test_results_mae",
             "results_nll": "test_results_nll",
+            "results_rmse_at_1": "test_results_rmse_at_1",
+            "results_rmse_at_2": "test_results_rmse_at_2",
+            "results_rmse_at_3": "test_results_rmse_at_3",
             "results_rmse_tree": "test_results_rmse_tree",
             "results_mae_tree": "test_results_mae_tree",
             "results_nll_tree": "test_results_nll_tree",
@@ -134,6 +159,21 @@ def create_pipeline_calculate_metrics(**kwargs):
             func=calculate_nll_tree,
             inputs=["model", "x", "y"],
             outputs="results_nll_tree"
+        ),
+        node(
+            func=calculate_rmse_at_1,
+            inputs=["model", "x", "y", "params:num_samples", "params:batch_size"],
+            outputs="results_rmse_at_1"
+        ),
+        node(
+            func=calculate_rmse_at_2,
+            inputs=["model", "x", "y", "params:num_samples", "params:batch_size"],
+            outputs="results_rmse_at_2"
+        ),
+        node(
+            func=calculate_rmse_at_3,
+            inputs=["model", "x", "y", "params:num_samples", "params:batch_size"],
+            outputs="results_rmse_at_3"
         )
     ])
 
