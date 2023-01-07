@@ -174,6 +174,7 @@ numpy==1.24.1
     #   nflows
     #   ngboost
     #   pandas
+    #   properscoring
     #   scikit-learn
     #   scipy
     #   tensorboard
@@ -218,6 +219,8 @@ poyo==0.5.0
     # via cookiecutter
 prompt-toolkit==3.0.36
     # via ipython
+properscoring==0.1.0
+    # via -r /Users/pwielopolski/Projects/Probabilistic-Flow-Boosting/src/requirements.in
 protobuf==3.20.3
     # via tensorboard
 ptyprocess==0.7.0
@@ -294,6 +297,7 @@ scipy==1.10.0
     #   formulaic
     #   lifelines
     #   ngboost
+    #   properscoring
     #   scikit-learn
     #   xgboost
 six==1.16.0
