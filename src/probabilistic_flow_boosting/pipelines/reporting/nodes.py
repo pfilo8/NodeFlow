@@ -87,6 +87,8 @@ def _calculate_rmse_at_k(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame,
             peaks_id, _ = signal.find_peaks(density, **find_peaks_parameters)
             peaks = support[peaks_id]
             peaks_order = np.argsort(-density[peaks_id])  # Sort in descending order.
+            if len(peaks_id) == 0:
+                return [np.mean(sample)]
             return peaks[peaks_order]
 
         results = []
@@ -251,12 +253,18 @@ def summary(
         train_results_rmse: float,
         train_results_mae: float,
         train_results_nll: float,
+        train_results_rmse_at_1: float,
+        train_results_rmse_at_2: float,
+        train_results_rmse_at_3: float,
         train_results_rmse_tree: float,
         train_results_mae_tree: float,
         train_results_nll_tree: float,
         test_results_rmse: float,
         test_results_mae: float,
         test_results_nll: float,
+        test_results_rmse_at_1: float,
+        test_results_rmse_at_2: float,
+        test_results_rmse_at_3: float,
         test_results_rmse_tree: float,
         test_results_mae_tree: float,
         test_results_nll_tree: float
@@ -265,12 +273,18 @@ def summary(
         ['train', 'rmse', train_results_rmse],
         ['train', 'mae', train_results_mae],
         ['train', 'nll', train_results_nll],
+        ['train', 'rmse_at_1', train_results_rmse_at_1],
+        ['train', 'rmse_at_2', train_results_rmse_at_2],
+        ['train', 'rmse_at_3', train_results_rmse_at_3],
         ['train', 'rmse_tree', train_results_rmse_tree],
         ['train', 'mae_tree', train_results_mae_tree],
         ['train', 'nll_tree', train_results_nll_tree],
         ['test', 'rmse', test_results_rmse],
         ['test', 'mae', test_results_mae],
         ['test', 'nll', test_results_nll],
+        ['test', 'rmse_at_1', test_results_rmse_at_1],
+        ['test', 'rmse_at_2', test_results_rmse_at_2],
+        ['test', 'rmse_at_3', test_results_rmse_at_3],
         ['test', 'rmse_tree', test_results_rmse_tree],
         ['test', 'mae_tree', test_results_mae_tree],
         ['test', 'nll_tree', test_results_nll_tree],

@@ -1,4 +1,5 @@
 # Copied from seaborn._statistics
+import numpy as np
 from scipy.stats import gaussian_kde
 
 
@@ -49,10 +50,6 @@ class KDE:
         self.cut = cut
         self.clip = clip
         self.cumulative = cumulative
-
-        if cumulative and _no_scipy:
-            raise RuntimeError("Cumulative KDE evaluation requires scipy")
-
         self.support = None
 
     def _define_support_grid(self, x, bw, cut, clip, gridsize):

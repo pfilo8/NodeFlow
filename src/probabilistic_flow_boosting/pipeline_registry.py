@@ -92,7 +92,7 @@ def register_pipelines() -> Dict[str, Pipeline]:
 
     uci_datasets = [
         ("uci_boston", 20),
-        ("uci_concrete", 20),
+        ("uci_concrete", 2),
         ("uci_energy", 20),
         ("uci_kin8nm", 20),
         ("uci_naval", 20),

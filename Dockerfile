@@ -1,4 +1,5 @@
-FROM pytorch/pytorch:1.3-cuda10.1-cudnn7-devel
+# FROM pytorch/pytorch:1.3-cuda10.1-cudnn7-devel
+FROM python:3.8-buster
 USER root
 
 RUN apt update
@@ -21,7 +22,7 @@ EXPOSE 4444
 COPY src/requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
 # Doesn't work in requirements
-RUN pip install kedro-mlflow
+RUN pip install kedro-mlflow==0.7.6
 
 # Add necessary paths to $PATH
 RUN echo "export PYTHONPATH=/src:$PYTHONPATH" >> /root/.bashrc
