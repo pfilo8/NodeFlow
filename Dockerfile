@@ -31,6 +31,7 @@ RUN echo "export PATH=$PATH:/usr/local/cuda/bin" >> /root/.bashrc
 # Create aliases
 RUN echo 'alias jn="jupyter notebook --no-browser --ip=0.0.0.0 --allow-root"' >> ~/.bashrc
 RUN echo 'alias tb="tensorboard --logdir=logs/ --host=0.0.0.0"' >> ~/.bashrc
+RUN echo 'alias ll="ls -lah"' >> ~/.bashrc
 
 # Set up language for Kedro
 RUN export LC_ALL=C.UTF-8

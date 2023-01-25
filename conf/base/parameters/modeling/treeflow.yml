@@ -5,9 +5,9 @@ flow_params:
   # input_dim: 2
 
 flow_hyperparams:
-  context_dim: [50]
-  hidden_dims: [[50, 50]]
-  num_blocks: [1]
+  context_dim: [16, 32]
+  hidden_dims: [[16, 16], [32, 32]]
+  num_blocks: [1, 2]
 
 tree_params:
   loss_function: "RMSEWithUncertainty"
@@ -15,8 +15,8 @@ tree_params:
   silent: True
 
 tree_hyperparams:
-  depth: [1]
-  num_trees: [300]
+  depth: [1, 2]
+  num_trees: [100, 300]
 
 tree_model_type: "CatBoostPriorNormal"
 #### Training ####

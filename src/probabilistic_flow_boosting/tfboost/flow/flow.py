@@ -252,8 +252,9 @@ class ContinuousNormalizingFlow:
         return loss
 
     def _save_temp(self, epoch, mid):
-        torch.save(self, f"/tmp/model_{mid}_{epoch}.pt")
+        print(f"Saving model from epoch {epoch}.")
+        torch.save(self, f"/tmp/model_{mid}.pt")
 
     def _load_temp(self, epoch, mid):
         print(f"Loading model from epoch {epoch}.")
-        return torch.load(f"/tmp/model_{mid}_{epoch}.pt")
+        return torch.load(f"/tmp/model_{mid}.pt")

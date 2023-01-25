@@ -7,6 +7,7 @@ kedro==0.17.5
 kedro-telemetry~=0.1.0
 nbstripout~=0.4
 nflows
+ninja
 ngboost==0.3.12
 plotly==4.14.3
 properscoring==0.1.0
@@ -14,6 +15,7 @@ pyarrow~=10.0.1
 pytest-cov~=2.5
 pytest-mock>=1.7.1, <2.0
 pytest~=6.2
+seaborn~=0.12.2
 scikit-learn==0.24.2
 torch==1.11.0
 torchdiffeq==0.1.1

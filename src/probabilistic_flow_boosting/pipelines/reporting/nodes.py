@@ -40,6 +40,7 @@ import ngboost
 import numpy as np
 import pandas as pd
 import properscoring as ps
+import torch
 
 from scipy import signal
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -48,6 +49,7 @@ from nflows.distributions import ConditionalDiagonalNormal
 from .utils import batch, KDE
 from ..utils import log_dataframe_artifact
 
+# from ...pgbm import PGBM
 from ...tfboost.tfboost import TreeFlowBoost
 from ...independent_multivariate_boosting import IndependentNGBoost
 
@@ -113,10 +115,12 @@ def _calculate_rmse_at_k(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame,
     x: np.ndarray = x.values
     y: np.ndarray = y.values
 
-    samples = []
-    for i in batch(range(num_samples), 100):
-        samples.append(model.sample(x, num_samples=len(i), batch_size=batch_size).squeeze(-1))
-    samples = np.concatenate(samples, axis=1)
+    # samples = []
+    # for i in batch(range(num_samples), 100):
+    #     samples.append(model.sample(x, num_samples=len(i), batch_size=batch_size).squeeze(-1))
+    # samples = np.concatenate(samples, axis=1)
+
+    samples = model.sample(x, num_samples=num_samples, batch_size=batch_size)
 
     y_test_treeflow_peaks = calculate_treeflow_peaks(samples, find_peaks_parameters)
     y_test_treeflow_peaks = [s[:k] for s in y_test_treeflow_peaks]
@@ -157,6 +161,41 @@ def calculate_crps(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_s
         ))
     crpss = np.concatenate(crpss)
     return crpss.mean()
+
+
+def calculate_crps_treeflow(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+    y = torch.Tensor(y.reshape(-1))
+
+    samples = []
+    for i in batch(range(num_samples), batch_size):
+        samples.append(model.sample(x, num_samples=len(i), batch_size=batch_size).squeeze(-1))
+    yhat_dist = torch.Tensor(np.concatenate(samples, axis=1))
+    yhat_dist = yhat_dist.T
+
+    n_forecasts = yhat_dist.shape[0]
+    # Sort the forecasts in ascending order
+    yhat_dist_sorted, _ = torch.sort(yhat_dist, 0)
+    # Create temporary tensors
+    y_cdf = torch.zeros_like(y)
+    yhat_cdf = torch.zeros_like(y)
+    yhat_prev = torch.zeros_like(y)
+    crps = torch.zeros_like(y)
+    # Loop over the samples generated per observation
+    for yhat in yhat_dist_sorted:
+        flag = (y_cdf == 0) * (y < yhat)
+        crps += flag * ((y - yhat_prev) * yhat_cdf ** 2)
+        crps += flag * ((yhat - y) * (yhat_cdf - 1) ** 2)
+        y_cdf += flag
+        crps += ~flag * ((yhat - yhat_prev) * (yhat_cdf - y_cdf) ** 2)
+        yhat_cdf += 1 / n_forecasts
+        yhat_prev = yhat
+
+    # In case y_cdf == 0 after the loop
+    flag = (y_cdf == 0)
+    crps += flag * (y - yhat)
+    return crps
 
 
 def calculate_rmse_tree(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame):
@@ -208,6 +247,17 @@ def calculate_nll_catboost(model: catboost.CatBoostRegressor, x: pd.DataFrame, y
     return -distribution.log_prob(y, y_hat_tree).numpy().mean()
 
 
+def calculate_rmse_catboost(model: catboost.CatBoostRegressor, x: pd.DataFrame, y: pd.DataFrame):
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+
+    y_hat: np.ndarray = model.predict(x)
+
+    if y.shape[1] == 1:
+        y_hat: np.ndarray = y_hat[:, 0]  # Only get mean
+    return mean_squared_error(y, y_hat, squared=False)
+
+
 def calculate_crps_catboost(model: catboost.CatBoostRegressor, x: pd.DataFrame, y: pd.DataFrame):
     x: np.ndarray = x.values
     y: np.ndarray = y.values
@@ -247,6 +297,11 @@ def calculate_nll_ngboost(model: Union[ngboost.NGBoost, IndependentNGBoost], x: 
         y_dists = model.pred_dist(x).scipy_distribution()
     nlls = [-y_dists[i].logpdf(y[i, :]) for i in range(y.shape[0])]
     return np.mean(nlls)
+
+
+def calculate_rmse_pgbm(model, x: torch.Tensor, y: torch.Tensor):
+    y_hat = model.predict(x)
+    return mean_squared_error(y, y_hat, squared=False)
 
 
 def summary(
