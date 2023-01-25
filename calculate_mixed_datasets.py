@@ -1,3 +1,5 @@
+import timeit
+
 import catboost
 import numpy as np
 import pandas as pd
@@ -22,6 +24,7 @@ from src.probabilistic_flow_boosting.pgbm import PGBM
 from src.probabilistic_flow_boosting.tfboost.tree import EmbeddableCatBoostPriorNormal
 from src.probabilistic_flow_boosting.tfboost.tfboost import TreeFlowBoost
 from src.probabilistic_flow_boosting.tfboost.flow import ContinuousNormalizingFlow
+from src.probabilistic_flow_boosting.tfboost.tfboost_ablation import TreeFlowWithoutShallow
 
 
 def get_dataset(dataset, ohe=False):
@@ -150,6 +153,7 @@ def modeling(
             'n_estimators': 2000
         }
 
+        start = timeit.default_timer()
         model.train(
             train_set=(x_tr, y_tr),
             objective=mseloss_objective,
@@ -157,6 +161,7 @@ def modeling(
             valid_set=(x_val, y_val),
             params=params
         )
+        train_time = timeit.default_timer() - start
 
         model.optimize_distribution(
             x_val,
@@ -178,7 +183,11 @@ def modeling(
             random_state=random_state,
             verbose=False
         )
+
+        start = timeit.default_timer()
         model.fit(x_tr, y_tr, eval_set=(x_val, y_val))
+        train_time = timeit.default_timer() - start
+
         nll = calculate_nll_catboost(model, x_test, y_test)
         crps = calculate_crps_catboost(model, x_test, y_test)
         rmse = calculate_rmse_catboost(model, x_test, y_test)
@@ -197,8 +206,31 @@ def modeling(
                                          conditional=True)
 
         treeflow = TreeFlowBoost(tree, flow, embedding_size=128)
-        treeflow.fit(x_tr.values, y_tr.values, x_val.values, y_val.values, n_epochs=150, batch_size=4096, verbose=True)
-        treeflow.save(f'results/{filename}')
+        start = timeit.default_timer()
+        treeflow.fit(x_tr.values, y_tr.values, x_val.values, y_val.values, n_epochs=1, batch_size=4096, verbose=True)
+        train_time = timeit.default_timer() - start
+
+        nll = calculate_nll(treeflow, x_test, y_test, batch_size=1024)
+        crps = calculate_crps_treeflow(treeflow, x_test, y_test, num_samples=1000, batch_size=1024).mean().item()
+        rmse = calculate_rmse(treeflow, x_test, y_test, num_samples=1000, batch_size=1024)
+        rmse_at_1 = calculate_rmse_at_1(treeflow, x_test, y_test, num_samples=1000, batch_size=1024)
+        rmse_at_2 = calculate_rmse_at_2(treeflow, x_test, y_test, num_samples=1000, batch_size=1024)
+    elif model == 'treeflow_ablation':
+        tree = EmbeddableCatBoostPriorNormal(
+            cat_features=cat_features_n,
+            loss_function="RMSEWithUncertainty",
+            depth=4,
+            num_trees=200,
+            random_state=random_state,
+            verbose=False
+        )
+        flow = ContinuousNormalizingFlow(input_dim=1, hidden_dims=(16, 16), context_dim=200 * 4 ** 2, num_blocks=2,
+                                         conditional=True)
+
+        treeflow = TreeFlowWithoutShallow(tree, flow, embedding_size=None)
+        start = timeit.default_timer()
+        treeflow.fit(x_tr.values, y_tr.values, x_val.values, y_val.values, n_epochs=1, batch_size=4096, verbose=True)
+        train_time = timeit.default_timer() - start
 
         nll = calculate_nll(treeflow, x_test, y_test, batch_size=1024)
         crps = calculate_crps_treeflow(treeflow, x_test, y_test, num_samples=1000, batch_size=1024).mean().item()
@@ -208,8 +240,10 @@ def modeling(
     elif model == 'cnf':
         cnf = ContinuousNormalizingFlowRegressor(input_dim=x_test.shape[1], output_dim=1, hidden_dims=(16, 16),
                                                  embedding_dim=128, num_blocks=2)
-        cnf.fit(x_tr.values, y_tr.values, x_val.values, y_val.values, n_epochs=150, batch_size=1024, verbose=True,
+        start = timeit.default_timer()
+        cnf.fit(x_tr.values, y_tr.values, x_val.values, y_val.values, n_epochs=1, batch_size=1024, verbose=True,
                 max_patience=20)
+        train_time = timeit.default_timer() - start
 
         nll = cnf.nll(x_test.values, y_test.values)
         crps = cnf.crps(x_test.values, y_test.values, num_samples=1000, batch_size=256)
@@ -219,7 +253,7 @@ def modeling(
     else:
         raise ValueError(f'Invalid model {model}.')
 
-    return crps, nll, rmse, rmse_at_1, rmse_at_2
+    return crps, nll, rmse, rmse_at_1, rmse_at_2, train_time
 
 
 DATASETS_LIST = [
@@ -236,7 +270,8 @@ MODEL_LIST = [
     'pgbm'
     'catboost',
     'treeflow',
-    'cnf'
+    'cnf',
+    'treeflow_ablation'
 ]
 
 results = []
@@ -251,23 +286,24 @@ for dataset in DATASETS_LIST:
             x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=i)
             x_tr, x_val, y_tr, y_val = train_test_split(x_train, y_train, test_size=0.2, random_state=i)
 
-            crps, nll, rmse, rmse_at_1, rmse_at_2 = modeling(model, x_tr, y_tr, x_val, y_val, x_test, y_test,
-                                                             cat_features_s, cat_features_n,
-                                                             random_state=i,
-                                                             filename=f'{model}_{dataset}_{i}')
+            crps, nll, rmse, rmse_at_1, rmse_at_2, train_time = modeling(model, x_tr, y_tr, x_val, y_val, x_test,
+                                                                         y_test,
+                                                                         cat_features_s, cat_features_n,
+                                                                         random_state=i,
+                                                                         filename=f'{model}_{dataset}_{i}')
 
-            print(dataset, i, crps, nll, rmse, rmse_at_1, rmse_at_2)
+            print(dataset, i, crps, nll, rmse, rmse_at_1, rmse_at_2, train_time)
 
-            results.append([dataset, model, i, crps, nll, rmse, rmse_at_1, rmse_at_2])
+            results.append([dataset, model, i, crps, nll, rmse, rmse_at_1, rmse_at_2, train_time])
 
 index = 'all'
 
 r = pd.DataFrame(
     results,
-    columns=['dataset', 'model', 'index', 'crps', 'nll', 'rmse', 'rmse_at_1', 'rmse_at_2']
+    columns=['dataset', 'model', 'index', 'crps', 'nll', 'rmse', 'rmse_at_1', 'rmse_at_2', 'train_time']
 )
 r.to_csv(f'results_raw_mixed_{index}.csv', index=False)
-g = r.groupby(['dataset', 'model'])[['crps', 'nll', 'rmse', 'rmse_at_1', 'rmse_at_2']].agg(
+g = r.groupby(['dataset', 'model'])[['crps', 'nll', 'rmse', 'rmse_at_1', 'rmse_at_2', 'train_time']].agg(
     [np.mean, np.std]
 )
 g.to_csv(f'results_mixed_{index}.csv')

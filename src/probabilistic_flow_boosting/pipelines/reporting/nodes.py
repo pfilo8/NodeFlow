@@ -49,7 +49,7 @@ from nflows.distributions import ConditionalDiagonalNormal
 from .utils import batch, KDE
 from ..utils import log_dataframe_artifact
 
-# from ...pgbm import PGBM
+from ...pgbm import PGBM
 from ...tfboost.tfboost import TreeFlowBoost
 from ...independent_multivariate_boosting import IndependentNGBoost
 
@@ -115,12 +115,14 @@ def _calculate_rmse_at_k(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame,
     x: np.ndarray = x.values
     y: np.ndarray = y.values
 
-    # samples = []
-    # for i in batch(range(num_samples), 100):
-    #     samples.append(model.sample(x, num_samples=len(i), batch_size=batch_size).squeeze(-1))
-    # samples = np.concatenate(samples, axis=1)
+    # For TreeFlow
+    samples = []
+    for i in batch(range(num_samples), 100):
+        samples.append(model.sample(x, num_samples=len(i), batch_size=batch_size).squeeze(-1))
+    samples = np.concatenate(samples, axis=1)
 
-    samples = model.sample(x, num_samples=num_samples, batch_size=batch_size)
+    # For CNF
+    # samples = model.sample(x, num_samples=num_samples, batch_size=batch_size)
 
     y_test_treeflow_peaks = calculate_treeflow_peaks(samples, find_peaks_parameters)
     y_test_treeflow_peaks = [s[:k] for s in y_test_treeflow_peaks]
