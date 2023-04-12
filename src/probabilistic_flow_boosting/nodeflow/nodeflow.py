@@ -1,7 +1,7 @@
 import uuid
 
 from tqdm import tqdm
-from typing import Iterable, List, Union
+from typing import Callable, Iterable, List, Union
 
 import numpy as np
 import torch
@@ -10,28 +10,37 @@ import torch.optim as optim
 
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
 from torch.utils.data import DataLoader, TensorDataset
 
 from .flow import ContinuousNormalizingFlow
+from .node import DenseODSTBlock
+from .node.activations import sparsemax, sparsemoid
 
 
-class ContinuousNormalizingFlowRegressor(BaseEstimator, RegressorMixin, nn.Module):
+class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
 
     def __init__(
             self,
             input_dim: int,
             output_dim: int,
-            embedding_dim: int = 40,
-            hidden_dims: Iterable[int] = (80, 40),
-            num_blocks: int = 3,
-            layer_type: str = "concatsquash",
-            nonlinearity: str = "tanh",
+            num_trees: int = 200,
+            depth: int = 6,
+            tree_output_dim: int = 1,
+            choice_function: Callable = sparsemax,
+            bin_function: Callable = sparsemoid,
+            initialize_response_: Callable = nn.init.normal_,
+            initialize_selection_logits_: Callable = nn.init.uniform_,
+            threshold_init_beta: float = 1.0,
+            threshold_init_cutoff: float = 1.0,
+            num_layers: int = 6,
+            max_features: Union[None, int] = None,
+            input_dropout: float = 0.0,
+            flow_hidden_dims: Iterable[int] = (80, 40),
+            flow_num_blocks: int = 3,
+            flow_layer_type: str = "concatsquash",
+            flow_nonlinearity: str = "tanh",
             device: str = None
     ):
-        """
-        Initialization of Continuous Normalizing Flow model.
-        """
         nn.Module.__init__(self)
 
         if device:
@@ -43,51 +52,57 @@ class ContinuousNormalizingFlowRegressor(BaseEstimator, RegressorMixin, nn.Modul
 
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.embedding_dim = embedding_dim
-        self.hidden_dims = hidden_dims
-        self.num_blocks = num_blocks
-        self.layer_type = layer_type
-        self.nonlinearity = nonlinearity
+        self.num_trees = num_trees
+        self.depth = depth
+        self.tree_output_dim = tree_output_dim
+        self.choice_function = choice_function
+        self.bin_function = bin_function
+        self.initialize_response_ = initialize_response_
+        self.initialize_selection_logits_ = initialize_selection_logits_
+        self.threshold_init_beta = threshold_init_beta
+        self.threshold_init_cutoff = threshold_init_cutoff
+        self.num_layers = num_layers
+        self.max_features = max_features
+        self.input_dropout = input_dropout
+        self.flow_hidden_dims = flow_hidden_dims
+        self.flow_num_blocks = flow_num_blocks
+        self.flow_layer_type = flow_layer_type
+        self.flow_nonlinearity = flow_nonlinearity
 
         self.feature_scaler = MinMaxScaler(feature_range=(-1, 1))
         self.target_scaler = MinMaxScaler(feature_range=(-1, 1))
 
-        if embedding_dim > 0:
-            self.feature_extractor = nn.Sequential(
-                nn.Linear(input_dim, embedding_dim),
-                nn.Tanh(),
-            ).to(self.device)
+        self.tree_model = DenseODSTBlock(
+            input_dim,
+            num_trees,
+            depth=depth,
+            tree_output_dim=tree_output_dim,
+            choice_function=choice_function,
+            bin_function=bin_function,
+            initialize_response_=initialize_response_,
+            initialize_selection_logits_=initialize_selection_logits_,
+            threshold_init_beta=threshold_init_beta,
+            threshold_init_cutoff=threshold_init_cutoff,
+            num_layers=num_layers,
+            max_features=max_features,
+            input_dropout=input_dropout,
+            flatten_output=True,
+        )
 
-            self.flow_model = ContinuousNormalizingFlow(
-                input_dim=output_dim,
-                hidden_dims=hidden_dims,
-                context_dim=embedding_dim,
-                num_blocks=num_blocks,
-                conditional=True,  # It must be true as we are using Conditional CNF model.
-                layer_type=layer_type,
-                nonlinearity=nonlinearity,
-                device=self.device
-            )
-        elif embedding_dim == 0:
-            self.feature_extractor = nn.Identity().to(self.device)
-
-            self.flow_model = ContinuousNormalizingFlow(
-                input_dim=output_dim,
-                hidden_dims=hidden_dims,
-                context_dim=input_dim,
-                num_blocks=num_blocks,
-                conditional=True,  # It must be true as we are using Conditional CNF model.
-                layer_type=layer_type,
-                nonlinearity=nonlinearity,
-                device=self.device
-            )
-        else:
-            ValueError(f"Embedding dim must be greater or equal to zero. Provided value: f{embedding_dim}.")
-
+        self.flow_model = ContinuousNormalizingFlow(
+            input_dim=output_dim,
+            hidden_dims=flow_hidden_dims,
+            context_dim=num_layers * tree_output_dim * num_trees,
+            num_blocks=flow_num_blocks,
+            conditional=True,  # It must be true as we are using Conditional CNF model.
+            layer_type=flow_layer_type,
+            nonlinearity=flow_nonlinearity,
+            device=self.device
+        )
 
     def _log_prob(self, X: torch.Tensor, y: torch.Tensor):
         """ Calculate the log probability of the model (batch). Internal method used for training."""
-        x = self.feature_extractor(X)
+        x = self.tree_model(X)
         x = self.flow_model.log_prob(y, x)
         x += np.log(np.abs(np.prod(self.target_scaler.scale_)))  # Target scaling correction. log(abs(det(jacobian)))
         return x
@@ -115,7 +130,7 @@ class ContinuousNormalizingFlowRegressor(BaseEstimator, RegressorMixin, nn.Modul
 
     @torch.no_grad()
     def _sample(self, X: torch.Tensor, num_samples: int) -> torch.Tensor:
-        x = self.feature_extractor(X)
+        x = self.tree_model(X)
         x = self.flow_model.sample(x, num_samples=num_samples)
         return x
 
@@ -154,7 +169,7 @@ class ContinuousNormalizingFlowRegressor(BaseEstimator, RegressorMixin, nn.Modul
     def fit(self, X: np.ndarray, y: np.ndarray, X_val: Union[np.ndarray, None] = None,
             y_val: Union[np.ndarray, None] = None, n_epochs: int = 100, batch_size: int = 128, max_patience: int = 50,
             verbose: bool = False):
-        """ Fit Continuous Normalizing Flow model.
+        """ Fit SoftTreeFlow model.
 
         Method supports the best epoch model selection and early stopping (max_patience param)
         if validation dataset is available.
@@ -228,39 +243,15 @@ class ContinuousNormalizingFlowRegressor(BaseEstimator, RegressorMixin, nn.Modul
         return - self.log_prob(X, y).mean()
 
     @torch.no_grad()
-    def crps(self, X: np.ndarray, y: np.ndarray, num_samples: int = 1000, batch_size=1024) -> float:
-        y = torch.Tensor(y.reshape(-1))
+    def crps(self, X: np.ndarray, y: np.ndarray, n_samples: int = 1000) -> float:
+        return None
 
-        samples = self.sample(X, num_samples=num_samples, batch_size=batch_size)
-        yhat_dist = torch.Tensor(samples)
-        yhat_dist = yhat_dist.T
-
-        n_forecasts = yhat_dist.shape[0]
-        # Sort the forecasts in ascending order
-        yhat_dist_sorted, _ = torch.sort(yhat_dist, 0)
-        # Create temporary tensors
-        y_cdf = torch.zeros_like(y)
-        yhat_cdf = torch.zeros_like(y)
-        yhat_prev = torch.zeros_like(y)
-        crps = torch.zeros_like(y)
-        # Loop over the samples generated per observation
-        for yhat in yhat_dist_sorted:
-            flag = (y_cdf == 0) * (y < yhat)
-            crps += flag * ((y - yhat_prev) * yhat_cdf ** 2)
-            crps += flag * ((yhat - y) * (yhat_cdf - 1) ** 2)
-            y_cdf += flag
-            crps += ~flag * ((yhat - yhat_prev) * (yhat_cdf - y_cdf) ** 2)
-            yhat_cdf += 1 / n_forecasts
-            yhat_prev = yhat
-
-        # In case y_cdf == 0 after the loop
-        flag = (y_cdf == 0)
-        crps += flag * (y - yhat)
-        return crps.mean().item()
-
-    def rmse(self, X: np.ndarray, y: np.ndarray, num_samples: int = 1000, batch_size=1024) -> float:
-        y_hat: np.ndarray = self.predict(X, num_samples=num_samples, batch_size=batch_size)
-        return mean_squared_error(y, y_hat, squared=False)
+    def predict_tree_path(self, X: np.ndarray):
+        """ Method for predicting the tree path from Soft Decision Tree component."""
+        X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.device)
+        paths, _ = self.tree_model(X)
+        paths: np.ndarray = paths.detach().cpu().numpy()
+        return paths
 
     def _save_temp(self, mid: str):
         torch.save(self, f"/tmp/model_{mid}.pt")

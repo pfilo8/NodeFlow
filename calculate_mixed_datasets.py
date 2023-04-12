@@ -17,10 +17,12 @@ from src.probabilistic_flow_boosting.pipelines.reporting.nodes import (
     calculate_rmse_at_1,
     calculate_rmse_at_2,
     calculate_rmse_catboost,
-    calculate_rmse_pgbm
+    calculate_rmse_pgbm,
+    calculate_crps_softtreeflow
 )
 from src.probabilistic_flow_boosting.cnf import ContinuousNormalizingFlowRegressor
-from src.probabilistic_flow_boosting.pgbm import PGBM
+# from src.probabilistic_flow_boosting.pgbm import PGBM
+from src.probabilistic_flow_boosting.softtreeflow import SoftTreeFlow
 from src.probabilistic_flow_boosting.tfboost.tree import EmbeddableCatBoostPriorNormal
 from src.probabilistic_flow_boosting.tfboost.tfboost import TreeFlowBoost
 from src.probabilistic_flow_boosting.tfboost.flow import ContinuousNormalizingFlow
@@ -250,6 +252,38 @@ def modeling(
         rmse = cnf.rmse(x_test, y_test, num_samples=1000, batch_size=256)
         rmse_at_1 = calculate_rmse_at_1(cnf, x_test, y_test, num_samples=1000, batch_size=256)
         rmse_at_2 = calculate_rmse_at_2(cnf, x_test, y_test, num_samples=1000, batch_size=256)
+    elif model == 'cnf-0':
+        cnf = ContinuousNormalizingFlowRegressor(input_dim=x_test.shape[1], output_dim=1, hidden_dims=(16, 16),
+                                                 embedding_dim=0, num_blocks=2)
+        start = timeit.default_timer()
+        cnf.fit(x_tr.values, y_tr.values, x_val.values, y_val.values, n_epochs=1000, batch_size=1024, verbose=True,
+                max_patience=20)
+        train_time = timeit.default_timer() - start
+
+        nll = cnf.nll(x_test.values, y_test.values)
+        crps = cnf.crps(x_test.values, y_test.values, num_samples=1000, batch_size=256)
+        rmse = cnf.rmse(x_test, y_test, num_samples=1000, batch_size=256)
+        rmse_at_1 = calculate_rmse_at_1(cnf, x_test, y_test, num_samples=1000, batch_size=256)
+        rmse_at_2 = calculate_rmse_at_2(cnf, x_test, y_test, num_samples=1000, batch_size=256)
+    elif model == 'softtreeflow':
+        softtreeflow = SoftTreeFlow(
+            input_dim=x_tr.shape[1],
+            output_dim=y_tr.shape[1],
+            tree_depth=3,
+            forest_n_estimators=16,
+            flow_hidden_dims=(16, 16),
+            flow_num_blocks=2
+        )
+        start = timeit.default_timer()
+        softtreeflow.fit(x_tr.values, y_tr.values, x_val.values, y_val.values, n_epochs=1000, batch_size=256,
+                         max_patience=20)
+        train_time = timeit.default_timer() - start
+
+        nll = calculate_nll(softtreeflow, x_test, y_test, batch_size=256)
+        crps = calculate_crps_softtreeflow(softtreeflow, x_test, y_test, num_samples=1000, batch_size=256).mean().item()
+        rmse = calculate_rmse(softtreeflow, x_test, y_test, num_samples=1000, batch_size=256)
+        rmse_at_1 = calculate_rmse_at_1(softtreeflow, x_test, y_test, num_samples=1000, batch_size=256)
+        rmse_at_2 = calculate_rmse_at_2(softtreeflow, x_test, y_test, num_samples=1000, batch_size=256)
     else:
         raise ValueError(f'Invalid model {model}.')
 
@@ -267,11 +301,13 @@ DATASETS_LIST = [
 ]
 
 MODEL_LIST = [
-    'pgbm'
-    'catboost',
-    'treeflow',
-    'cnf',
-    'treeflow_ablation'
+    # 'pgbm'
+    # 'catboost',
+    # 'treeflow',
+    # 'cnf',
+    'cnf-0',
+    # 'treeflow_ablation',
+    # 'softtreeflow'
 ]
 
 results = []
@@ -280,7 +316,7 @@ for dataset in DATASETS_LIST:
     for model in MODEL_LIST:
         for i in range(1, 6):
             setup_random_seed(i)
-            ohe = (model == 'pgbm' or model == 'cnf')
+            ohe = (model == 'pgbm' or model == 'cnf' or model == 'cnf-0' or model == 'softtreeflow')
             x, y, cat_features_s, cat_features_n = get_dataset(dataset, ohe=ohe)
 
             x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=i)
@@ -296,7 +332,7 @@ for dataset in DATASETS_LIST:
 
             results.append([dataset, model, i, crps, nll, rmse, rmse_at_1, rmse_at_2, train_time])
 
-index = 'all'
+index = 'cnf-0'
 
 r = pd.DataFrame(
     results,
