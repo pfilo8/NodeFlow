@@ -61,8 +61,7 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, model_params
     results = results.sort_values('log_prob_val', ascending=True)
     log_dataframe_artifact(results, 'grid_search_results')
 
-    best_params = results.iloc[0].to_dict()
-    best_flow_p = best_params['hyperparams']
+    best_params = results.iloc[0].to_dict()['hyperparams']
 
-    m, _ = train_nodeflow(x_tr, y_tr, x_val, y_val, best_flow_p, model_params, hyperparams, n_epochs, batch_size, random_seed)
+    m = train_nodeflow(x_tr, y_tr, x_val, y_val, model_params, best_params, n_epochs, batch_size, random_seed)
     return m
