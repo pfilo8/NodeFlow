@@ -26,7 +26,7 @@ def create_general_pipeline_ngboost(namespace):
     return p
 
 def create_general_pipeline_nodeflow(namespace):
-    pipeline_general = create_pipeline_train_model_nodeflow()# + create_pipeline_report_ngboost()
+    pipeline_general = create_pipeline_train_model_nodeflow() + create_pipeline_report_ngboost()
     p = pipeline(
         pipeline_general,
         namespace=namespace
