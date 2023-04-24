@@ -1,0 +1,16 @@
+#### Models ####
+
+model_params:
+  num_layers: 6
+  # loss_function: "MultiRMSE"
+  # device: "mps"
+
+model_hyperparams:
+  depth: [1, 3, 6]
+  num_trees: [100, 300]
+#### Training ####
+
+# n_epochs: 30
+# split_size: 0.8
+# batch_size: 128
+# num_samples: 1000

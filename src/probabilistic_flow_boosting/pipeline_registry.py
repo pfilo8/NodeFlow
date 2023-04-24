@@ -31,7 +31,12 @@ from typing import Dict
 
 from kedro.pipeline import Pipeline
 
-from .pipelines import create_general_pipeline, create_general_pipeline_ngboost, create_pipeline_aggregated_report
+from .pipelines import (
+    create_general_pipeline,
+    create_general_pipeline_ngboost,
+    create_pipeline_aggregated_report,
+    create_general_pipeline_nodeflow
+) 
 
 
 def create_general_uci_pipeline(namespace, n):
@@ -61,6 +66,15 @@ def create_general_momogp_ngboost_pipeline(namespace):
             inputs=[f"{namespace}.summary"],
             outputs=f"{namespace}.aggregated_summary"
         )
+    ])
+
+def create_general_uci_nodeflow_pipeline(namespace, n):
+    return Pipeline([
+        *[create_general_pipeline_nodeflow(f"{namespace}_{i}") for i in range(n)],
+        # create_pipeline_aggregated_report(
+        #     inputs=[f"{namespace}_{i}.summary" for i in range(n)],
+        #     outputs=f"{namespace}.aggregated_summary"
+        # )
     ])
 
 
@@ -107,10 +121,15 @@ def register_pipelines() -> Dict[str, Pipeline]:
         d: create_general_uci_pipeline(d, n) for d, n in uci_datasets
     }
 
+    uci_nodeflow_pipelines = {
+        f"{d}_nodeflow": create_general_uci_nodeflow_pipeline(d, n) for d, n in uci_datasets
+    }
+
     return {
         "__default__": Pipeline([]),
         **momogp_pipelines,
         **momogp_ngboost_pipelines,
         **uci_pipelines,
+        **uci_nodeflow_pipelines,
         **oceanographic_pipelines
     }

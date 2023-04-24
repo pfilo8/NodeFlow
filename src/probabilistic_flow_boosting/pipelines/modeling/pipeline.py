@@ -33,7 +33,7 @@ generated using Kedro 0.17.5
 
 from kedro.pipeline import Pipeline, node
 
-from .nodes import modeling_multivariate, modeling_treeflow
+from .nodes import modeling_multivariate, modeling_treeflow, modeling_nodeflow
 
 
 def create_pipeline_train_model(**kwargs):
@@ -55,6 +55,16 @@ def create_pipeline_train_model_ngboost(**kwargs):
             inputs=["x_train", "y_train", "params:ngboost_params", "params:base_tree_params",
                     "params:ngboost_hyperparams", "params:base_tree_hyperparams", "params:independent",
                     "params:independent_model_type", "params:split_size", "params:random_seed"],
+            outputs="model"
+        )
+    ])
+
+def create_pipeline_train_model_nodeflow(**kwargs):
+    return Pipeline([
+        node(
+            func=modeling_nodeflow,
+            inputs=["x_train", "y_train", "params:model_params", "params:model_hyperparams",
+                    "params:split_size", "params:n_epochs", "params:batch_size", "params:random_seed"],
             outputs="model"
         )
     ])
