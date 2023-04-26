@@ -30,10 +30,16 @@ This is a boilerplate pipeline 'reporting'
 generated using Kedro 0.17.5
 """
 
-from .pipeline import create_pipeline_report, create_pipeline_report_ngboost, create_pipeline_aggregated_report
+from .pipeline import (
+    create_pipeline_report,
+    create_pipeline_report_ngboost,
+    create_pipeline_report_nodeflow,
+    create_pipeline_aggregated_report, 
+)
 
 __all__ = [
     "create_pipeline_report",
     "create_pipeline_report_ngboost",
+    "create_pipeline_report_nodeflow"
     "create_pipeline_aggregated_report"
 ]

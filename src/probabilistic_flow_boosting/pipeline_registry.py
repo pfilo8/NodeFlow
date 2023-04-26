@@ -70,11 +70,11 @@ def create_general_momogp_ngboost_pipeline(namespace):
 
 def create_general_uci_nodeflow_pipeline(namespace, n):
     return Pipeline([
-        *[create_general_pipeline_nodeflow(f"{namespace}_{i}") for i in range(n)],
-        # create_pipeline_aggregated_report(
-        #     inputs=[f"{namespace}_{i}.summary" for i in range(n)],
-        #     outputs=f"{namespace}.aggregated_summary"
-        # )
+        *[create_general_pipeline_nodeflow(f"{namespace}_{i}") for i in range(1)],
+        create_pipeline_aggregated_report(
+            inputs=[f"{namespace}_{i}.summary" for i in range(1)],
+            outputs=f"{namespace}.aggregated_summary"
+        )
     ])
 
 
@@ -122,7 +122,7 @@ def register_pipelines() -> Dict[str, Pipeline]:
     }
 
     uci_nodeflow_pipelines = {
-        f"{d}_nodeflow": create_general_uci_nodeflow_pipeline(d, n) for d, n in uci_datasets
+        f"{d}_nodeflow": create_general_uci_nodeflow_pipeline(f"{d}_nodeflow", n) for d, n in uci_datasets
     }
 
     return {

@@ -237,3 +237,54 @@ def create_pipeline_report_ngboost():
             outputs="summary"
         )
     ])
+
+
+def create_pipeline_calculate_metrics_nodeflow(**kwargs):
+    return Pipeline([
+        node(
+            func=calculate_nll,
+            inputs=["model", "x", "y", "params:batch_size"],
+            outputs="results_nll"
+        ),
+    ])
+
+
+def create_pipeline_report_train_nodeflow():
+    return pipeline(
+        create_pipeline_calculate_metrics_nodeflow(),
+        inputs={
+            "x": "x_train",
+            "y": "y_train"
+        },
+        outputs={
+            "results_nll": "train_results_nll",
+        }
+    )
+
+
+def create_pipeline_report_test_nodeflow():
+    return pipeline(
+        create_pipeline_calculate_metrics_nodeflow(),
+        inputs={
+            "x": "x_test",
+            "y": "y_test"
+        },
+        outputs={
+            "results_nll": "test_results_nll",
+        }
+    )
+
+
+def create_pipeline_report_nodeflow():
+    return Pipeline([
+        create_pipeline_report_train_nodeflow(),
+        create_pipeline_report_test_nodeflow(),
+        node(
+            func=summary_ngboost,
+            inputs=[
+                "train_results_nll",
+                "test_results_nll",
+            ],
+            outputs="summary"
+        )
+    ])

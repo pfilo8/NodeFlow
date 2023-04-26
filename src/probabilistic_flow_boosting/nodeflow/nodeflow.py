@@ -258,3 +258,10 @@ class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
 
     def _load_temp(self, mid: str):
         return torch.load(f"/tmp/model_{mid}.pt")
+    
+    def save(self, filename: str):
+        torch.save(self, f"{filename}-nodeflow")
+
+    @classmethod
+    def load(cls, filename: str):
+        return torch.load(f"{filename}-nodeflow")
