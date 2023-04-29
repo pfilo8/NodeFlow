@@ -44,7 +44,7 @@ for hyperparams in generate_params_for_grid_search(model_hyperparams):
         **hyperparams
     )
     # x_val.values, y_val.values,
-    nodeflow.fit(x_tr.values, y_tr.values, None, None, n_epochs=500, batch_size=1024, max_patience=20)
+    nodeflow.fit(x_tr.values, y_tr.values, None, None, n_epochs=1, batch_size=1024, max_patience=20)
 
     nll_train = nodeflow.nll(x_tr.values, y_tr.values)
     nll_val = nodeflow.nll(x_val.values, y_val.values)

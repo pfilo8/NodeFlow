@@ -37,7 +37,10 @@ uci_boston_nodeflow_{{i}}.model:
 
 uci_boston_nodeflow.aggregated_summary:
   type: pandas.CSVDataSet
-  filepath: data/08_reporting/UCI/bostonHousing/summary.csv
+  filepath: gcs://nodeflow/data/08_reporting/UCI/bostonHousing/summary.csv
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 
 #### Concrete ####
 
@@ -74,7 +77,10 @@ uci_concrete_nodeflow_{{i}}.model:
 
 uci_concrete_nodeflow.aggregated_summary:
   type: pandas.CSVDataSet
-  filepath: data/08_reporting/UCI/concrete/summary.csv
+  filepath: gcs://nodeflow/data/08_reporting/UCI/concrete/summary.csv
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 
 #### Energy ####
 
@@ -111,7 +117,10 @@ uci_energy_nodeflow_{{i}}.model:
 
 uci_energy_nodeflow.aggregated_summary:
   type: pandas.CSVDataSet
-  filepath: data/08_reporting/UCI/energy/summary.csv
+  filepath: gcs://nodeflow/data/08_reporting/UCI/energy/summary.csv
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 
 #### kin8nm ####
 
@@ -148,7 +157,10 @@ uci_kin8nm_nodeflow_{{i}}.model:
 
 uci_kin8nm_nodeflow.aggregated_summary:
   type: pandas.CSVDataSet
-  filepath: data/08_reporting/UCI/kin8nm/summary.csv
+  filepath: gcs://nodeflow/data/08_reporting/UCI/kin8nm/summary.csv
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 
 #### Naval Propulsion Plant ####
 
@@ -185,7 +197,10 @@ uci_naval_nodeflow_{{i}}.model:
 
 uci_naval_nodeflow.aggregated_summary:
   type: pandas.CSVDataSet
-  filepath: data/08_reporting/UCI/naval-propulsion-plant/summary.csv
+  filepath: gcs://nodeflow/data/08_reporting/UCI/naval-propulsion-plant/summary.csv
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 
 #### Power Plant ####
 
@@ -222,7 +237,10 @@ uci_power_plant_nodeflow_{{i}}.model:
 
 uci_power_plant_nodeflow.aggregated_summary:
   type: pandas.CSVDataSet
-  filepath: data/08_reporting/UCI/power-plant/summary.csv
+  filepath: gcs://nodeflow/data/08_reporting/UCI/power-plant/summary.csv
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 
 #### Protein Tertiary Structure ####
 
@@ -259,7 +277,10 @@ uci_protein_nodeflow_{{i}}.model:
 
 uci_protein_nodeflow.aggregated_summary:
   type: pandas.CSVDataSet
-  filepath: data/08_reporting/UCI/protein-tertiary-structure/summary.csv
+  filepath: gcs://nodeflow/data/08_reporting/UCI/protein-tertiary-structure/summary.csv
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 
 #### Wine Quality Red ####
 
@@ -296,7 +317,10 @@ uci_wine_quality_nodeflow_{{i}}.model:
 
 uci_wine_quality_nodeflow.aggregated_summary:
   type: pandas.CSVDataSet
-  filepath: data/08_reporting/UCI/wine-quality-red/summary.csv
+  filepath: gcs://nodeflow/data/08_reporting/UCI/wine-quality-red/summary.csv
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 
 #### Yacht ####
 
@@ -333,7 +357,10 @@ uci_yacht_nodeflow_{{i}}.model:
 
 uci_yacht_nodeflow.aggregated_summary:
   type: pandas.CSVDataSet
-  filepath: data/08_reporting/UCI/yacht/summary.csv
+  filepath: gcs://nodeflow/data/08_reporting/UCI/yacht/summary.csv
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 
 #### Year Prediction MSD ####
 
@@ -378,4 +405,7 @@ uci_year_prediction_msd_nodeflow_{{i}}.model:
 
 uci_year_prediction_msd_nodeflow.aggregated_summary:
   type: pandas.CSVDataSet
-  filepath: data/08_reporting/UCI/year-prediction-msd/summary.csv
+  filepath: gcs://nodeflow/data/08_reporting/UCI/year-prediction-msd/summary.csv
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa

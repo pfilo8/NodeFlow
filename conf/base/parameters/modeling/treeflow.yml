@@ -21,6 +21,6 @@ tree_hyperparams:
 tree_model_type: "CatBoostPriorNormal"
 #### Training ####
 
-n_epochs: 10
-batch_size: 128
-num_samples: 1000
+# n_epochs: 10
+# batch_size: 128
+# num_samples: 1000

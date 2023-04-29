@@ -87,7 +87,7 @@ class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
             max_features=max_features,
             input_dropout=input_dropout,
             flatten_output=True,
-        )
+        ).to(device)
 
         self.flow_model = ContinuousNormalizingFlow(
             input_dim=output_dim,

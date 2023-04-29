@@ -10,7 +10,7 @@ model_hyperparams:
   num_trees: [100] #, 300]
 #### Training ####
 
-# n_epochs: 30
+n_epochs: 5
 # split_size: 0.8
-# batch_size: 128
+batch_size: 1024
 # num_samples: 1000
