@@ -73,7 +73,7 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, optuna_db: s
     study = optuna.create_study(
         study_name=study_name,
         storage=storage_name,
-        direction=['minimize', 'minimize'],
+        directions=['minimize', 'minimize'],
         sampler=optuna.samplers.GridSampler(model_hyperparams),
         load_if_exists=True
     )
