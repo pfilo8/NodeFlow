@@ -28,7 +28,7 @@ class OptunaDbDataSet(AbstractDataSet):
     def _load(self) -> NodeFlow:
         return self._filepath
 
-    def _save(self, model: NodeFlow) -> None:
+    def _save(self) -> None:
         return self._filepath
     
     def _describe(self) -> Dict[str, Any]:

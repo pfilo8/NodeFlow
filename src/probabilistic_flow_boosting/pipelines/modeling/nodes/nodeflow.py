@@ -78,8 +78,8 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, optuna_db: s
         load_if_exists=True
     )
     study.optimize(objective, n_trials=3*3*2)
-    trial = study.best_trial
-    logging.info(f"{trial}")
+    # trial = study.best_trial
+    # logging.info(f"{trial}")
 
     df = study.trials_dataframe()
     
