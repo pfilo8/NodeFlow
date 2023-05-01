@@ -36,6 +36,10 @@ uci_boston_nodeflow_{{i}}.model:
     project: theta-kingdom-385217
   credentials: creds_sa
 
+uci_boston_nodeflow_{{i}}.optuna_db:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaDbDataSet
+  filepath: data/05_model_input/UCI/bostonHousing/optunadb_boston_{{i}}.db
+
 {% endfor %}
 
 uci_boston_nodeflow.aggregated_summary:
