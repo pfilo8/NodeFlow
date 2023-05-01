@@ -63,7 +63,7 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, optuna_db: s
         logging.info(f"{hyperparams}, {result_train}, {result_val}")
 #         print(hyperparams, result_train, result_val)#, best_epoch)
 #         results.append([hyperparams, result_train, result_val])
-        return result_val
+        return result_train, result_val
 
     optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
     study_name = optuna_db.split("/")[-1]  # Unique identifier of the study.
@@ -73,7 +73,7 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, optuna_db: s
     study = optuna.create_study(
         study_name=study_name,
         storage=storage_name,
-        direction='minimize',
+        direction=['minimize', 'minimize'],
         sampler=optuna.samplers.GridSampler(model_hyperparams),
         load_if_exists=True
     )
