@@ -332,7 +332,7 @@ uci_wine_quality_nodeflow_{{i}}.y_test:
 
 uci_wine_quality_nodeflow_{{i}}.model:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/06_models/UCI/wine/optuna_report.csv
+  filepath: gcs://nodeflow/data/06_models/UCI/wine/optuna_report_{{i}}.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
