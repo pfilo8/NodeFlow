@@ -5,6 +5,7 @@ isort
 kedro==0.17.5
 torch==2.0.0
 kedro-telemetry~=0.1.0
+numpy==1.23.5
 nbstripout
 nflows
 ninja
@@ -17,6 +18,7 @@ pytest-mock
 pytest
 seaborn
 scikit-learn
-
+gcsfs
 torchdiffeq
 xgboost
+optuna

@@ -3,14 +3,18 @@
 model_params:
   num_layers: 6
   # loss_function: "MultiRMSE"
-  # device: "mps"
+  device: "cpu"
 
 model_hyperparams:
-  depth: [1] #, 3, 6]
-  num_trees: [100] #, 300]
+  depth: [1, 2, 3]
+  num_trees: [50, 100] #, 300]
+  flow_hidden_dims: [[16,16], [32,32], [16,16,16]]
 #### Training ####
 
-n_epochs: 5
+n_epochs: 10
 # split_size: 0.8
 batch_size: 1024
-# num_samples: 1000
+num_samples: 1000
+
+# export CUDA_VISIBLE_DEVICES=0
+# kedro run --pipeline=uci_wine_quality_nodeflow

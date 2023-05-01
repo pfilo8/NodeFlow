@@ -1,3 +1,6 @@
+import sys
+import logging
+import optuna
 import pandas as pd
 
 from ..utils import generate_params_for_grid_search, setup_random_seed, split_data
@@ -36,32 +39,50 @@ def train_nodeflow(x_train, y_train, x_val, y_val, model_params, hyperparams,
         x_val, y_val = x_val.values, y_val.values
 
     m = nodeflow.fit(x_train.values, y_train.values, x_val, y_val, n_epochs=n_epochs, batch_size=batch_size)
-    return nodeflow
+    return m
 
-def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, model_params, model_hyperparams,
+
+
+def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, optuna_db: str, model_params, model_hyperparams,
                     split_size=0.8, n_epochs: int = 100, batch_size: int = 1000, random_seed: int = 42):
     setup_random_seed(random_seed)
-
+    study = optuna.create_study(sampler=optuna.samplers.RandomSampler())
+    
     x_tr, x_val, y_tr, y_val = split_data(x_train=x_train, y_train=y_train, split_size=split_size)
+    
+    def objective(trial):
+        hyperparams = {
+            k: trial.suggest_categorical(k, v) for k, v in model_hyperparams.items()
+        }
+        m = train_nodeflow(x_tr, y_tr, x_val, y_val, model_params, hyperparams, n_epochs, batch_size, random_seed)
 
-    # model_hyperparams['hidden_dims'] = map(tuple, model_hyperparams['hidden_dims'])
-    results = []
+        result_train = calculate_nll(m, x_tr, y_tr, batch_size=batch_size)
+        result_val = calculate_nll(m, x_val, y_val, batch_size=batch_size)
 
-    for hyperparams in generate_params_for_grid_search(model_hyperparams):
-            m = train_nodeflow(x_tr, y_tr, x_val, y_val, model_params, hyperparams, n_epochs, batch_size, random_seed)
+        # TODO: save best epoch
+        logging.info(f"{hyperparams}, {result_train}, {result_val}")
+#         print(hyperparams, result_train, result_val)#, best_epoch)
+#         results.append([hyperparams, result_train, result_val])
+        return result_val
 
-            result_train = calculate_nll(m, x_tr, y_tr, batch_size=batch_size)
-            result_val = calculate_nll(m, x_val, y_val, batch_size=batch_size)
+    optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
+    study_name = optuna_db.split("/")[-1]  # Unique identifier of the study.
+    storage_name = "sqlite:///{}".format(optuna_db)
+    logging.info(f"{storage_name}")
+    
+    study = optuna.create_study(
+        study_name=study_name,
+        storage=storage_name,
+        direction='minimize',
+        sampler=optuna.samplers.GridSampler(model_hyperparams),
+        load_if_exists=True
+    )
+    study.optimize(objective, n_trials=3*3*2)
+    trial = study.best_trial
+    logging.info(f"{trial}")
 
-            # TODO: save best epoch
-            print(hyperparams, result_train, result_val)#, best_epoch)
-            results.append([hyperparams, result_train, result_val])
-
-    results = pd.DataFrame(results, columns=['hyperparams', 'log_prob_train', 'log_prob_val'])
-    results = results.sort_values('log_prob_val', ascending=True)
-    log_dataframe_artifact(results, 'grid_search_results')
-
-    best_params = results.iloc[0].to_dict()['hyperparams']
-
-    m = train_nodeflow(x_tr, y_tr, x_val, y_val, model_params, best_params, n_epochs, batch_size, random_seed)
-    return m
+    df = study.trials_dataframe()
+    
+    # # best_params = trial.params
+    # # m = train_nodeflow(x_tr, y_tr, x_val, y_val, model_params, best_params, n_epochs, batch_size, random_seed)
+    return df
