@@ -219,10 +219,14 @@ uci_naval_nodeflow_{{i}}.y_test:
 
 uci_naval_nodeflow_{{i}}.model:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/06_models/UCI/naval/optuna_report.csv
+  filepath: gcs://nodeflow/data/06_models/UCI/naval/optuna_report_{{i}}.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
+
+uci_naval_nodeflow_{{i}}.optuna_db:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaDbDataSet
+  filepath: data/05_model_input/UCI/naval/optunadb_naval_{{i}}.db
 
 {% endfor %}
 
@@ -262,10 +266,14 @@ uci_power_plant_nodeflow_{{i}}.y_test:
 
 uci_power_plant_nodeflow_{{i}}.model:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/06_models/UCI/power/optuna_report.csv
+  filepath: gcs://nodeflow/data/06_models/UCI/power-plant/optuna_report_{{i}}.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
+
+uci_power_plant_nodeflow_{{i}}.optuna_db:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaDbDataSet
+  filepath: data/05_model_input/UCI/power-plant/optunadb_power_plant_{{i}}.db
 
 {% endfor %}
 
@@ -305,10 +313,14 @@ uci_protein_nodeflow_{{i}}.y_test:
 
 uci_protein_nodeflow_{{i}}.model:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/06_models/UCI/protein/optuna_report.csv
+  filepath: gcs://nodeflow/data/06_models/UCI/protein-tertiary-structure/optuna_report_{{i}}.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
+
+uci_protein_nodeflow_{{i}}.optuna_db:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaDbDataSet
+  filepath: data/05_model_input/UCI/protein-tertiary-structure/optunadb_protein_{{i}}.db
 
 {% endfor %}
 
@@ -395,10 +407,14 @@ uci_yacht_nodeflow_{{i}}.y_test:
 
 uci_yacht_nodeflow_{{i}}.model:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/06_models/UCI/yacht/optuna_report.csv
+  filepath: gcs://nodeflow/data/06_models/UCI/yacht/optuna_report_{{i}}.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
+
+uci_yacht_nodeflow_{{i}}.optuna_db:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaDbDataSet
+  filepath: data/05_model_input/UCI/yacht/optunadb_yacht_{{i}}.db
 
 {% endfor %}
 
@@ -446,10 +462,14 @@ uci_year_prediction_msd_nodeflow_{{i}}.y_test:
 
 uci_year_prediction_msd_nodeflow_{{i}}.model:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/06_models/UCI/year/optuna_report.csv
+  filepath: gcs://nodeflow/data/06_models/UCI/year/optuna_report_{{i}}.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
+
+uci_year_prediction_msd_nodeflow_{{i}}.optuna_db:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaDbDataSet
+  filepath: data/05_model_input/UCI/year-prediction-msd/optunadb_year_prediction_msd_{{i}}.db
 
 {% endfor %}
 
