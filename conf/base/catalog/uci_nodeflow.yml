@@ -172,10 +172,14 @@ uci_kin8nm_nodeflow_{{i}}.y_test:
 
 uci_kin8nm_nodeflow_{{i}}.model:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/06_models/UCI/kin8nm/optuna_report.csv
+  filepath: gcs://nodeflow/data/06_models/UCI/kin8nm/optuna_report_{{i}}.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
+
+uci_kin8nm_nodeflow_{{i}}.optuna_db:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaDbDataSet
+  filepath: data/05_model_input/UCI/kin8nm/optunadb_kin8nm_{{i}}.db
 
 {% endfor %}
 
