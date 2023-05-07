@@ -78,10 +78,14 @@ uci_concrete_nodeflow_{{i}}.y_test:
 
 uci_concrete_nodeflow_{{i}}.model:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/06_models/UCI/concrete/optuna_report.csv
+  filepath: gcs://nodeflow/data/06_models/UCI/concrete/optuna_report_{{i}}.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
+
+uci_concrete_nodeflow_{{i}}.optuna_db:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaDbDataSet
+  filepath: data/05_model_input/UCI/concrete/optunadb_concrete_{{i}}.db
 
 {% endfor %}
 
