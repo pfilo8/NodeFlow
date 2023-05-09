@@ -65,6 +65,6 @@ def create_pipeline_train_model_nodeflow(**kwargs):
             func=modeling_nodeflow,
             inputs=["x_train", "y_train", "optuna_db", "params:model_params", "params:model_hyperparams",
                     "params:split_size", "params:n_epochs", "params:batch_size", "params:random_seed"],
-            outputs="model"
+            outputs=["optuna_gs_report", "model"]
         )
     ])

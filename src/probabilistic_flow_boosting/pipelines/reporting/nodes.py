@@ -369,6 +369,26 @@ def summary_ngboost(
     log_dataframe_artifact(results, "test_results")
     return results
 
+def summary_nodeflow(
+        train_results_nll: float,
+        test_results_nll: float,
+        train_results_rmse: float,
+        test_results_rmse: float,       
+):
+    results = pd.DataFrame([
+        ['train', 'nll', train_results_nll],
+        ['test', 'nll', test_results_nll],
+        ['train', 'rmse', train_results_rmse],
+        ['test', 'rmse', test_results_rmse],
+    ],
+        columns=[
+            'set', 'metric', 'value'
+        ]
+    )
+    log_dataframe_artifact(results, "test_results")
+    return results
+    
+
 
 def aggregated_report(*inputs: Tuple[pd.DataFrame]) -> pd.DataFrame:
     df = pd.concat(inputs)

@@ -46,7 +46,8 @@ from .nodes import (
     plot_loss_function,
     summary,
     summary_ngboost,
-    aggregated_report
+    aggregated_report,
+    summary_nodeflow
 )
 
 
@@ -246,6 +247,11 @@ def create_pipeline_calculate_metrics_nodeflow(**kwargs):
             inputs=["model", "x", "y", "params:batch_size"],
             outputs="results_nll"
         ),
+        node(
+            func=calculate_rmse,
+            inputs=["model", "x", "y", "params:num_samples", "params:batch_size"],
+            outputs="results_rmse"
+        ),
     ])
 
 
@@ -258,6 +264,7 @@ def create_pipeline_report_train_nodeflow():
         },
         outputs={
             "results_nll": "train_results_nll",
+            "results_rmse": "train_results_rmse",
         }
     )
 
@@ -271,6 +278,7 @@ def create_pipeline_report_test_nodeflow():
         },
         outputs={
             "results_nll": "test_results_nll",
+            "results_rmse": "test_results_rmse",
         }
     )
 
@@ -280,10 +288,12 @@ def create_pipeline_report_nodeflow():
         create_pipeline_report_train_nodeflow(),
         create_pipeline_report_test_nodeflow(),
         node(
-            func=summary_ngboost,
+            func=summary_nodeflow,
             inputs=[
                 "train_results_nll",
                 "test_results_nll",
+                "train_results_rmse",
+                "test_results_rmse",
             ],
             outputs="summary"
         )

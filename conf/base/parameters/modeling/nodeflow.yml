@@ -6,9 +6,10 @@ model_params:
   device: "cpu"
 
 model_hyperparams:
-  depth: [1, 2, 3]
-  num_trees: [50, 100] #, 300]
-  flow_hidden_dims: [[16,16], [32,32], [16,16,16]]
+  depth: [4] #, 2, 3]
+  tree_output_dim: [1] # ,2,3]
+  num_trees: [100, 200] #, 300]
+  flow_hidden_dims: [[16,16], [32,32]] #, [16,16,16]]
 #### Training ####
 
 n_epochs: 10

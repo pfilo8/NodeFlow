@@ -2,6 +2,7 @@ import sys
 import logging
 import optuna
 import pandas as pd
+import numpy as np
 
 from ..utils import generate_params_for_grid_search, setup_random_seed, split_data
 from ...utils import log_dataframe_artifact
@@ -42,7 +43,6 @@ def train_nodeflow(x_train, y_train, x_val, y_val, model_params, hyperparams,
     return m
 
 
-
 def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, optuna_db: str, model_params, model_hyperparams,
                     split_size=0.8, n_epochs: int = 100, batch_size: int = 1000, random_seed: int = 42):
     setup_random_seed(random_seed)
@@ -63,7 +63,7 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, optuna_db: s
         logging.info(f"{hyperparams}, {result_train}, {result_val}")
 #         print(hyperparams, result_train, result_val)#, best_epoch)
 #         results.append([hyperparams, result_train, result_val])
-        return result_train, result_val
+        return result_val
 
     optuna.logging.get_logger("optuna").addHandler(logging.StreamHandler(sys.stdout))
     study_name = optuna_db.split("/")[-1]  # Unique identifier of the study.
@@ -73,16 +73,15 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, optuna_db: s
     study = optuna.create_study(
         study_name=study_name,
         storage=storage_name,
-        directions=['minimize', 'minimize'],
+        direction='minimize',
         sampler=optuna.samplers.GridSampler(model_hyperparams),
         load_if_exists=True
     )
-    study.optimize(objective, n_trials=3*3*2)
-    # trial = study.best_trial
-    # logging.info(f"{trial}")
-
-    df = study.trials_dataframe()
+    num_trials = np.prod([len(p) for p in model_hyperparams.values()])
+    study.optimize(objective, n_trials=num_trials)
     
-    # # best_params = trial.params
-    # # m = train_nodeflow(x_tr, y_tr, x_val, y_val, model_params, best_params, n_epochs, batch_size, random_seed)
-    return df
+    df = study.trials_dataframe()
+    best_params = study.best_trial.params
+    print(best_params)
+    m = train_nodeflow(x_train, y_train, None, None, model_params, best_params, n_epochs, batch_size, random_seed)
+    return df, m

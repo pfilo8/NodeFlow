@@ -35,7 +35,7 @@ from .pipelines import (
     create_general_pipeline,
     create_general_pipeline_ngboost,
     create_pipeline_aggregated_report,
-    create_general_pipeline_nodeflow
+    create_general_pipeline_nodeflow,
 ) 
 
 
@@ -79,7 +79,11 @@ def create_general_uci_nodeflow_pipeline(namespace, n):
 
 def create_gridsearch_uci_nodeflow_pipeline(namespace, n):
     return Pipeline([
-        *[create_general_pipeline_nodeflow(f"{namespace}_{i}") for i in range(2)],
+        *[create_general_pipeline_nodeflow(f"{namespace}_{i}") for i in range(3)],
+        create_pipeline_aggregated_report(
+            inputs=[f"{namespace}_{i}.summary" for i in range(3)],
+            outputs=f"{namespace}.aggregated_summary"
+        )
     ])
 
 
