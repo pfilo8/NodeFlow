@@ -247,11 +247,11 @@ def create_pipeline_calculate_metrics_nodeflow(**kwargs):
             inputs=["model", "x", "y", "params:batch_size"],
             outputs="results_nll"
         ),
-        node(
-            func=calculate_rmse,
-            inputs=["model", "x", "y", "params:num_samples", "params:batch_size"],
-            outputs="results_rmse"
-        ),
+        # node(
+        #     func=calculate_rmse,
+        #     inputs=["model", "x", "y", "params:num_samples", "params:batch_size"],
+        #     outputs="results_rmse"
+        # ),
     ])
 
 
@@ -264,7 +264,7 @@ def create_pipeline_report_train_nodeflow():
         },
         outputs={
             "results_nll": "train_results_nll",
-            "results_rmse": "train_results_rmse",
+            # "results_rmse": "train_results_rmse",
         }
     )
 
@@ -278,7 +278,7 @@ def create_pipeline_report_test_nodeflow():
         },
         outputs={
             "results_nll": "test_results_nll",
-            "results_rmse": "test_results_rmse",
+            # "results_rmse": "test_results_rmse",
         }
     )
 
@@ -292,8 +292,8 @@ def create_pipeline_report_nodeflow():
             inputs=[
                 "train_results_nll",
                 "test_results_nll",
-                "train_results_rmse",
-                "test_results_rmse",
+                # "train_results_rmse",
+                # "test_results_rmse",
             ],
             outputs="summary"
         )

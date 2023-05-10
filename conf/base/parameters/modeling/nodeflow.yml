@@ -7,7 +7,7 @@ model_params:
 
 model_hyperparams:
   depth: [4] #, 2, 3]
-  tree_output_dim: [1] # ,2,3]
+  tree_output_dim: [1,2,3]
   num_trees: [100, 200] #, 300]
   flow_hidden_dims: [[16,16], [32,32]] #, [16,16,16]]
 #### Training ####

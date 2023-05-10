@@ -372,14 +372,14 @@ def summary_ngboost(
 def summary_nodeflow(
         train_results_nll: float,
         test_results_nll: float,
-        train_results_rmse: float,
-        test_results_rmse: float,       
+        # train_results_rmse: float,
+        # test_results_rmse: float,       
 ):
     results = pd.DataFrame([
         ['train', 'nll', train_results_nll],
         ['test', 'nll', test_results_nll],
-        ['train', 'rmse', train_results_rmse],
-        ['test', 'rmse', test_results_rmse],
+        # ['train', 'rmse', train_results_rmse],
+        # ['test', 'rmse', test_results_rmse],
     ],
         columns=[
             'set', 'metric', 'value'
