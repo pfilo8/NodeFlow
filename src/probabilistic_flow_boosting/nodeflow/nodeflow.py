@@ -192,7 +192,7 @@ class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
         mid: str = str(uuid.uuid4())  # To be able to run multiple experiments in parallel.
         loss_best: float = np.inf
 
-        with tqdm(range(n_epochs)) as pbar:
+        with tqdm(range(n_epochs), disable=(not verbose)) as pbar:
             for _ in pbar:
                 self.train()
                 for x_batch, y_batch in dataset_loader_train:

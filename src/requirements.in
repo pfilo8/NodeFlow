@@ -21,4 +21,4 @@ scikit-learn
 gcsfs
 torchdiffeq
 xgboost
-optuna
+ray[tune]

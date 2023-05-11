@@ -2,20 +2,20 @@
 
 model_params:
   num_layers: 6
+  flow_hidden_dims: [32,32] # [16,16,16]
   # loss_function: "MultiRMSE"
   device: "cpu"
 
 model_hyperparams:
-  depth: [4] #, 2, 3]
+  depth: [1,4] #, 2, 3]
   tree_output_dim: [1,2,3]
   num_trees: [100, 200] #, 300]
-  flow_hidden_dims: [[16,16], [32,32]] #, [16,16,16]]
 #### Training ####
 
-n_epochs: 10
+n_epochs: 5
 # split_size: 0.8
 batch_size: 1024
 num_samples: 1000
 
 # export CUDA_VISIBLE_DEVICES=0
-# kedro run --pipeline=uci_wine_quality_nodeflow
+# `
