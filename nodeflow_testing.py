@@ -32,7 +32,8 @@ nodeflow = NodeFlow(
     output_dim=y_tr.shape[1],
     num_trees=20,
     depth=6,
-    num_layers=6
+    num_layers=6,
+    tree_output_dim=2
 )
 
 nodeflow.fit(x_tr.values, y_tr.values, x_val.values, y_val.values, n_epochs=500, batch_size=1024, max_patience=20)
