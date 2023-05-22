@@ -9,7 +9,8 @@ import torch.nn as nn
 import torch.optim as optim
 
 from sklearn.base import BaseEstimator, RegressorMixin
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, QuantileTransformer
 from torch.utils.data import DataLoader, TensorDataset
 
 from .flow import ContinuousNormalizingFlow
@@ -39,7 +40,8 @@ class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
             flow_num_blocks: int = 3,
             flow_layer_type: str = "concatsquash",
             flow_nonlinearity: str = "tanh",
-            device: str = None
+            device: str = None,
+            random_state: int = 0
     ):
         nn.Module.__init__(self)
 
@@ -69,9 +71,11 @@ class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
         self.flow_layer_type = flow_layer_type
         self.flow_nonlinearity = flow_nonlinearity
 
-        self.feature_scaler = MinMaxScaler(feature_range=(-1, 1))
+        self.feature_scaler = Pipeline([
+            ('quantile', QuantileTransformer(random_state=random_state, output_distribution='normal')),
+            ('standarize', StandardScaler())
+        ])
         self.target_scaler = MinMaxScaler(feature_range=(-1, 1))
-
         self.tree_model = DenseODSTBlock(
             input_dim,
             num_trees,
