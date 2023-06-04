@@ -1,7 +1,7 @@
 [tool.kedro]
 package_name = "probabilistic_flow_boosting"
 project_name = "Probabilistic Flow Boosting"
-project_version = "0.17.5"
+kedro_init_version = "0.18.8"
 
 [tool.isort]
 multi_line_output = 3

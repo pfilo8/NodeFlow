@@ -2,10 +2,10 @@ catboost
 flake8
 ipython
 isort
-kedro==0.17.5
+kedro==0.18.8
 torch==2.0.0
-kedro-telemetry~=0.1.0
-numpy==1.23.5
+# kedro-telemetry~=0.1.0
+numpy # ==1.23.5
 nbstripout
 nflows
 ninja
@@ -21,4 +21,3 @@ scikit-learn
 gcsfs
 torchdiffeq
 xgboost
-ray[tune]
