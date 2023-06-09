@@ -79,9 +79,9 @@ def create_general_uci_nodeflow_pipeline(namespace, n):
 
 def create_gridsearch_uci_nodeflow_pipeline(namespace, n):
     return Pipeline([
-        *[create_general_pipeline_nodeflow(f"{namespace}_{i}") for i in range(10)],
+        *[create_general_pipeline_nodeflow(f"{namespace}_{i}") for i in range(n)],
         create_pipeline_aggregated_report(
-            inputs=[f"{namespace}_{i}.summary" for i in range(10)],
+            inputs=[f"{namespace}_{i}.summary" for i in range(n)],
             outputs=f"{namespace}.aggregated_summary"
         )
     ])

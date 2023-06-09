@@ -97,15 +97,15 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, model_params
         batch_size=batch_size,
         random_seed=random_seed
     )
-    torch.multiprocessing.set_start_method('spawn')
+    torch.multiprocessing.set_start_method('spawn', force=True)
     partial_worker = partial(worker, **params)
     manager = multiprocessing.Manager()
     stack = manager.Queue()
     result_q = manager.Queue()
     stack.put(0)
     stack.put(1)
-    # stack.put(2)
-    # stack.put(3)
+    stack.put(0)
+    stack.put(1)
 
     processes = []
     for params in model_hyperparams:
@@ -131,5 +131,5 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, model_params
     log_dataframe_artifact(results, 'grid_search_results')
     best_params = results.iloc[0].to_dict()['hyperparams']
     torch.cuda.empty_cache()
-    m = train_nodeflow(x_tr, y_tr, x_val, y_val, model_params, best_params, n_epochs, batch_size, random_seed)
+    m = train_nodeflow(x_train, y_train, None, None, model_params, best_params, n_epochs, batch_size, random_seed)
     return m
