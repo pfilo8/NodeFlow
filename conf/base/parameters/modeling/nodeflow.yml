@@ -5,7 +5,7 @@ uci_wine_quality_nodeflow_{{i}}:
     num_layers: 6
     flow_hidden_dims: [32,32] # [16,16,16]
     # loss_function: "MultiRMSE"
-    device: "cpu"
+    device: "cuda"
 
   model_hyperparams:
     depth: [1,4] #, 2, 3]
@@ -21,3 +21,25 @@ uci_wine_quality_nodeflow_{{i}}:
 {% endfor %}
 
 # kedro run --pipeline=uci_wine_quality_nodeflow
+
+{% for i in range(20) %}
+uci_energy_nodeflow_{{i}}:
+  model_params:
+    num_layers: 6
+    # loss_function: "MultiRMSE"
+    device: "cuda"
+
+  model_hyperparams:
+    depth: [1,3] #, 2, 3]
+    tree_output_dim: [1,2]
+    num_trees: [100, 200] #, 300]
+    flow_hidden_dims: [[16,16], [32,32]]
+  #### Training ####
+
+  n_epochs: 400
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2024
+  num_samples: 1000
+{% endfor %}
+# kedro run --pipeline=uci_energy_nodeflow

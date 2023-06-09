@@ -70,6 +70,8 @@ class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
         self.flow_num_blocks = flow_num_blocks
         self.flow_layer_type = flow_layer_type
         self.flow_nonlinearity = flow_nonlinearity
+        self.random_state = random_state
+        self._best_epoch = None
 
         self.feature_scaler = Pipeline([
             ('quantile', QuantileTransformer(random_state=random_state, output_distribution='normal')),
@@ -184,7 +186,7 @@ class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
         X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.device)
         y: torch.Tensor = torch.as_tensor(data=y, dtype=torch.float, device=self.device)
 
-        self.optimizer_ = optim.Adam(self.parameters())
+        self.optimizer_ = optim.AdamW(self.parameters())
 
         dataset_loader_train: DataLoader = DataLoader(
             dataset=TensorDataset(X, y),
@@ -197,7 +199,7 @@ class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
         loss_best: float = np.inf
 
         with tqdm(range(n_epochs), disable=(not verbose)) as pbar:
-            for _ in pbar:
+            for epoch in pbar:
                 self.train()
                 for x_batch, y_batch in dataset_loader_train:
                     self.optimizer_.zero_grad()
@@ -218,6 +220,7 @@ class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
                         loss_best = loss_val
                         self._save_temp(mid)
                         patience = 0
+                        self._best_epoch = epoch
 
                     else:
                         patience += 1

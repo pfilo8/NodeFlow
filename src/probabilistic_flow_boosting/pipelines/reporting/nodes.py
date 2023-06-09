@@ -35,7 +35,7 @@ import datetime
 
 import catboost
 import matplotlib.pyplot as plt
-import mlflow
+# import mlflow
 import ngboost
 import numpy as np
 import pandas as pd
@@ -285,7 +285,7 @@ def plot_loss_function(model: TreeFlowBoost):
     ax.plot(x, losses["train"])
     if len(losses["val"]) > 0:
         ax.plot(x, losses["val"])
-    mlflow.log_figure(fig, f'losses-{str(datetime.datetime.now()).replace(" ", "-")}.png')
+    # mlflow.log_figure(fig, f'losses-{str(datetime.datetime.now()).replace(" ", "-")}.png')
 
 
 def calculate_nll_ngboost(model: Union[ngboost.NGBoost, IndependentNGBoost], x: pd.DataFrame, y: pd.DataFrame,
@@ -398,6 +398,6 @@ def aggregated_report(*inputs: Tuple[pd.DataFrame]) -> pd.DataFrame:
 
     # MLFlow
     results["set-metric"] = results["set"] + "_" + results["metric"]
-    mlflow.log_metrics({f"{k}_mean": v for k, v in zip(results["set-metric"].values, results["mean"].values)})
-    mlflow.log_metrics({f"{k}_std": v for k, v in zip(results["set-metric"].values, results["std"].values)})
+    # mlflow.log_metrics({f"{k}_mean": v for k, v in zip(results["set-metric"].values, results["mean"].values)})
+    # mlflow.log_metrics({f"{k}_std": v for k, v in zip(results["set-metric"].values, results["std"].values)})
     return results

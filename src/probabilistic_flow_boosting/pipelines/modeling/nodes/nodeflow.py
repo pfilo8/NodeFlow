@@ -46,7 +46,8 @@ def train_nodeflow(x_train, y_train, x_val, y_val, model_params, hyperparams,
     if x_val is not None and y_val is not None:
         x_val, y_val = x_val.values, y_val.values
 
-    m = nodeflow.fit(x_train.values, y_train.values, x_val, y_val, n_epochs=n_epochs, batch_size=batch_size, verbose=show_tqdm)
+    m = nodeflow.fit(x_train.values, y_train.values, x_val, y_val,
+                    n_epochs=n_epochs, batch_size=batch_size, verbose=show_tqdm, max_patience=30)
     return m
 
 
@@ -57,15 +58,21 @@ def worker(stack, results, hyperparams,
         torch.cuda.set_device(gpu_id)
         torch.cuda.empty_cache()
         print("Taking: ", gpu_id)
-        show_tqdm = False
+        show_tqdm = True
         setup_random_seed(random_seed)
         m = train_nodeflow(x_tr, y_tr, x_val, y_val, model_params, hyperparams, n_epochs, batch_size, random_seed, show_tqdm)
         result_train = calculate_nll(m, x_tr, y_tr, batch_size=batch_size)
         result_val = calculate_nll(m, x_val, y_val, batch_size=batch_size)
+        best_epoch = m._best_epoch
 
         # TODO: save best epoch
-        print(hyperparams, result_train, result_val)
-        results.put({"hyperparams": hyperparams, "result_train": result_train, "result_val": result_val})
+        print(hyperparams, result_train, result_val, best_epoch)
+        results.put({
+            "hyperparams": hyperparams,
+            "log_prob_train": result_train,
+            "log_prob_val": result_val,
+            "best_epoch": best_epoch,
+        })
     except Exception as e:
         print(e)
     finally:
@@ -90,14 +97,15 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, model_params
         batch_size=batch_size,
         random_seed=random_seed
     )
+    torch.multiprocessing.set_start_method('spawn')
     partial_worker = partial(worker, **params)
     manager = multiprocessing.Manager()
     stack = manager.Queue()
     result_q = manager.Queue()
     stack.put(0)
     stack.put(1)
-    stack.put(2)
-    stack.put(3)
+    # stack.put(2)
+    # stack.put(3)
 
     processes = []
     for params in model_hyperparams:
@@ -106,6 +114,7 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, model_params
         p = multiprocessing.Process(target=partial_worker, args=(stack,result_q,params,))
         p.start()
         processes.append(p)
+        time.sleep(3)
     
     for p in processes:
         p.join()
@@ -118,6 +127,7 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, model_params
 
     results = pd.DataFrame(results, columns=['hyperparams', 'log_prob_train', 'log_prob_val', 'best_epoch'])
     results = results.sort_values('log_prob_val', ascending=True)
+    print(results)
     log_dataframe_artifact(results, 'grid_search_results')
     best_params = results.iloc[0].to_dict()['hyperparams']
     torch.cuda.empty_cache()
