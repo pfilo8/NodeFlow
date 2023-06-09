@@ -44,6 +44,7 @@ from .nodes import (
     calculate_rmse_at_3,
     calculate_nll_ngboost,
     plot_loss_function,
+    calculate_metrics_nodeflow,
     summary,
     summary_ngboost,
     aggregated_report,
@@ -243,15 +244,10 @@ def create_pipeline_report_ngboost():
 def create_pipeline_calculate_metrics_nodeflow(**kwargs):
     return Pipeline([
         node(
-            func=calculate_nll,
-            inputs=["model", "x", "y", "params:batch_size"],
-            outputs="results_nll"
+            func=calculate_metrics_nodeflow,
+            inputs=["model", "x", "y", "params:num_samples", "params:batch_size", "params:sample_batch_size"],
+            outputs=["results_nll", "results_rmse_1", "results_rmse_2", "results_crps"]
         ),
-        # node(
-        #     func=calculate_rmse,
-        #     inputs=["model", "x", "y", "params:num_samples", "params:batch_size"],
-        #     outputs="results_rmse"
-        # ),
     ])
 
 
@@ -264,7 +260,9 @@ def create_pipeline_report_train_nodeflow():
         },
         outputs={
             "results_nll": "train_results_nll",
-            # "results_rmse": "train_results_rmse",
+            "results_rmse_1": "train_results_rmse_1",
+            "results_rmse_2": "train_results_rmse_2",
+            "results_crps": "train_results_crps",
         }
     )
 
@@ -278,7 +276,9 @@ def create_pipeline_report_test_nodeflow():
         },
         outputs={
             "results_nll": "test_results_nll",
-            # "results_rmse": "test_results_rmse",
+            "results_rmse_1": "test_results_rmse_1",
+            "results_rmse_2": "test_results_rmse_2",
+            "results_crps": "test_results_crps",
         }
     )
 
@@ -292,8 +292,12 @@ def create_pipeline_report_nodeflow():
             inputs=[
                 "train_results_nll",
                 "test_results_nll",
-                # "train_results_rmse",
-                # "test_results_rmse",
+                "train_results_rmse_1",
+                "test_results_rmse_1",
+                "train_results_rmse_2",
+                "test_results_rmse_2",
+                "train_results_crps",
+                "test_results_crps",
             ],
             outputs="summary"
         )

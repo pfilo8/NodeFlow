@@ -36,7 +36,7 @@ import datetime
 import catboost
 import matplotlib.pyplot as plt
 # import mlflow
-import ngboost
+# import ngboost
 import numpy as np
 import pandas as pd
 import properscoring as ps
@@ -49,8 +49,9 @@ from nflows.distributions import ConditionalDiagonalNormal
 from .utils import batch, KDE
 from ..utils import log_dataframe_artifact
 
-from ...pgbm import PGBM
+# from ...pgbm import PGBM
 from ...tfboost.tfboost import TreeFlowBoost
+from ...nodeflow.nodeflow import NodeFlow
 from ...independent_multivariate_boosting import IndependentNGBoost
 
 
@@ -75,40 +76,35 @@ def calculate_nll(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, batch_
     y: np.ndarray = y.values
     return -model.log_prob(x, y, batch_size=batch_size).mean()
 
+def calculate_peaks_from_sample(sample, find_peaks_parameters, n_peaks=2):
+    kde = KDE()
+    density, support = kde(sample)
+    peaks_id, _ = signal.find_peaks(density, **find_peaks_parameters)
+    peaks_order = np.argsort(-density[peaks_id])  # Sort in descending order.
+    peaks = support[peaks_id]
+    peaks = peaks[peaks_order]
+    if len(peaks_id) == 0:
+        peaks = np.repeat(np.mean(sample), n_peaks)
+    peaks = np.resize(peaks, n_peaks)
+    return peaks
+
+def calculate_peaks(samples: np.ndarray, find_peaks_parameters: Dict[Any, Any] = None, n_peaks: int = 2):
+    if find_peaks_parameters is None:
+        find_peaks_parameters = {}
+    results = [calculate_peaks_from_sample(sample, find_peaks_parameters, n_peaks) for sample in samples]
+    results = np.array(results)
+    return results
+
+def rmse_at_k(y_true: np.ndarray, y_score: List[np.ndarray]):
+    results = []
+
+    for i in range(y_true.shape[0]):
+        results.append(np.min((y_score[i] - y_true[i]) ** 2))  # Take closer prediction
+
+    return np.sqrt(np.average(results))
 
 def _calculate_rmse_at_k(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int,
                          k: int = 2, find_peaks_parameters: Dict[Any, Any] = None):
-    def calculate_treeflow_peaks(samples: np.ndarray, find_peaks_parameters: Dict[Any, Any] = None):
-        if find_peaks_parameters is None:
-            find_peaks_parameters = {}
-
-        def calculate_peaks(sample, find_peaks_parameters):
-            kde = KDE()
-            density, support = kde(sample)
-
-            peaks_id, _ = signal.find_peaks(density, **find_peaks_parameters)
-            peaks = support[peaks_id]
-            peaks_order = np.argsort(-density[peaks_id])  # Sort in descending order.
-            if len(peaks_id) == 0:
-                return [np.mean(sample)]
-            return peaks[peaks_order]
-
-        results = []
-
-        for sample in samples:
-            peaks = calculate_peaks(sample, find_peaks_parameters)
-            results.append(peaks)
-
-        return results
-
-    def rmse_at_k(y_true: np.ndarray, y_score: List[np.ndarray]):
-        results = []
-
-        for i in range(y_true.shape[0]):
-            results.append(np.min((y_score[i] - y_true[i]) ** 2))  # Take closer prediction
-
-        return np.sqrt(np.average(results))
-
     if find_peaks_parameters is None:
         find_peaks_parameters = {"height": 0.1}  # Proposed default
 
@@ -124,11 +120,38 @@ def _calculate_rmse_at_k(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame,
     # For CNF
     # samples = model.sample(x, num_samples=num_samples, batch_size=batch_size)
 
-    y_test_treeflow_peaks = calculate_treeflow_peaks(samples, find_peaks_parameters)
+    y_test_treeflow_peaks = calculate_peaks(samples, find_peaks_parameters)
     y_test_treeflow_peaks = [s[:k] for s in y_test_treeflow_peaks]
 
     return rmse_at_k(y, y_test_treeflow_peaks)
 
+def calculate_metrics_nodeflow(model: NodeFlow, x: np.ndarray, y: np.ndarray, num_samples: int,
+                               batch_size: int, sample_batch_size: int, find_peaks_parameters: Dict[Any, Any] = None):
+    torch.cuda.empty_cache()
+    # NLL
+    x: np.ndarray = x.values
+    y: np.ndarray = y.values
+    nll = -model.log_prob(x, y, batch_size=batch_size).mean()
+
+    samples = model.sample(x, num_samples=num_samples, batch_size=sample_batch_size)
+    if find_peaks_parameters is None:
+        find_peaks_parameters = {"height": 0.1}  # Proposed default
+    # RMSE
+    peaks_1 = calculate_peaks(samples, find_peaks_parameters, n_peaks=1)
+    peaks_2 = calculate_peaks(samples, find_peaks_parameters, n_peaks=2)
+    rmse_1 = np.sqrt(np.mean((y-peaks_1)**2))
+    rmse_2 = np.sqrt(np.mean(np.min((np.tile(y, 2)-peaks_2)**2, axis=1)))
+
+    # CRPS
+    y = y.reshape(-1)
+    crpss = []
+    for o, f in zip(batch(y, 100), batch(samples, 100)):
+        crpss.append(ps.crps_ensemble(
+            observations=o,
+            forecasts=f
+        ))
+    crpss = np.concatenate(crpss)
+    return nll, rmse_1, rmse_2, crpss.mean()
 
 def calculate_rmse_at_1(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
     return _calculate_rmse_at_k(model=model, x=x, y=y, num_samples=num_samples, batch_size=batch_size, k=1,
@@ -288,7 +311,7 @@ def plot_loss_function(model: TreeFlowBoost):
     # mlflow.log_figure(fig, f'losses-{str(datetime.datetime.now()).replace(" ", "-")}.png')
 
 
-def calculate_nll_ngboost(model: Union[ngboost.NGBoost, IndependentNGBoost], x: pd.DataFrame, y: pd.DataFrame,
+def calculate_nll_ngboost(model, x: pd.DataFrame, y: pd.DataFrame,
                           independent=False) -> float:
     x: np.ndarray = x.values
     y: np.ndarray = y.values
@@ -372,14 +395,22 @@ def summary_ngboost(
 def summary_nodeflow(
         train_results_nll: float,
         test_results_nll: float,
-        # train_results_rmse: float,
-        # test_results_rmse: float,       
+        train_results_rmse_1: float,
+        test_results_rmse_1: float,
+        train_results_rmse_2: float,
+        test_results_rmse_2: float,
+        train_results_crps: float,
+        test_results_crps: float,
 ):
     results = pd.DataFrame([
         ['train', 'nll', train_results_nll],
         ['test', 'nll', test_results_nll],
-        # ['train', 'rmse', train_results_rmse],
-        # ['test', 'rmse', test_results_rmse],
+        ['train', 'rmse_1', train_results_rmse_1],
+        ['test', 'rmse_1', test_results_rmse_1],
+        ['train', 'rmse_2', train_results_rmse_2],
+        ['test', 'rmse_2', test_results_rmse_2],
+        ['train', 'crps', train_results_crps],
+        ['test', 'crps', test_results_crps],
     ],
         columns=[
             'set', 'metric', 'value'

@@ -1,8 +1,10 @@
 from itertools import product
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 
 from src.probabilistic_flow_boosting.extras.datasets.uci_dataset import UCIDataSet
 from src.probabilistic_flow_boosting.nodeflow import NodeFlow
+from src.probabilistic_flow_boosting.pipelines.reporting.nodes import calculate_metrics_nodeflow
 
 x_train = UCIDataSet(
     filepath_data="data/01_raw/UCI/wine-quality-red/data.txt",
@@ -41,14 +43,20 @@ for hyperparams in generate_params_for_grid_search(model_hyperparams):
     nodeflow = NodeFlow(
         input_dim=x_tr.shape[1],
         output_dim=y_tr.shape[1],
+        device="cuda",
         **hyperparams
     )
     # x_val.values, y_val.values,
-    nodeflow.fit(x_tr.values, y_tr.values, None, None, n_epochs=1, batch_size=1024, max_patience=20)
+    nodeflow.fit(x_tr.values, y_tr.values, None, None, n_epochs=100, batch_size=1024, max_patience=20, verbose=True)
 
     nll_train = nodeflow.nll(x_tr.values, y_tr.values)
     nll_val = nodeflow.nll(x_val.values, y_val.values)
     nll_test = nodeflow.nll(x_test.values, y_test.values)
-    with open("results.csv", "a") as results_f:
-        results_f.write(f"{hyperparams},{nll_train},{nll_val},{nll_test}")
-    print(hyperparams, nll_train, nll_val, nll_test)
+    print(nll_train, nll_test)
+    rmse_1, rmse_2, crps = calculate_metrics_nodeflow(nodeflow, x_val.values, y_val.values, num_samples=1000, batch_size=32)
+    print(rmse_1, rmse_2, crps)
+
+    # rmse_2 = calculate_rmse_at_2(nodeflow, x_val, y_val, num_samples=1000, batch_size=128)
+    # with open("results.csv", "a") as results_f:
+    #     results_f.write(f"{hyperparams},{nll_train},{nll_val},{nll_test}")
+    # print(hyperparams, nll_train, nll_val, nll_test, rmse_2)
