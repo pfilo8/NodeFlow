@@ -154,7 +154,7 @@ class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
 
         all_samples: List[torch.Tensor] = []
 
-        for x in dataset_loader:
+        for x in tqdm(dataset_loader):
             sample: torch.Tensor = self._sample(x[0], num_samples)
             all_samples.append(sample)
 
@@ -268,8 +268,8 @@ class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
         return torch.load(f"/tmp/model_{mid}.pt")
     
     def save(self, filename: str):
-        torch.save(self, f"{filename}-nodeflow")
+        torch.save(self, f"{filename}-nodeflow.pt")
 
     @classmethod
     def load(cls, filename: str):
-        return torch.load(f"{filename}-nodeflow")
+        return torch.load(f"{filename}-nodeflow.pt")
