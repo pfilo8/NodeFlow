@@ -186,7 +186,7 @@ class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
         X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.device)
         y: torch.Tensor = torch.as_tensor(data=y, dtype=torch.float, device=self.device)
 
-        self.optimizer_ = optim.AdamW(self.parameters())
+        self.optimizer_ = optim.RAdam(self.parameters(), lr=0.003)
 
         dataset_loader_train: DataLoader = DataLoader(
             dataset=TensorDataset(X, y),
@@ -196,6 +196,7 @@ class NodeFlow(BaseEstimator, RegressorMixin, nn.Module):
 
         patience: int = 0
         mid: str = str(uuid.uuid4())  # To be able to run multiple experiments in parallel.
+        self.mid = mid
         loss_best: float = np.inf
 
         with tqdm(range(n_epochs), disable=(not verbose)) as pbar:

@@ -393,7 +393,7 @@ uci_wine_quality_nodeflow_{{i}}.optuna_db:
 
 uci_wine_quality_nodeflow_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.NodeFlowDataSet
-  filepath: data/06_models/UCI/wine/model_{{i}}
+  filepath: data/06_models/UCI/wine-quality-red/model_{{i}}
 
 uci_wine_quality_nodeflow_{{i}}.summary:
   type: pandas.CSVDataSet
