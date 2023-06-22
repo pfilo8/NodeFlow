@@ -152,7 +152,7 @@ class ContinuousNormalizingFlowRegressor(BaseEstimator, RegressorMixin, nn.Modul
         return samples
 
     def fit(self, X: np.ndarray, y: np.ndarray, X_val: Union[np.ndarray, None] = None,
-            y_val: Union[np.ndarray, None] = None, n_epochs: int = 100, batch_size: int = 128, max_patience: int = 50,
+            y_val: Union[np.ndarray, None] = None, n_epochs: int = 100, batch_size: int = 128, max_patience: int = 30,
             verbose: bool = False):
         """ Fit Continuous Normalizing Flow model.
 
@@ -165,7 +165,7 @@ class ContinuousNormalizingFlowRegressor(BaseEstimator, RegressorMixin, nn.Modul
         X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.device)
         y: torch.Tensor = torch.as_tensor(data=y, dtype=torch.float, device=self.device)
 
-        self.optimizer_ = optim.Adam(self.parameters())
+        self.optimizer_ = optim.RAdam(self.parameters(), lr=0.003)
 
         dataset_loader_train: DataLoader = DataLoader(
             dataset=TensorDataset(X, y),
@@ -175,10 +175,11 @@ class ContinuousNormalizingFlowRegressor(BaseEstimator, RegressorMixin, nn.Modul
 
         patience: int = 0
         mid: str = str(uuid.uuid4())  # To be able to run multiple experiments in parallel.
+        self.mid = mid
         loss_best: float = np.inf
 
         with tqdm(range(n_epochs)) as pbar:
-            for _ in pbar:
+            for epoch in pbar:
                 self.train()
                 for x_batch, y_batch in dataset_loader_train:
                     self.optimizer_.zero_grad()
@@ -198,6 +199,7 @@ class ContinuousNormalizingFlowRegressor(BaseEstimator, RegressorMixin, nn.Modul
                     if loss_val < loss_best:
                         loss_best = loss_val
                         self._save_temp(mid)
+                        self._best_epoch = epoch
                         patience = 0
 
                     else:
@@ -267,3 +269,10 @@ class ContinuousNormalizingFlowRegressor(BaseEstimator, RegressorMixin, nn.Modul
 
     def _load_temp(self, mid: str):
         return torch.load(f"/tmp/model_{mid}.pt")
+    
+    def save(self, filename: str):
+        torch.save(self, f"{filename}-cnf.pt")
+
+    @classmethod
+    def load(cls, filename: str):
+        return torch.load(f"{filename}-cnf.pt")

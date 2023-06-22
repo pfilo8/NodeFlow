@@ -36,6 +36,7 @@ from .pipelines import (
     create_general_pipeline_ngboost,
     create_pipeline_aggregated_report,
     create_general_pipeline_nodeflow,
+    create_general_pipeline_cnf
 ) 
 
 
@@ -86,6 +87,14 @@ def create_gridsearch_uci_nodeflow_pipeline(namespace, n):
         )
     ])
 
+def create_gridsearch_uci_cnf_pipeline(namespace, n):
+    return Pipeline([
+        *[create_general_pipeline_cnf(f"{namespace}_{i}") for i in range(n)],
+        create_pipeline_aggregated_report(
+            inputs=[f"{namespace}_{i}.summary" for i in range(n)],
+            outputs=f"{namespace}.aggregated_summary"
+        )
+    ])
 
 def register_pipelines() -> Dict[str, Pipeline]:
     """Register the project's pipelines.
@@ -134,11 +143,16 @@ def register_pipelines() -> Dict[str, Pipeline]:
         f"{d}_nodeflow": create_gridsearch_uci_nodeflow_pipeline(f"{d}_nodeflow", n) for d, n in uci_datasets
     }
 
+    uci_cnf_pipelines = {
+        f"{d}_cnf": create_gridsearch_uci_cnf_pipeline(f"{d}_cnf", n) for d, n in uci_datasets
+    }
+
     return {
         "__default__": Pipeline([]),
         **momogp_pipelines,
         **momogp_ngboost_pipelines,
         **uci_pipelines,
         **uci_nodeflow_pipelines,
-        **oceanographic_pipelines
+        **oceanographic_pipelines,
+        **uci_cnf_pipelines
     }
