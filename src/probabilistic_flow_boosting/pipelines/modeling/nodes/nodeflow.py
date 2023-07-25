@@ -4,10 +4,10 @@ import logging
 import pandas as pd
 import torch
 import time
-import multiprocessing
+
 from functools import partial
 
-from ..utils import generate_params_for_grid_search, setup_random_seed, split_data
+from ..utils import generate_params_for_grid_search, setup_random_seed, split_data, run_multiple_gpu, as_worker
 from ...utils import log_dataframe_artifact
 from ...reporting.nodes import calculate_nll
 
@@ -46,38 +46,35 @@ def train_nodeflow(x_train, y_train, x_val, y_val, model_params, hyperparams,
                     n_epochs=n_epochs, batch_size=batch_size, verbose=show_tqdm, max_patience=30)
     return m
 
+@as_worker
+def train_nodeflow_worker(
+    x_tr, x_val, y_tr, y_val,
+    model_params,
+    model_hyperparams,
+    n_epochs: int = 100,
+    batch_size: int = 1000,
+    random_seed: int = 42
+):
+    show_tqdm = True
+    setup_random_seed(random_seed)
 
-def worker(stack, results, hyperparams,
-        x_tr, x_val, y_tr, y_val, model_params, n_epochs: int = 100, batch_size: int = 1000, random_seed: int = 42):
-    try:
-        gpu_id = stack.get()
-        torch.cuda.set_device(gpu_id)
-        torch.cuda.empty_cache()
-        print("Taking: ", gpu_id)
-        show_tqdm = True
-        setup_random_seed(random_seed)
-        start_time = time.time()
-        m = train_nodeflow(x_tr, y_tr, x_val, y_val, model_params, hyperparams, n_epochs, batch_size, random_seed, show_tqdm)
-        elapsed_time = time.time() - start_time
-        result_train = calculate_nll(m, x_tr, y_tr, batch_size=batch_size)
-        result_val = calculate_nll(m, x_val, y_val, batch_size=batch_size)
-        best_epoch = m._best_epoch
-        os.remove(f"/tmp/ofurman/model_{m.mid}.pt")
+    start_time = time.time()
+    m = train_nodeflow(x_tr, y_tr, x_val, y_val, model_params, model_hyperparams, n_epochs, batch_size, random_seed, show_tqdm)
+    elapsed_time = time.time() - start_time
+    
+    result_train = calculate_nll(m, x_tr, y_tr, batch_size=batch_size)
+    result_val = calculate_nll(m, x_val, y_val, batch_size=batch_size)
+    best_epoch = m._best_epoch
+    os.remove(f"/tmp/model_{m.mid}.pt")
 
-        # TODO: save best epoch
-        print(hyperparams, result_train, result_val, best_epoch)
-        results.put({
-            "hyperparams": hyperparams,
-            "log_prob_train": result_train,
-            "log_prob_val": result_val,
-            "best_epoch": best_epoch,
-            "train_time": elapsed_time
-        })
-    except Exception as e:
-        print(e)
-    finally:
-        stack.put(gpu_id)
-        print("Free: ", gpu_id)
+    print(model_hyperparams, result_train, result_val, best_epoch, elapsed_time)
+    return {
+        "hyperparams": model_hyperparams,
+        "log_prob_train": result_train,
+        "log_prob_val": result_val,
+        "best_epoch": best_epoch,
+        "train_time": elapsed_time
+    }
 
 
 def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, model_params, model_hyperparams,
@@ -95,37 +92,11 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, model_params
         batch_size=batch_size,
         random_seed=random_seed
     )
-    torch.multiprocessing.set_start_method('spawn', force=True)
-    partial_worker = partial(worker, **params)
-    manager = multiprocessing.Manager()
-    stack = manager.Queue()
-    result_q = manager.Queue()
-    stack.put(0)
-    stack.put(0)
-    stack.put(1)
-    stack.put(1)
-    stack.put(2)
-    stack.put(2)
+    partial_worker = partial(train_nodeflow_worker, **params)
 
-    processes = []
-    for params in model_hyperparams:
-        while stack.empty():
-            time.sleep(5)
-        p = multiprocessing.Process(target=partial_worker, args=(stack,result_q,params,))
-        p.start()
-        processes.append(p)
-        time.sleep(3)
-    
-    for p in processes:
-        p.join()
+    results = run_multiple_gpu(partial_worker, model_hyperparams, n_gpu=4, n_jobs_per_gpu=2)
 
-    results = []
-    while not result_q.empty():
-        results.append(result_q.get())
-    print(results)
-
-
-    results = pd.DataFrame(results, columns=['hyperparams', 'log_prob_train', 'log_prob_val', 'best_epoch'])
+    results = pd.DataFrame(results, columns=['hyperparams', 'log_prob_train', 'log_prob_val', 'best_epoch', 'train_time'])
     results = results.sort_values('log_prob_val', ascending=True)
     print(results)
     log_dataframe_artifact(results, 'grid_search_results')

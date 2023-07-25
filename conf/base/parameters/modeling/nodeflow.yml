@@ -49,15 +49,15 @@ uci_concrete_nodeflow_{{i}}:
 {% for i in range(20) %}
 uci_energy_nodeflow_{{i}}:
   model_params:
-    num_layers: 6
-    depth: 3
     # loss_function: "MultiRMSE"
     device: "cuda"
 
   model_hyperparams:
+    num_layers: [6, 3, 1]
+    depth: [4, 2, 1]
     tree_output_dim: [1]
-    num_trees: [50, 100] #, 300]
-    flow_hidden_dims: [[16,16], [32,32], [16, 16, 16], [32, 32, 32]]
+    num_trees: [300, 100, 50]
+    flow_hidden_dims: [[64,64,64,32], [16,16], [32,32], [16, 16, 16], [32, 32, 32], [64,32], [64,64,32]]
   #### Training ####
 
   n_epochs: 400
