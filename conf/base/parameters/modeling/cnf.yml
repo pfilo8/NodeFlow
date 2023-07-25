@@ -112,17 +112,15 @@ uci_naval_cnf_{{i}}:
 {% for i in range(20) %}
 uci_power_plant_cnf_{{i}}:
   model_params:
-    device: "cuda"
+    num_blocks: 3
+    device: "cpu"
 
   model_hyperparams:
-    num_layers: [6]
-    depth: [4]
-    tree_output_dim: [1]
-    num_trees: [50, 100] # 50, 
-    flow_hidden_dims: [[16,16], [16, 16, 16]] # [64,64,64], [32, 32, 32], [32,32]
+    embedding_dim: [0]
+    hidden_dims: [[100, 50], [100, 100, 50], [200, 100, 100, 50]]
   #### Training ####
 
-  n_epochs: 200
+  n_epochs: 100
   split_size: 0.8
   random_seed: 42
   batch_size: 4096

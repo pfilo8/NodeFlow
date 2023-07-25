@@ -1,13 +1,8 @@
 import sys
 import logging
-# import optuna
 import pandas as pd
-import numpy as np
 import torch
-from joblib import Parallel, delayed
 import time
-import multiprocessing
-from functools import partial
 import multiprocessing
 from functools import partial
 
@@ -60,7 +55,9 @@ def worker(stack, results, hyperparams,
         print("Taking: ", gpu_id)
         show_tqdm = True
         setup_random_seed(random_seed)
+        start_time = time.time()
         m = train_nodeflow(x_tr, y_tr, x_val, y_val, model_params, hyperparams, n_epochs, batch_size, random_seed, show_tqdm)
+        elaps_time = time.time() - start_time
         result_train = calculate_nll(m, x_tr, y_tr, batch_size=batch_size)
         result_val = calculate_nll(m, x_val, y_val, batch_size=batch_size)
         best_epoch = m._best_epoch
@@ -72,14 +69,13 @@ def worker(stack, results, hyperparams,
             "log_prob_train": result_train,
             "log_prob_val": result_val,
             "best_epoch": best_epoch,
+            "train_time": elaps_time
         })
     except Exception as e:
         print(e)
     finally:
         stack.put(gpu_id)
         print("Free: ", gpu_id)
-
-
 
 
 def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, model_params, model_hyperparams,
