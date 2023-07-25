@@ -53,7 +53,7 @@ def train_cnf(x_train, y_train, x_val, y_val, model_params, hyperparams,
         x_val, y_val = x_val.values, y_val.values
 
     m = model.fit(x_train.values, y_train.values, x_val, y_val,
-                    n_epochs=n_epochs, batch_size=batch_size, verbose=show_tqdm, max_patience=30)
+                    n_epochs=n_epochs, batch_size=batch_size, verbose=show_tqdm, max_patience=5)
     return m
 
 
@@ -61,8 +61,8 @@ def worker(stack, results, hyperparams,
         x_tr, x_val, y_tr, y_val, model_params, n_epochs: int = 100, batch_size: int = 1000, random_seed: int = 42):
     try:
         gpu_id = stack.get()
-        # torch.cuda.set_device(gpu_id)
-        # torch.cuda.empty_cache()
+        torch.cuda.set_device(gpu_id)
+        torch.cuda.empty_cache()
         print("Taking: ", gpu_id)
         show_tqdm = True
         setup_random_seed(random_seed)
@@ -103,15 +103,14 @@ def modeling_cnf(x_train: pd.DataFrame, y_train: pd.DataFrame, model_params, mod
         batch_size=batch_size,
         random_seed=random_seed
     )
-    # torch.multiprocessing.set_start_method('spawn', force=True)
+    torch.multiprocessing.set_start_method('spawn', force=True)
     partial_worker = partial(worker, **params)
     manager = multiprocessing.Manager()
     stack = manager.Queue()
     result_q = manager.Queue()
     stack.put(0)
     stack.put(1)
-    stack.put(0)
-    stack.put(1)
+    stack.put(2)
 
     processes = []
     for params in model_hyperparams:

@@ -1,3 +1,4 @@
+import os
 import sys
 import logging
 import pandas as pd
@@ -57,10 +58,11 @@ def worker(stack, results, hyperparams,
         setup_random_seed(random_seed)
         start_time = time.time()
         m = train_nodeflow(x_tr, y_tr, x_val, y_val, model_params, hyperparams, n_epochs, batch_size, random_seed, show_tqdm)
-        elaps_time = time.time() - start_time
+        elapsed_time = time.time() - start_time
         result_train = calculate_nll(m, x_tr, y_tr, batch_size=batch_size)
         result_val = calculate_nll(m, x_val, y_val, batch_size=batch_size)
         best_epoch = m._best_epoch
+        os.remove(f"/tmp/ofurman/model_{m.mid}.pt")
 
         # TODO: save best epoch
         print(hyperparams, result_train, result_val, best_epoch)
@@ -69,7 +71,7 @@ def worker(stack, results, hyperparams,
             "log_prob_train": result_train,
             "log_prob_val": result_val,
             "best_epoch": best_epoch,
-            "train_time": elaps_time
+            "train_time": elapsed_time
         })
     except Exception as e:
         print(e)
@@ -99,9 +101,11 @@ def modeling_nodeflow(x_train: pd.DataFrame, y_train: pd.DataFrame, model_params
     stack = manager.Queue()
     result_q = manager.Queue()
     stack.put(0)
-    stack.put(1)
     stack.put(0)
     stack.put(1)
+    stack.put(1)
+    stack.put(2)
+    stack.put(2)
 
     processes = []
     for params in model_hyperparams:

@@ -532,7 +532,7 @@ uci_year_prediction_msd_nodeflow_{{i}}.hp_search:
 
 uci_year_prediction_msd_nodeflow_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.NodeFlowDataSet
-  filepath: data/06_models/UCI/year/model_{{i}}
+  filepath: data/06_models/UCI/year-prediction-msd/model_{{i}}
 
 uci_year_prediction_msd_nodeflow_{{i}}.summary:
   type: pandas.CSVDataSet

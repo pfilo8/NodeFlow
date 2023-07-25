@@ -10,11 +10,6 @@ uci_wine_quality_cnf_{{i}}:
   model_hyperparams:
     embedding_dim: [0]
     hidden_dims: [[32,32], [80, 40]]
-    # num_layers: [6]
-    # depth: [2, 4]
-    # tree_output_dim: [1]
-    # num_trees: [100]
-    # flow_hidden_dims: [[32,32], [16,16,16], [32, 32, 32], [64,64,32]]
   #### Training ####
 
   n_epochs: 400
@@ -129,8 +124,6 @@ uci_power_plant_cnf_{{i}}:
 {% endfor %}
 # kedro run --pipeline=uci_power_plant_cnf
 
-
-
 {% for i in range(20) %}
 uci_protein_cnf_{{i}}:
   model_params:
@@ -152,3 +145,23 @@ uci_protein_cnf_{{i}}:
   sample_batch_size: 4
 {% endfor %}
 # kedro run --pipeline=uci_protein_cnf
+
+{% for i in range(20) %}
+uci_year_prediction_msd_cnf_{{i}}:
+  model_params:
+    device: "cuda"
+    num_blocks: 3
+
+  model_hyperparams:
+    embedding_dim: [0]
+    hidden_dims: [[80, 80, 80, 40], [80,40], [80, 80, 40]]
+  #### Training ####
+
+  n_epochs: 10
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 1024
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_year_prediction_msd_cnf

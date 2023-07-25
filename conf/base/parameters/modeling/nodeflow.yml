@@ -30,11 +30,11 @@ uci_concrete_nodeflow_{{i}}:
     device: "cuda"
 
   model_hyperparams:
-    num_layers: [6]
-    depth: [3]
+    num_layers: [6, 3]
+    depth: [4, 2]
     tree_output_dim: [1]
-    num_trees: [500, 300, 100]
-    flow_hidden_dims: [[32,32], [16, 16, 16], [32, 32, 32], [64,64,32]]
+    num_trees: [500, 300, 100, 50]
+    flow_hidden_dims: [[32,32], [16, 16, 16], [32, 32, 32], [100, 100, 50], [200, 100, 100, 50]]
   #### Training ####
 
   n_epochs: 400
@@ -142,17 +142,61 @@ uci_protein_nodeflow_{{i}}:
 
   model_hyperparams:
     num_layers: [6]
-    depth: [4]
+    depth: [2, 4]
     tree_output_dim: [1]
     num_trees: [300] # 50, 
-    flow_hidden_dims: [[32, 32, 32], [16, 16, 16]] # [64,64,32], 
+    flow_hidden_dims: [[32, 32, 32], [16, 16, 16], [64,64,32]] # , , 
   #### Training ####
 
   n_epochs: 75
   split_size: 0.8
   random_seed: 42
-  batch_size: 4096
+  batch_size: 2048
   num_samples: 1000
   sample_batch_size: 4
 {% endfor %}
 # kedro run --pipeline=uci_protein_nodeflow
+
+{% for i in range(20) %}
+uci_yacht_nodeflow_{{i}}:
+  model_params:
+    device: "cuda"
+
+  model_hyperparams:
+    num_layers: [6, 3]
+    depth: [4, 2, 1]
+    tree_output_dim: [1]
+    num_trees: [300, 100, 50] 
+    flow_hidden_dims: [[100, 100, 50], [200, 100, 100, 50], [32, 32, 32], [16, 16, 16], [32,32], [16,16]]
+  #### Training ####
+
+  n_epochs: 400
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 1024
+  num_samples: 1000
+  sample_batch_size: 16
+{% endfor %}
+# kedro run --pipeline=uci_yacht_nodeflow
+
+{% for i in range(20) %}
+uci_year_prediction_msd_nodeflow_{{i}}:
+  model_params:
+    device: "cuda"
+
+  model_hyperparams:
+    num_layers: [6]
+    depth: [4, 2]
+    tree_output_dim: [1]
+    num_trees: [300, 100, 50] 
+    flow_hidden_dims: [[32, 32, 32], [16, 16, 16], [32,32]]
+  #### Training ####
+
+  n_epochs: 10
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2048
+  num_samples: 1000
+  sample_batch_size: 4
+{% endfor %}
+# kedro run --pipeline=uci_year_prediction_msd_nodeflow
