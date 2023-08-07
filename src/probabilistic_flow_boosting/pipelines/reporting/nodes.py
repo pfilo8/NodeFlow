@@ -50,9 +50,9 @@ from .utils import batch, KDE
 from ..utils import log_dataframe_artifact
 
 # from ...pgbm import PGBM
-from ...tfboost.tfboost import TreeFlowBoost
-from ...nodeflow.nodeflow import NodeFlow
-from ...independent_multivariate_boosting import IndependentNGBoost
+from probabilistic_flow_boosting.models.tfboost.tfboost import TreeFlowBoost
+from probabilistic_flow_boosting.models.nodeflow import NodeFlow
+from probabilistic_flow_boosting.models.independent_multivariate_boosting import IndependentNGBoost
 
 
 def calculate_rmse(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):

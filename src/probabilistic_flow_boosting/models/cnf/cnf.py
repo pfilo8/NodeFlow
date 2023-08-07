@@ -13,7 +13,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 from torch.utils.data import DataLoader, TensorDataset
 
-from .flow import ContinuousNormalizingFlow
+from probabilistic_flow_boosting.models.flow import ContinuousNormalizingFlow
 
 
 class ContinuousNormalizingFlowRegressor(BaseEstimator, RegressorMixin, nn.Module):
@@ -265,10 +265,10 @@ class ContinuousNormalizingFlowRegressor(BaseEstimator, RegressorMixin, nn.Modul
         return mean_squared_error(y, y_hat, squared=False)
 
     def _save_temp(self, mid: str):
-        torch.save(self, f"/tmp/model_{mid}.pt")
+        torch.save(self, f"/home/ofurman/storage/tmp/model_{mid}.pt")
 
     def _load_temp(self, mid: str):
-        return torch.load(f"/tmp/model_{mid}.pt")
+        return torch.load(f"/home/ofurman/storage/tmp/model_{mid}.pt")
     
     def save(self, filename: str):
         torch.save(self, f"{filename}-cnf.pt")

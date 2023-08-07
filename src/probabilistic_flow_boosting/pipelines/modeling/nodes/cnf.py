@@ -15,7 +15,7 @@ from ..utils import generate_params_for_grid_search, setup_random_seed, split_da
 from ...utils import log_dataframe_artifact
 from ...reporting.nodes import calculate_nll
 
-from ....cnf import ContinuousNormalizingFlowRegressor
+from probabilistic_flow_boosting.models.cnf import ContinuousNormalizingFlowRegressor
 
 
 def train_cnf(x_train, y_train, x_val, y_val, model_params, hyperparams,

@@ -1,8 +1,8 @@
 from typing import Any, Dict
 
 from kedro.io import AbstractDataSet
-from ...nodeflow.nodeflow import NodeFlow
-from ...cnf.cnf import ContinuousNormalizingFlowRegressor
+from probabilistic_flow_boosting.models.cnf.cnf import ContinuousNormalizingFlowRegressor
+from probabilistic_flow_boosting.models.nodeflow import NodeFlow
 
 
 class CNFDataSet(AbstractDataSet):
@@ -22,7 +22,6 @@ class CNFDataSet(AbstractDataSet):
             filepath=self._filepath
         )
 
-
 class NodeFlowDataSet(AbstractDataSet):
 
     def __init__(self, filepath):
@@ -36,22 +35,6 @@ class NodeFlowDataSet(AbstractDataSet):
 
     def _describe(self) -> Dict[str, Any]:
         """Returns a dict that describes the attributes of the dataset"""
-        return dict(
-            filepath=self._filepath
-        )
-
-class OptunaDbDataSet(AbstractDataSet):
-    def __init__(self, filepath):
-        self._filepath = filepath
-
-    def _load(self) -> NodeFlow:
-        return self._filepath
-
-    def _save(self) -> None:
-        return self._filepath
-    
-    def _describe(self) -> Dict[str, Any]:
-        """Returns a filepath to optuna experiment db"""
         return dict(
             filepath=self._filepath
         )

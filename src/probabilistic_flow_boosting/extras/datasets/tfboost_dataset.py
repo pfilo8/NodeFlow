@@ -1,7 +1,7 @@
 from typing import Any, Dict
 
 from kedro.io import AbstractDataSet
-from ...tfboost.tfboost import TreeFlowBoost
+from probabilistic_flow_boosting.models.tfboost.tfboost import TreeFlowBoost
 
 
 class TFBoostDataSet(AbstractDataSet):

@@ -4,6 +4,6 @@ import datetime
 
 
 def log_dataframe_artifact(dataframe, name):
-    path = f'/tmp/{name}-{str(datetime.datetime.now()).replace(" ", "-")}.csv'
-    dataframe.to_csv(path, index=False)
+    path = f'/home/ofurman/storage/tmp/{name}-{str(datetime.datetime.now()).replace(" ", "-")}.csv'
+    dataframe.to_csv(path, index=False, )
     # mlflow.log_artifact(path)

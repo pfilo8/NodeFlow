@@ -1,0 +1,22 @@
+catboost
+flake8
+isort
+kedro==0.18.8
+torch
+numpy
+nbstripout
+nflows
+# ninja
+ngboost
+# plotly
+properscoring
+pyarrow
+pytest-cov
+pytest-mock
+pytest
+# seaborn
+scikit-learn
+gcsfs
+torchdiffeq
+xgboost
+lightning
