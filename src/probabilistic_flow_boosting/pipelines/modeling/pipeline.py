@@ -63,7 +63,7 @@ def create_pipeline_train_model_nodeflow(**kwargs):
     return Pipeline([
         node(
             func=modeling_nodeflow,
-            inputs=["x_train", "y_train", "params:model_params", "params:model_hyperparams",
+            inputs=["x_train", "y_train", "params:model_hyperparams",
                     "params:split_size", "params:n_epochs", "params:batch_size", "params:random_seed"],
             outputs=["model", "hp_search"]
         )
@@ -73,7 +73,7 @@ def create_pipeline_train_model_cnf(**kwargs):
     return Pipeline([
         node(
             func=modeling_cnf,
-            inputs=["x_train", "y_train", "params:model_params", "params:model_hyperparams",
+            inputs=["x_train", "y_train", "params:model_hyperparams",
                     "params:split_size", "params:n_epochs", "params:batch_size", "params:random_seed"],
             outputs=["model", "hp_search"]
         )

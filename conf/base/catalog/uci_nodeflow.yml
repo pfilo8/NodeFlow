@@ -140,7 +140,7 @@ uci_energy_nodeflow_{{i}}.y_test:
 
 uci_energy_nodeflow_{{i}}.hp_search:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/07_model_output/UCI/energy/hp_search_concrete_{{i}}.csv
+  filepath: gcs://nodeflow/data/07_model_output/UCI/energy/hp_search_energy_{{i}}.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa

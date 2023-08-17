@@ -1,12 +1,6 @@
 #### Models ####
 {% for i in range(20) %}
 uci_wine_quality_cnf_{{i}}:
-  model_params:
-    # loss_function: "MultiRMSE"
-    # embedding_dim: 40
-    num_blocks: 3
-    device: "cpu"
-
   model_hyperparams:
     embedding_dim: [0]
     hidden_dims: [[32,32], [80, 40]]
@@ -24,11 +18,6 @@ uci_wine_quality_cnf_{{i}}:
 
 {% for i in range(20) %}
 uci_concrete_cnf_{{i}}:
-  model_params:
-    # loss_function: "MultiRMSE"
-    num_blocks: 3
-    device: "cpu"
-
   model_hyperparams:
     embedding_dim: [0]
     hidden_dims: [[32,32], [80, 40]]
@@ -45,11 +34,6 @@ uci_concrete_cnf_{{i}}:
 
 {% for i in range(20) %}
 uci_energy_cnf_{{i}}:
-  model_params:
-    num_blocks: 3
-    # loss_function: "MultiRMSE"
-    device: "cpu"
-
   model_hyperparams:
     embedding_dim: [0]
     hidden_dims: [[80, 40], [80, 80, 40]]
@@ -66,10 +50,6 @@ uci_energy_cnf_{{i}}:
 
 {% for i in range(20) %}
 uci_kin8nm_cnf_{{i}}:
-  model_params:
-    num_blocks: 3
-    device: "cpu"
-
   model_hyperparams:
     embedding_dim: [0]
     hidden_dims: [[80, 40], [80, 80, 40]]
@@ -86,10 +66,6 @@ uci_kin8nm_cnf_{{i}}:
 
 {% for i in range(20) %}
 uci_naval_cnf_{{i}}:
-  model_params:
-    num_blocks: 3
-    device: "cpu"
-# 
   model_hyperparams:
     embedding_dim: [0]
     hidden_dims: [[80, 40], [100, 100, 50]]
@@ -106,10 +82,6 @@ uci_naval_cnf_{{i}}:
 
 {% for i in range(20) %}
 uci_power_plant_cnf_{{i}}:
-  model_params:
-    num_blocks: 3
-    device: "cpu"
-
   model_hyperparams:
     embedding_dim: [0]
     hidden_dims: [[100, 50], [100, 100, 50], [200, 100, 100, 50]]
@@ -126,9 +98,6 @@ uci_power_plant_cnf_{{i}}:
 
 {% for i in range(20) %}
 uci_protein_cnf_{{i}}:
-  model_params:
-    device: "cuda"
-
   model_hyperparams:
     num_layers: [6]
     depth: [4]
@@ -148,10 +117,6 @@ uci_protein_cnf_{{i}}:
 
 {% for i in range(20) %}
 uci_year_prediction_msd_cnf_{{i}}:
-  model_params:
-    device: "cuda"
-    num_blocks: 3
-
   model_hyperparams:
     embedding_dim: [0]
     hidden_dims: [[80, 80, 80, 40], [80,40], [80, 80, 40]]

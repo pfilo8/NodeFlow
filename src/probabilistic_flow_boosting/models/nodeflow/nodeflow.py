@@ -153,24 +153,30 @@ class NodeFlow(pl.LightningModule):
         x, y = batch
         logpx = self(x, y)
         loss = -logpx.mean()
-        self.log("train_nll", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
+        self.log("train_nll", loss, on_step=False, on_epoch=True, prog_bar=True, logger=False)
         return loss
     
     def validation_step(self, batch, batch_idx):
         x, y = batch
         logpx = self(x, y)
         loss = -logpx.mean()
-        self.log("val_nll", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
+        self.log("val_nll", loss, on_step=False, on_epoch=True, prog_bar=True, logger=False)
+
+    def predict_step(self, batch: Any, num_samples: int = 10) -> Any:
+        x, y = batch
+        samples = self._sample(x[0], num_samples)
+        samples_size = samples.shape
+        samples = samples.reshape((samples_size[0] * samples_size[1], samples_size[2]))
 
     def configure_optimizers(self) -> Any:
         optimizer = optim.RAdam(self.parameters(), lr=0.003)
         return optimizer
 
-    # @torch.no_grad()
-    # def _sample(self, X: torch.Tensor, num_samples: int) -> torch.Tensor:
-    #     x = self.tree_model(X)
-    #     x = self.flow_model.sample(x, num_samples=num_samples)
-    #     return x
+    @torch.no_grad()
+    def _sample(self, X: torch.Tensor, num_samples: int) -> torch.Tensor:
+        x = self.tree_model(X)
+        x = self.flow_model.sample(x, num_samples=num_samples)
+        return x
 
     # @torch.no_grad()
     # def sample(self, X: np.ndarray, num_samples: int = 10, batch_size: int = 128) -> np.ndarray:
@@ -200,36 +206,9 @@ class NodeFlow(pl.LightningModule):
     #     samples: np.ndarray = samples.squeeze()
     #     return samples
 
-    # @torch.no_grad()
-    # def predict(
-    #     self, X: np.ndarray, method: str = "mean", num_samples: int = 1000, batch_size: int = 128, **kwargs
-    # ) -> np.ndarray:
-    #     samples: np.ndarray = self.sample(X=X, num_samples=num_samples, batch_size=batch_size)
+    def save(self, filename: str):
+        torch.save(self, f"{filename}-nodeflow.pt")
 
-    #     if method == "mean":
-    #         y_pred: np.ndarray = samples.mean(axis=1)
-    #     else:
-    #         raise ValueError(f"Method {method} not supported.")
-
-    #     y_pred: np.ndarray = np.array(y_pred)
-    #     return y_pred
-
-    # def predict_tree_path(self, X: np.ndarray):
-    #     """Method for predicting the tree path from Soft Decision Tree component."""
-    #     X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.device)
-    #     paths, _ = self.tree_model(X)
-    #     paths: np.ndarray = paths.detach().cpu().numpy()
-    #     return paths
-
-    # def _save_temp(self, mid: str):
-    #     torch.save(self, f"/tmp/model_{mid}.pt")
-
-    # def _load_temp(self, mid: str):
-    #     return torch.load(f"/tmp/model_{mid}.pt")
-
-    # def save(self, filename: str):
-    #     torch.save(self, f"{filename}-nodeflow.pt")
-
-    # @classmethod
-    # def load(cls, filename: str):
-    #     return torch.load(f"{filename}-nodeflow.pt")
+    @classmethod
+    def load(cls, filename: str):
+        return torch.load(f"{filename}-nodeflow.pt")
