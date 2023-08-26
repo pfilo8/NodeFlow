@@ -41,14 +41,14 @@ uci_concrete_nodeflow_{{i}}:
 {% for i in range(20) %}
 uci_energy_nodeflow_{{i}}:
   model_hyperparams:
-    num_layers: [1] #,2,3,4,5,6]
-    depth: [1] #,2,3,4,5]
-    tree_output_dim: [1,2]
-    num_trees: [50, 100] #, 200, 300, 400, 500]
-    flow_hidden_dims: [[16,16]] #, [32,32], [16, 16, 16], [32, 32, 32]]
+    num_layers: [1,2,3,4,5,6,7,8,9,10]
+    depth: [1,2,3,4, 5,6,7,8,9,10]
+    tree_output_dim: [3, 2, 1]
+    num_trees: [50, 100, 150, 200, 300, 400, 500]
+    flow_hidden_dims: [[4,4], [8,8], [16,16], [32,32], [16, 16, 16], [32, 32, 32]]
   #### Training ####
 
-  n_epochs: 100
+  n_epochs: 500
   split_size: 0.8
   random_seed: 42
   batch_size: 2024

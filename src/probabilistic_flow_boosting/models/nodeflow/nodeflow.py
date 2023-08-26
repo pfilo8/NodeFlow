@@ -54,7 +54,7 @@ class NodeFlowDataModule(pl.LightningDataModule):
         return DataLoader(
             dataset=TensorDataset(X, y),
             shuffle=False,
-            batch_size=self.batch_size
+            batch_size=self.batch_size,
         )
 
     def val_dataloader(self):
@@ -63,7 +63,7 @@ class NodeFlowDataModule(pl.LightningDataModule):
         return DataLoader(
             dataset=TensorDataset(X, y),
             shuffle=False,
-            batch_size=self.batch_size
+            batch_size=self.batch_size,
         )
         
 
