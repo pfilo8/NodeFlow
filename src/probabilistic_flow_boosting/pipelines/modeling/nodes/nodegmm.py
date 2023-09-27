@@ -8,17 +8,13 @@ import numpy as np
 import pandas as pd
 import optuna
 
-import warnings
-from pytorch_lightning.utilities.warnings import PossibleUserWarning
-warnings.filterwarnings("ignore", category=PossibleUserWarning)
-
 from lightning.pytorch import Trainer, seed_everything
-from lightning.pytorch.tuner.tuning import Tuner
 from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping, StochasticWeightAveraging
 
 from probabilistic_flow_boosting.pipelines.modeling.pytorch_lightning import PyTorchLightningPruningCallback
-from ..utils import generate_params_for_grid_search
-from probabilistic_flow_boosting.models.nodeflow import NodeFlow, NodeFlowDataModule
+from probabilistic_flow_boosting.models.nodeflow import NodeFlowDataModule
+from probabilistic_flow_boosting.models.node_gmm import NodeGMM
+
 
 optuna.logging.enable_propagation()
 logging.basicConfig(level=logging.INFO)
@@ -27,8 +23,8 @@ class CudaOutOfMemory(optuna.exceptions.OptunaError):
     def __init__(self, message):
         super().__init__(message)
 
-def train_nodeflow(x_train, y_train, n_epochs, patience, split_size, batch_size, model_hyperparams):
-    model = NodeFlow(input_dim=x_train.shape[1], output_dim=y_train.shape[1], **model_hyperparams)
+def train_nodegmm(x_train, y_train, n_epochs, patience, split_size, batch_size, model_hyperparams):
+    model = NodeGMM(input_dim=x_train.shape[1], output_dim=y_train.shape[1], **model_hyperparams)
     datamodule = NodeFlowDataModule(x_train, y_train, split_size=split_size, batch_size=batch_size)
 
     callbacks = [
@@ -54,19 +50,17 @@ def objective(x_train, y_train, n_epochs, patience, split_size, batch_size, hpar
     tree_output_dim = trial.suggest_int("tree_output_dim", *hparams["tree_output_dim"])
     num_trees = trial.suggest_int("num_trees", *hparams["num_trees"])
 
-    flow_hidden_dims_size = trial.suggest_categorical("flow_hidden_dims_size", [4, 8, 16, 32])
-    flow_hidden_dims_shape = trial.suggest_int("flow_hidden_dims_shape", 2, 2)
-    flow_hidden_dims = [flow_hidden_dims_size]*flow_hidden_dims_shape
+    n_components = trial.suggest_int("n_components", *hparams["n_components"])
 
     model_hyperparams = dict(
         num_layers=num_layers,
         depth=depth,
         tree_output_dim=tree_output_dim,
         num_trees=num_trees,
-        flow_hidden_dims=flow_hidden_dims,
+        n_components=n_components,
     )
 
-    model = NodeFlow(input_dim=x_train.shape[1], output_dim=y_train.shape[1], **model_hyperparams)
+    model = NodeGMM(input_dim=x_train.shape[1], output_dim=y_train.shape[1], **model_hyperparams)
     datamodule = NodeFlowDataModule(x_train, y_train, split_size=split_size, batch_size=batch_size)
 
     try:
@@ -92,7 +86,7 @@ def objective(x_train, y_train, n_epochs, patience, split_size, batch_size, hpar
     except RuntimeError as exc:
         return float('inf') # return any high 
 
-def modeling_nodeflow(
+def modeling_nodegmm(
     x_train: pd.DataFrame,
     y_train: pd.DataFrame,
     model_hyperparams,
@@ -103,6 +97,7 @@ def modeling_nodeflow(
     random_seed: int = 42,
 ):
     seed_everything(random_seed, workers=True) # sets seeds for numpy, torch and python.random.
+    torch.cuda.set_per_process_memory_fraction(0.5)
     pruner = optuna.pruners.HyperbandPruner(min_resource=3,)
     # sampler = optuna.samplers.TPESampler(n_startup_trials=10)
     sampler = optuna.samplers.RandomSampler(seed=random_seed)
@@ -120,7 +115,7 @@ def modeling_nodeflow(
             trial=trial
         ),
         n_trials=3000,
-        timeout=10800,
+        timeout=3600,
         show_progress_bar=True,
         gc_after_trial=True,
         catch=(CudaOutOfMemory)
@@ -135,11 +130,8 @@ def modeling_nodeflow(
         print("    {}: {}".format(key, value))
     
     model_params = trial.params
-    model_params["flow_hidden_dims"] = [trial.params["flow_hidden_dims_size"]]*trial.params["flow_hidden_dims_shape"]
-    del model_params["flow_hidden_dims_size"]
-    del model_params["flow_hidden_dims_shape"]
 
-    best_model_path = train_nodeflow(
+    best_model_path = train_nodegmm(
         x_train=x_train,
         y_train=y_train,
         n_epochs=n_epochs,
@@ -148,7 +140,7 @@ def modeling_nodeflow(
         batch_size=batch_size,
         model_hyperparams=model_params
     )
-    model = NodeFlow.load_from_checkpoint(best_model_path, input_dim=x_train.shape[1], output_dim=y_train.shape[1], **model_params)
+    model = NodeGMM.load_from_checkpoint(best_model_path, input_dim=x_train.shape[1], output_dim=y_train.shape[1], **model_params)
     os.remove(best_model_path)
     
-    return model, results
+    return model, results, study

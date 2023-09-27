@@ -1,7 +1,9 @@
 from typing import Any, Callable, Iterable, List, Union, Optional
+from lightning.pytorch.utilities.types import EVAL_DATALOADERS, STEP_OUTPUT
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -16,16 +18,33 @@ from probabilistic_flow_boosting.models.node import DenseODSTBlock
 from probabilistic_flow_boosting.models.node.activations import sparsemax, sparsemoid
 
 class NodeFlowDataModule(pl.LightningDataModule):
-    def __init__(self, X: pd.DataFrame, y: pd.DataFrame, split_size: Optional[float], batch_size: int = 1024) -> None:
+    def __init__(
+        self, 
+        X_train: pd.DataFrame,
+        y_train: pd.DataFrame,
+        X_test: Optional[pd.DataFrame] = None,
+        y_test: Optional[pd.DataFrame] = None,
+        split_size: float = 0.8,
+        batch_size: int = 1024
+    ) -> None:
         super().__init__()
         self.batch_size = batch_size
         self.split_size = split_size
-        self.X = X.to_numpy()
-        self.y = y.to_numpy()
-        if self.split_size:
-            num_training_examples = int(self.split_size * self.X.shape[0])
-            self.x_tr, self.x_val = self.X[:num_training_examples], self.X[num_training_examples:]
-            self.y_tr, self.y_val = self.y[:num_training_examples], self.y[num_training_examples:]
+        
+        self.X_train = X_train.to_numpy() if isinstance(X_train, pd.DataFrame) else X_train
+        self.y_train = y_train.to_numpy() if isinstance(y_train, pd.DataFrame) else y_train
+
+        if X_test is not None:
+            self.X_test = X_test.to_numpy() if isinstance(X_test, pd.DataFrame) else X_test
+            self.y_test = y_test.to_numpy() if isinstance(y_test, pd.DataFrame) else y_test
+
+        if self.split_size is not None:
+            num_training_examples = int(self.split_size * self.X_train.shape[0])
+            self.x_tr, self.x_val = self.X_train[:num_training_examples], self.X_train[num_training_examples:]
+            self.y_tr, self.y_val = self.y_train[:num_training_examples], self.y_train[num_training_examples:]
+        else:
+            self.x_tr = self.X_train
+            self.y_tr = self.y_train
         
         self.feature_scaler = Pipeline(
             [
@@ -39,32 +58,38 @@ class NodeFlowDataModule(pl.LightningDataModule):
         if stage == "fit":
             self.x_tr: np.ndarray = self.feature_scaler.fit_transform(self.x_tr)
             self.y_tr: np.ndarray = self.target_scaler.fit_transform(self.y_tr)
-            self.x_val: np.ndarray = self.feature_scaler.transform(self.x_val)
-            self.y_val: np.ndarray = self.target_scaler.transform(self.y_val)
+            if self.split_size is not None:
+                self.x_val: np.ndarray = self.feature_scaler.transform(self.x_val)
+                self.y_val: np.ndarray = self.target_scaler.transform(self.y_val)
         if stage == "validate":
             self.x_val: np.ndarray = self.feature_scaler.transform(self.x_val)
             self.y_val: np.ndarray = self.target_scaler.transform(self.y_val)
         if stage == "test":
-            self.X = self.feature_scaler.transform(self.X)
-            self.y = self.target_scaler.transform(self.y)
+            self.x_tr: np.ndarray = self.feature_scaler.fit_transform(self.x_tr)
+            self.y_tr: np.ndarray = self.target_scaler.fit_transform(self.y_tr)
+            self.X_test = self.feature_scaler.transform(self.X_test)
+            self.y_test = self.target_scaler.transform(self.y_test)
+
+    def _to_dataloader(self, X, y):
+        X: torch.Tensor = torch.as_tensor(X, dtype=torch.float32)
+        y: torch.Tensor = torch.as_tensor(y, dtype=torch.float32)
+        return DataLoader(
+            dataset=TensorDataset(X, y),
+            shuffle=False,
+            batch_size=self.batch_size,
+        )
 
     def train_dataloader(self):
-        X: torch.Tensor = torch.as_tensor(self.x_tr, dtype=torch.float32)
-        y: torch.Tensor = torch.as_tensor(self.y_tr, dtype=torch.float32)
-        return DataLoader(
-            dataset=TensorDataset(X, y),
-            shuffle=False,
-            batch_size=self.batch_size,
-        )
+        return self._to_dataloader(X=self.x_tr, y=self.y_tr)
 
     def val_dataloader(self):
-        X: torch.Tensor = torch.as_tensor(self.x_val, dtype=torch.float32)
-        y: torch.Tensor = torch.as_tensor(self.y_val, dtype=torch.float32)
-        return DataLoader(
-            dataset=TensorDataset(X, y),
-            shuffle=False,
-            batch_size=self.batch_size,
-        )
+        return self._to_dataloader(X=self.x_val, y=self.y_val)
+    
+    def test_dataloader(self):
+        return self._to_dataloader(X=self.X_test, y=self.y_test)
+    
+    def predict_dataloader(self):
+        return self._to_dataloader(X=self.X_test, y=self.y_test)
         
 
 
@@ -142,9 +167,19 @@ class NodeFlow(pl.LightningModule):
             nonlinearity=flow_nonlinearity,
         )
 
+    @torch.enable_grad() 
     def forward(self, X, y):
         """Calculate the log probability of the model (batch). Method used only for training and validation."""
         x = self.tree_model(X)
+        x = self.flow_model.log_prob(y, x)
+        x += np.log(np.abs(np.prod(self.trainer.datamodule.target_scaler.scale_))) # Target scaling correction. log(abs(det(jacobian)))
+        return x
+    
+    @torch.enable_grad()
+    def _log_prob(self, X, y):
+        """Calculate the log probability of the model (batch). Method used only for testing."""
+        grad_x = X.clone().requires_grad_()
+        x = self.tree_model(grad_x)
         x = self.flow_model.log_prob(y, x)
         x += np.log(np.abs(np.prod(self.trainer.datamodule.target_scaler.scale_))) # Target scaling correction. log(abs(det(jacobian)))
         return x
@@ -161,50 +196,43 @@ class NodeFlow(pl.LightningModule):
         logpx = self(x, y)
         loss = -logpx.mean()
         self.log("val_nll", loss, on_step=False, on_epoch=True, prog_bar=True, logger=False)
+        return loss
 
-    def predict_step(self, batch: Any, num_samples: int = 10) -> Any:
+    def test_step(self, batch, batch_idx):
         x, y = batch
-        samples = self._sample(x[0], num_samples)
+        logpx = self._log_prob(x, y)
+        loss = -logpx.mean()
+        self.log("test_nll", loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
+        return loss
+
+    @torch.enable_grad()
+    def _sample(self, X: torch.Tensor, num_samples: int) -> torch.Tensor:
+        grad_x = X.clone().requires_grad_()
+        x = self.tree_model(grad_x)
+        x = self.flow_model.sample(x, num_samples=num_samples)
+        return x
+    
+    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0, num_samples: int = 1000) -> Any:
+        Xs, y = batch
+        all_samples: List[torch.Tensor] = []
+        for x in tqdm(torch.unbind(Xs, dim=0)):
+            x = x.reshape(1, -1)
+            samples = self._sample(x, num_samples)
+            all_samples.append(samples)
+        
+        # Inverse target transformation
+        samples: torch.Tensor = torch.cat(all_samples, dim=0)
         samples_size = samples.shape
-        samples = samples.reshape((samples_size[0] * samples_size[1], samples_size[2]))
+        samples: np.ndarray = samples.detach().cpu().numpy()
+        samples: np.ndarray = samples.reshape((samples_size[0] * samples_size[1], samples_size[2]))
+        samples: np.ndarray = self.trainer.datamodule.target_scaler.inverse_transform(samples)
+        samples: np.ndarray = samples.reshape((samples_size[0], samples_size[1], samples_size[2]))
+        samples: np.ndarray = samples.squeeze()
+        return samples
 
     def configure_optimizers(self) -> Any:
         optimizer = optim.RAdam(self.parameters(), lr=0.003)
         return optimizer
-
-    @torch.no_grad()
-    def _sample(self, X: torch.Tensor, num_samples: int) -> torch.Tensor:
-        x = self.tree_model(X)
-        x = self.flow_model.sample(x, num_samples=num_samples)
-        return x
-
-    # @torch.no_grad()
-    # def sample(self, X: np.ndarray, num_samples: int = 10, batch_size: int = 128) -> np.ndarray:
-    #     """Sample from the model."""
-    #     X: np.ndarray = self.feature_scaler.transform(X)
-
-    #     X: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.device)
-    #     dataset_loader: DataLoader = DataLoader(dataset=TensorDataset(X), shuffle=False, batch_size=batch_size)
-
-    #     all_samples: List[torch.Tensor] = []
-
-    #     for x in tqdm(dataset_loader):
-    #         sample: torch.Tensor = self._sample(x[0], num_samples)
-    #         all_samples.append(sample)
-
-    #     samples: torch.Tensor = torch.cat(all_samples, dim=0)
-    #     samples: torch.Tensor = samples.detach().cpu()
-    #     samples: np.ndarray = samples.numpy()
-
-    #     # Inverse target transformation
-    #     samples_size = samples.shape
-
-    #     samples: np.ndarray = samples.reshape((samples_size[0] * samples_size[1], samples_size[2]))
-    #     samples: np.ndarray = self.target_scaler.inverse_transform(samples)
-    #     samples: np.ndarray = samples.reshape((samples_size[0], samples_size[1], samples_size[2]))
-
-    #     samples: np.ndarray = samples.squeeze()
-    #     return samples
 
     def save(self, filename: str):
         torch.save(self, f"{filename}-nodeflow.pt")

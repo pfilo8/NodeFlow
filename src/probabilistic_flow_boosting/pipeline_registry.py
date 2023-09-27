@@ -36,7 +36,8 @@ from .pipelines import (
     create_general_pipeline_ngboost,
     create_pipeline_aggregated_report,
     create_general_pipeline_nodeflow,
-    create_general_pipeline_cnf
+    create_general_pipeline_cnf,
+    create_general_pipeline_nodegmm,
 ) 
 
 
@@ -71,15 +72,6 @@ def create_general_momogp_ngboost_pipeline(namespace):
 
 def create_general_uci_nodeflow_pipeline(namespace, n):
     return Pipeline([
-        *[create_general_pipeline_nodeflow(f"{namespace}_{i}") for i in range(5)],
-        create_pipeline_aggregated_report(
-            inputs=[f"{namespace}_{i}.summary" for i in range(5)],
-            outputs=f"{namespace}.aggregated_summary"
-        )
-    ])
-
-def create_gridsearch_uci_nodeflow_pipeline(namespace, n):
-    return Pipeline([
         *[create_general_pipeline_nodeflow(f"{namespace}_{i}") for i in range(n)],
         create_pipeline_aggregated_report(
             inputs=[f"{namespace}_{i}.summary" for i in range(n)],
@@ -87,9 +79,18 @@ def create_gridsearch_uci_nodeflow_pipeline(namespace, n):
         )
     ])
 
-def create_gridsearch_uci_cnf_pipeline(namespace, n):
+def create_general_uci_cnf_pipeline(namespace, n):
     return Pipeline([
         *[create_general_pipeline_cnf(f"{namespace}_{i}") for i in range(n)],
+        create_pipeline_aggregated_report(
+            inputs=[f"{namespace}_{i}.summary" for i in range(n)],
+            outputs=f"{namespace}.aggregated_summary"
+        )
+    ])
+
+def create_general_uci_nodegmm_pipeline(namespace, n):
+    return Pipeline([
+        *[create_general_pipeline_nodegmm(f"{namespace}_{i}") for i in range(n)],
         create_pipeline_aggregated_report(
             inputs=[f"{namespace}_{i}.summary" for i in range(n)],
             outputs=f"{namespace}.aggregated_summary"
@@ -140,11 +141,15 @@ def register_pipelines() -> Dict[str, Pipeline]:
     }
 
     uci_nodeflow_pipelines = {
-        f"{d}_nodeflow": create_gridsearch_uci_nodeflow_pipeline(f"{d}_nodeflow", n) for d, n in uci_datasets
+        f"{d}_nodeflow": create_general_uci_nodeflow_pipeline(f"{d}_nodeflow", n) for d, n in uci_datasets
     }
 
     uci_cnf_pipelines = {
-        f"{d}_cnf": create_gridsearch_uci_cnf_pipeline(f"{d}_cnf", n) for d, n in uci_datasets
+        f"{d}_cnf": create_general_uci_cnf_pipeline(f"{d}_cnf", n) for d, n in uci_datasets
+    }
+
+    uci_nodegmm_pipelines = {
+        f"{d}_nodegmm": create_general_uci_nodegmm_pipeline(f"{d}_nodegmm", n) for d, n in uci_datasets
     }
 
     return {
@@ -154,5 +159,6 @@ def register_pipelines() -> Dict[str, Pipeline]:
         **uci_pipelines,
         **uci_nodeflow_pipelines,
         **oceanographic_pipelines,
-        **uci_cnf_pipelines
+        **uci_cnf_pipelines,
+        **uci_nodegmm_pipelines
     }

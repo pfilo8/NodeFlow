@@ -34,12 +34,14 @@ from .pipeline import (
     create_pipeline_train_model,
     create_pipeline_train_model_ngboost,
     create_pipeline_train_model_nodeflow,
-    create_pipeline_train_model_cnf
+    create_pipeline_train_model_cnf,
+    create_pipeline_train_model_nodegmm
 )
 
 __all__ = [
     "create_pipeline_train_model",
     "create_pipeline_train_model_ngboost",
     "create_pipeline_train_model_nodeflow",
-    "create_pipeline_train_model_cnf"
+    "create_pipeline_train_model_cnf",
+    "create_pipeline_train_model_nodegmm"
 ]

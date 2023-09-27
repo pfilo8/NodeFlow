@@ -245,7 +245,7 @@ def create_pipeline_calculate_metrics_nodeflow(**kwargs):
     return Pipeline([
         node(
             func=calculate_metrics_nodeflow,
-            inputs=["model", "x", "y", "params:num_samples", "params:batch_size", "params:sample_batch_size"],
+            inputs=["model", "x_train", "y_train", "x_test", "y_test", "params:num_samples", "params:batch_size", "params:sample_batch_size"],
             outputs=["results_nll", "results_rmse_1", "results_rmse_2", "results_crps"]
         ),
     ])
@@ -255,8 +255,10 @@ def create_pipeline_report_train_nodeflow():
     return pipeline(
         create_pipeline_calculate_metrics_nodeflow(),
         inputs={
-            "x": "x_train",
-            "y": "y_train"
+            "x_train": "x_train",
+            "y_train": "y_train",
+            "x_test": "x_train",
+            "y_test": "y_train"
         },
         outputs={
             "results_nll": "train_results_nll",
@@ -271,8 +273,10 @@ def create_pipeline_report_test_nodeflow():
     return pipeline(
         create_pipeline_calculate_metrics_nodeflow(),
         inputs={
-            "x": "x_test",
-            "y": "y_test"
+            "x_train": "x_train",
+            "y_train": "y_train",
+            "x_test": "x_test",
+            "y_test": "y_test"
         },
         outputs={
             "results_nll": "test_results_nll",

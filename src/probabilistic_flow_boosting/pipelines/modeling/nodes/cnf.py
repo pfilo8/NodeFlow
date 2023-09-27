@@ -89,7 +89,7 @@ def worker(stack, results, hyperparams,
 
 
 def modeling_cnf(x_train: pd.DataFrame, y_train: pd.DataFrame, model_params, model_hyperparams,
-                    split_size=0.8, n_epochs: int = 100, batch_size: int = 1000, random_seed: int = 42):
+                    split_size=0.8, n_epochs: int = 100, patience: int = 10, batch_size: int = 1000, random_seed: int = 42):
     x_tr, x_val, y_tr, y_val = split_data(x_train=x_train, y_train=y_train, split_size=split_size)
     
     model_hyperparams = [params for params in generate_params_for_grid_search(model_hyperparams)]

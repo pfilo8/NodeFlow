@@ -33,7 +33,7 @@ generated using Kedro 0.17.5
 
 from kedro.pipeline import Pipeline, node
 
-from .nodes import modeling_multivariate, modeling_treeflow, modeling_nodeflow, modeling_cnf
+from .nodes import modeling_multivariate, modeling_treeflow, modeling_nodeflow, modeling_cnf, modeling_nodegmm
 
 
 def create_pipeline_train_model(**kwargs):
@@ -64,7 +64,7 @@ def create_pipeline_train_model_nodeflow(**kwargs):
         node(
             func=modeling_nodeflow,
             inputs=["x_train", "y_train", "params:model_hyperparams",
-                    "params:split_size", "params:n_epochs", "params:batch_size", "params:random_seed"],
+                    "params:split_size", "params:n_epochs", "params:patience", "params:batch_size", "params:random_seed"],
             outputs=["model", "hp_search"]
         )
     ])
@@ -74,7 +74,17 @@ def create_pipeline_train_model_cnf(**kwargs):
         node(
             func=modeling_cnf,
             inputs=["x_train", "y_train", "params:model_hyperparams",
-                    "params:split_size", "params:n_epochs", "params:batch_size", "params:random_seed"],
+                    "params:split_size", "params:n_epochs", "params:patience", "params:batch_size", "params:random_seed"],
             outputs=["model", "hp_search"]
+        )
+    ])
+
+def create_pipeline_train_model_nodegmm(**kwargs):
+    return Pipeline([
+        node(
+            func=modeling_nodegmm,
+            inputs=["x_train", "y_train", "params:model_hyperparams",
+                    "params:split_size", "params:n_epochs", "params:patience", "params:batch_size", "params:random_seed"],
+            outputs=["model", "hp_search", "optuna_study"]
         )
     ])

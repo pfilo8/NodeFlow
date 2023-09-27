@@ -20,3 +20,5 @@ gcsfs
 torchdiffeq
 xgboost
 lightning
+optuna
+google-auth
