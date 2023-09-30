@@ -48,14 +48,18 @@ def train_cnf(x_train, y_train, n_epochs, patience, split_size, batch_size, mode
 
 
 def objective(x_train, y_train, n_epochs, patience, split_size, batch_size, hparams, trial: optuna.trial.Trial) -> float:
-    # We optimize the number of layers, hidden units in each layer and dropouts.
-
-    embedding_dim = trial.suggest_int("embedding_dim", *hparams["embedding_dim"])
-    num_blocks = trial.suggest_int("num_blocks", *hparams["num_blocks"])
-
-    hidden_dims_size = trial.suggest_categorical("hidden_dims_size", [4, 8, 16, 32])
-    hidden_dims_shape = trial.suggest_int("hidden_dims_shape", 2, 3)
-    hidden_dims = [hidden_dims_size]*hidden_dims_shape
+    try:
+        embedding_dim = trial.suggest_int("embedding_dim", *hparams["embedding_dim"])
+        num_blocks = trial.suggest_int("num_blocks", *hparams["num_blocks"])
+        hidden_dims_size = trial.suggest_int("hidden_dims_size", *hparams["hidden_dims_size"])
+        hidden_dims_shape = trial.suggest_int("hidden_dims_shape", *hparams["hidden_dims_shape"])
+        hidden_dims = [hidden_dims_size]*hidden_dims_shape
+    except:
+        embedding_dim = trial.suggest_int("embedding_dim", 0,200)
+        num_blocks = trial.suggest_int("num_blocks", 3,3)
+        hidden_dims_size = trial.suggest_categorical("hidden_dims_size", [4,8,16,32])
+        hidden_dims_shape = trial.suggest_int("hidden_dims_shape", 2,3)
+        hidden_dims = [hidden_dims_size]*hidden_dims_shape
 
     model_hyperparams = dict(
         embedding_dim=embedding_dim,
@@ -105,7 +109,14 @@ def modeling_cnf(
     torch.cuda.set_per_process_memory_fraction(0.49)
     pruner = optuna.pruners.HyperbandPruner(min_resource=5, max_resource=n_epochs)
     # sampler = optuna.samplers.TPESampler(n_startup_trials=10)
-    sampler = optuna.samplers.RandomSampler(seed=random_seed)
+    # sampler = optuna.samplers.RandomSampler(seed=random_seed)
+
+    sampler = optuna.samplers.GridSampler(search_space={
+        "embedding_dim": model_hyperparams["embedding_dim"],
+        "num_blocks": model_hyperparams["num_blocks"],
+        "hidden_dims_size": model_hyperparams["hidden_dims_size"],
+        "hidden_dims_shape": model_hyperparams["hidden_dims_shape"],
+    })
     study = optuna.create_study(direction="minimize", pruner=pruner, sampler=sampler)
 
     study.optimize(
@@ -119,7 +130,7 @@ def modeling_cnf(
             hparams=model_hyperparams,
             trial=trial
         ),
-        n_trials=5,
+        n_trials=100,
         timeout=10800,
         show_progress_bar=True,
         gc_after_trial=True,

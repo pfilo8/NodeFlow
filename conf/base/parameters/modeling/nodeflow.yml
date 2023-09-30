@@ -30,7 +30,7 @@ uci_concrete_nodeflow_{{i}}:
     flow_hidden_dims: [[8,8], [16,16], [32,32]]
   #### Training ####
 
-  n_epochs: 5
+  n_epochs: 400
   patience: 40
   split_size: 0.8
   random_seed: 42

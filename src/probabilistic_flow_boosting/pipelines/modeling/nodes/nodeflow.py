@@ -119,7 +119,7 @@ def modeling_nodeflow(
             hparams=model_hyperparams,
             trial=trial
         ),
-        n_trials=5,
+        n_trials=2000,
         timeout=10800,
         show_progress_bar=True,
         gc_after_trial=True,

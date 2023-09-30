@@ -2,9 +2,10 @@
 {% for i in range(20) %}
 uci_wine_quality_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0,0]
-    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
-    num_blocks: [3,3]
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
   #### Training ####
 
   n_epochs: 400
@@ -21,9 +22,10 @@ uci_wine_quality_cnf_{{i}}:
 {% for i in range(20) %}
 uci_concrete_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0,0]
-    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
-    num_blocks: [3,3]
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
   #### Training ####
 
   n_epochs: 400
@@ -39,9 +41,10 @@ uci_concrete_cnf_{{i}}:
 {% for i in range(20) %}
 uci_energy_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0,0]
-    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
-    num_blocks: [3,3]
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
   #### Training ####
 
   n_epochs: 100
@@ -57,9 +60,10 @@ uci_energy_cnf_{{i}}:
 {% for i in range(20) %}
 uci_kin8nm_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0,0]
-    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
-    num_blocks: [3,3]
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
   #### Training ####
 
   n_epochs: 100
@@ -75,9 +79,10 @@ uci_kin8nm_cnf_{{i}}:
 {% for i in range(20) %}
 uci_naval_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0,0]
-    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
-    num_blocks: [3,3]
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
   #### Training ####
 
   n_epochs: 100
@@ -93,9 +98,10 @@ uci_naval_cnf_{{i}}:
 {% for i in range(20) %}
 uci_power_plant_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0,0]
-    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
-    num_blocks: [3,3]
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
   #### Training ####
 
   n_epochs: 100
@@ -111,12 +117,13 @@ uci_power_plant_cnf_{{i}}:
 {% for i in range(20) %}
 uci_protein_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0,0]
-    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
-    num_blocks: [3,3]
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
   #### Training ####
 
-  n_epochs: 100
+  n_epochs: 50
   patience: 10
   split_size: 0.8
   random_seed: 42
@@ -129,9 +136,10 @@ uci_protein_cnf_{{i}}:
 {% for i in range(20) %}
 uci_yacht_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0,0]
-    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
-    num_blocks: [3,3]
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
   #### Training ####
 
   n_epochs: 400
@@ -147,9 +155,10 @@ uci_yacht_cnf_{{i}}:
 {% for i in range(20) %}
 uci_year_prediction_msd_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0,0]
-    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
-    num_blocks: [3,3]
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
   #### Training ####
 
   n_epochs: 20
