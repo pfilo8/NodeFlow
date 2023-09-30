@@ -34,12 +34,14 @@ from .pipeline import (
     create_pipeline_report,
     create_pipeline_report_ngboost,
     create_pipeline_report_nodeflow,
+    create_pipeline_report_cnf,
     create_pipeline_aggregated_report, 
 )
 
 __all__ = [
     "create_pipeline_report",
     "create_pipeline_report_ngboost",
-    "create_pipeline_report_nodeflow"
+    "create_pipeline_report_nodeflow",
+    "create_pipeline_report_cnf",
     "create_pipeline_aggregated_report"
 ]

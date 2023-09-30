@@ -31,7 +31,7 @@ uci_concrete_nodegmm_{{i}}:
   #### Training ####
 
   n_epochs: 400
-  patience: 40
+  patience: 60
   split_size: 0.8
   random_seed: 42
   batch_size: 2048

@@ -65,7 +65,7 @@ def create_pipeline_train_model_nodeflow(**kwargs):
             func=modeling_nodeflow,
             inputs=["x_train", "y_train", "params:model_hyperparams",
                     "params:split_size", "params:n_epochs", "params:patience", "params:batch_size", "params:random_seed"],
-            outputs=["model", "hp_search"]
+            outputs=["model", "hp_search", "optuna_study"]
         )
     ])
 
@@ -75,7 +75,7 @@ def create_pipeline_train_model_cnf(**kwargs):
             func=modeling_cnf,
             inputs=["x_train", "y_train", "params:model_hyperparams",
                     "params:split_size", "params:n_epochs", "params:patience", "params:batch_size", "params:random_seed"],
-            outputs=["model", "hp_search"]
+            outputs=["model", "hp_search", "optuna_study"]
         )
     ])
 

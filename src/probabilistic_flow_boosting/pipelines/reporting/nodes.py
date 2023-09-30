@@ -54,6 +54,7 @@ from ..utils import log_dataframe_artifact
 # from ...pgbm import PGBM
 from probabilistic_flow_boosting.models.tfboost.tfboost import TreeFlowBoost
 from probabilistic_flow_boosting.models.nodeflow import NodeFlow, NodeFlowDataModule
+from probabilistic_flow_boosting.models.cnf import ContinuousNormalizingFlowRegressor, CNFDataModule
 from probabilistic_flow_boosting.models.independent_multivariate_boosting import IndependentNGBoost
 
 
@@ -154,7 +155,58 @@ def calculate_metrics_nodeflow(
     nll = np.mean([val["test_nll"] for val in test_results])
 
     samples = trainer.predict(model, datamodule=datamodule, return_predictions=True)
-    samples = np.concatenate(samples)
+    samples = np.concatenate(samples).reshape(-1, 1000)
+    print(samples.shape)
+
+    if find_peaks_parameters is None:
+        find_peaks_parameters = {"height": 0.1}  # Proposed default
+    # RMSE
+    peaks_1 = calculate_peaks(samples, find_peaks_parameters, n_peaks=1)
+    peaks_2 = calculate_peaks(samples, find_peaks_parameters, n_peaks=2)
+    rmse_1 = np.sqrt(np.mean((y_test-peaks_1)**2))
+    rmse_2 = np.sqrt(np.mean(np.min((np.tile(y_test, 2)-peaks_2)**2, axis=1)))
+
+    # CRPS
+    y_test = y_test.reshape(-1)
+    crpss = []
+    for o, f in zip(batch(y_test, 100), batch(samples, 100)):
+        crpss.append(ps.crps_ensemble(
+            observations=o,
+            forecasts=f
+        ))
+    crpss = np.concatenate(crpss)
+    return nll, rmse_1, rmse_2, crpss.mean()
+
+def calculate_metrics_cnf(
+        model: ContinuousNormalizingFlowRegressor,
+        X_train: np.ndarray,
+        y_train: np.ndarray,
+        X_test: np.ndarray,
+        y_test: np.ndarray,
+        num_samples: int,
+        batch_size: int,
+        sample_batch_size: int,
+        find_peaks_parameters: Dict[Any, Any] = None
+    ):
+    torch.cuda.set_per_process_memory_fraction(0.49)
+    y_test = y_test.to_numpy()
+    torch.cuda.empty_cache()
+    # NLL
+    datamodule = CNFDataModule(X_train, y_train, X_test, y_test, split_size=0.8, batch_size=sample_batch_size)
+    trainer = Trainer(
+        max_epochs=100,
+        devices=1,
+        check_val_every_n_epoch=4,
+        accelerator="cuda",
+        enable_checkpointing=False,
+        inference_mode=False,
+    )
+    test_results = trainer.test(model, datamodule=datamodule)
+    nll = np.mean([val["test_nll"] for val in test_results])
+
+    samples = trainer.predict(model, datamodule=datamodule, return_predictions=True)
+    samples = np.concatenate(samples).reshape(-1, 1000)
+    print(samples.shape)
 
     if find_peaks_parameters is None:
         find_peaks_parameters = {"height": 0.1}  # Proposed default

@@ -38,7 +38,7 @@ uci_boston_cnf_{{i}}.hp_search:
 
 uci_boston_cnf_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.CNFDataSet
-  filepath: data/06_models/UCI/bostonHousing/model_{{i}}
+  filepath: data/06_models/UCI/bostonHousing/model_cnf_{{i}}
 
 uci_boston_cnf_{{i}}.summary:
   type: pandas.CSVDataSet
@@ -47,6 +47,12 @@ uci_boston_cnf_{{i}}.summary:
     project: theta-kingdom-385217
   credentials: creds_sa
 
+uci_boston_cnf_{{i}}.optuna_study:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
+  filepath: gcs://nodeflow/cnf/data/07_model_output_optuna_study/UCI/bostonHousing/optuna_study_{{i}}.pkl
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 
 {% endfor %}
 
@@ -93,7 +99,7 @@ uci_concrete_cnf_{{i}}.hp_search:
 
 uci_concrete_cnf_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.CNFDataSet
-  filepath: data/06_models/UCI/concrete/model_{{i}}
+  filepath: data/06_models/UCI/concrete/model_cnf_{{i}}
 
 uci_concrete_cnf_{{i}}.summary:
   type: pandas.CSVDataSet
@@ -102,6 +108,12 @@ uci_concrete_cnf_{{i}}.summary:
     project: theta-kingdom-385217
   credentials: creds_sa
 
+uci_concrete_cnf_{{i}}.optuna_study:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
+  filepath: gcs://nodeflow/cnf/data/07_model_output_optuna_study/UCI/concrete/optuna_study_{{i}}.pkl
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 {% endfor %}
 
 uci_concrete_cnf.aggregated_summary:
@@ -147,7 +159,7 @@ uci_energy_cnf_{{i}}.hp_search:
 
 uci_energy_cnf_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.CNFDataSet
-  filepath: data/06_models/UCI/energy/model_{{i}}
+  filepath: data/06_models/UCI/energy/model_cnf_{{i}}
 
 uci_energy_cnf_{{i}}.summary:
   type: pandas.CSVDataSet
@@ -156,6 +168,12 @@ uci_energy_cnf_{{i}}.summary:
     project: theta-kingdom-385217
   credentials: creds_sa
 
+uci_energy_cnf_{{i}}.optuna_study:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
+  filepath: gcs://nodeflow/cnf/data/07_model_output_optuna_study/UCI/energy/optuna_study_{{i}}.pkl
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 {% endfor %}
 
 uci_energy_cnf.aggregated_summary:
@@ -201,7 +219,7 @@ uci_kin8nm_cnf_{{i}}.hp_search:
 
 uci_kin8nm_cnf_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.CNFDataSet
-  filepath: data/06_models/UCI/kin8nm/model_{{i}}
+  filepath: data/06_models/UCI/kin8nm/model_cnf_{{i}}
 
 uci_kin8nm_cnf_{{i}}.summary:
   type: pandas.CSVDataSet
@@ -210,6 +228,12 @@ uci_kin8nm_cnf_{{i}}.summary:
     project: theta-kingdom-385217
   credentials: creds_sa
 
+uci_kin8nm_cnf_{{i}}.optuna_study:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
+  filepath: gcs://nodeflow/cnf/data/07_model_output_optuna_study/UCI/kin8nm/optuna_study_{{i}}.pkl
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 {% endfor %}
 
 uci_kin8nm_cnf.aggregated_summary:
@@ -255,7 +279,7 @@ uci_naval_cnf_{{i}}.hp_search:
 
 uci_naval_cnf_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.CNFDataSet
-  filepath: data/06_models/UCI/naval-propulsion-plant/model_{{i}}
+  filepath: data/06_models/UCI/naval-propulsion-plant/model_cnf_{{i}}
 
 uci_naval_cnf_{{i}}.summary:
   type: pandas.CSVDataSet
@@ -264,6 +288,12 @@ uci_naval_cnf_{{i}}.summary:
     project: theta-kingdom-385217
   credentials: creds_sa
 
+uci_naval_cnf_{{i}}.optuna_study:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
+  filepath: gcs://nodeflow/cnf/data/07_model_output_optuna_study/UCI/naval-propulsion-plant/optuna_study_{{i}}.pkl
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 {% endfor %}
 
 uci_naval_cnf.aggregated_summary:
@@ -309,7 +339,7 @@ uci_power_plant_cnf_{{i}}.hp_search:
 
 uci_power_plant_cnf_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.CNFDataSet
-  filepath: data/06_models/UCI/power-plant/model_{{i}}
+  filepath: data/06_models/UCI/power-plant/model_cnf_{{i}}
 
 uci_power_plant_cnf_{{i}}.summary:
   type: pandas.CSVDataSet
@@ -318,6 +348,12 @@ uci_power_plant_cnf_{{i}}.summary:
     project: theta-kingdom-385217
   credentials: creds_sa
 
+uci_power_plant_cnf_{{i}}.optuna_study:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
+  filepath: gcs://nodeflow/cnf/data/07_model_output_optuna_study/UCI/power-plant/optuna_study_{{i}}.pkl
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 {% endfor %}
 
 uci_power_plant_cnf.aggregated_summary:
@@ -363,7 +399,7 @@ uci_protein_cnf_{{i}}.hp_search:
 
 uci_protein_cnf_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.CNFDataSet
-  filepath: data/06_models/UCI/protein-tertiary-structure/model_{{i}}
+  filepath: data/06_models/UCI/protein-tertiary-structure/model_cnf_{{i}}
 
 uci_protein_cnf_{{i}}.summary:
   type: pandas.CSVDataSet
@@ -372,6 +408,12 @@ uci_protein_cnf_{{i}}.summary:
     project: theta-kingdom-385217
   credentials: creds_sa
 
+uci_protein_cnf_{{i}}.optuna_study:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
+  filepath: gcs://nodeflow/cnf/data/07_model_output_optuna_study/UCI/protein-tertiary-structure/optuna_study_{{i}}.pkl
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 {% endfor %}
 
 uci_protein_cnf.aggregated_summary:
@@ -417,7 +459,7 @@ uci_wine_quality_cnf_{{i}}.hp_search:
 
 uci_wine_quality_cnf_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.CNFDataSet
-  filepath: data/06_models/UCI/wine-quality-red/model_{{i}}
+  filepath: data/06_models/UCI/wine-quality-red/model_cnf_{{i}}
 
 uci_wine_quality_cnf_{{i}}.summary:
   type: pandas.CSVDataSet
@@ -425,7 +467,17 @@ uci_wine_quality_cnf_{{i}}.summary:
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
+
+uci_wine_quality_cnf_{{i}}.optuna_study:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
+  filepath: gcs://nodeflow/cnf/data/07_model_output_optuna_study/UCI/wine-quality-red/optuna_study_{{i}}.pkl
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
+
+
 {% endfor %}
+
 
 uci_wine_quality_cnf.aggregated_summary:
   type: pandas.CSVDataSet
@@ -470,7 +522,7 @@ uci_yacht_cnf_{{i}}.hp_search:
 
 uci_yacht_cnf_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.CNFDataSet
-  filepath: data/06_models/UCI/yacht/model_{{i}}
+  filepath: data/06_models/UCI/yacht/model_cnf_{{i}}
 
 uci_yacht_cnf_{{i}}.summary:
   type: pandas.CSVDataSet
@@ -479,6 +531,12 @@ uci_yacht_cnf_{{i}}.summary:
     project: theta-kingdom-385217
   credentials: creds_sa
 
+uci_yacht_cnf_{{i}}.optuna_study:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
+  filepath: gcs://nodeflow/cnf/data/07_model_output_optuna_study/UCI/yacht/optuna_study_{{i}}.pkl
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 {% endfor %}
 
 uci_yacht_cnf.aggregated_summary:
@@ -532,7 +590,7 @@ uci_year_prediction_msd_cnf_{{i}}.hp_search:
 
 uci_year_prediction_msd_cnf_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.CNFDataSet
-  filepath: data/06_models/UCI/year-prediction-msd/model_{{i}}
+  filepath: data/06_models/UCI/year-prediction-msd/model_cnf_{{i}}
 
 uci_year_prediction_msd_cnf_{{i}}.summary:
   type: pandas.CSVDataSet
@@ -541,6 +599,12 @@ uci_year_prediction_msd_cnf_{{i}}.summary:
     project: theta-kingdom-385217
   credentials: creds_sa
 
+uci_year_prediction_msd_cnf_{{i}}.optuna_study:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
+  filepath: gcs://nodeflow/cnf/data/07_model_output_optuna_study/UCI/year-prediction-msd/optuna_study_{{i}}.pkl
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
 {% endfor %}
 
 uci_year_prediction_msd_cnf.aggregated_summary:

@@ -13,11 +13,9 @@ from pytorch_lightning.utilities.warnings import PossibleUserWarning
 warnings.filterwarnings("ignore", category=PossibleUserWarning)
 
 from lightning.pytorch import Trainer, seed_everything
-from lightning.pytorch.tuner.tuning import Tuner
 from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping, StochasticWeightAveraging
 
 from probabilistic_flow_boosting.pipelines.modeling.pytorch_lightning import PyTorchLightningPruningCallback
-from ..utils import generate_params_for_grid_search
 from probabilistic_flow_boosting.models.nodeflow import NodeFlow, NodeFlowDataModule
 
 optuna.logging.enable_propagation()
@@ -90,6 +88,7 @@ def objective(x_train, y_train, n_epochs, patience, split_size, batch_size, hpar
         trial.set_user_attr("total_epochs", trainer.current_epoch)
         return trainer.early_stopping_callback.best_score.item()
     except RuntimeError as exc:
+        raise CudaOutOfMemory(str(exc))
         return float('inf') # return any high 
 
 def modeling_nodeflow(
@@ -103,7 +102,8 @@ def modeling_nodeflow(
     random_seed: int = 42,
 ):
     seed_everything(random_seed, workers=True) # sets seeds for numpy, torch and python.random.
-    pruner = optuna.pruners.HyperbandPruner(min_resource=3,)
+    torch.cuda.set_per_process_memory_fraction(0.49)
+    pruner = optuna.pruners.HyperbandPruner(min_resource=5,)
     # sampler = optuna.samplers.TPESampler(n_startup_trials=10)
     sampler = optuna.samplers.RandomSampler(seed=random_seed)
     study = optuna.create_study(direction="minimize", pruner=pruner, sampler=sampler)
@@ -119,7 +119,7 @@ def modeling_nodeflow(
             hparams=model_hyperparams,
             trial=trial
         ),
-        n_trials=3000,
+        n_trials=5,
         timeout=10800,
         show_progress_bar=True,
         gc_after_trial=True,
@@ -151,4 +151,4 @@ def modeling_nodeflow(
     model = NodeFlow.load_from_checkpoint(best_model_path, input_dim=x_train.shape[1], output_dim=y_train.shape[1], **model_params)
     os.remove(best_model_path)
     
-    return model, results
+    return model, results, study

@@ -160,7 +160,7 @@ class NodeFlow(pl.LightningModule):
         self.flow_model = ContinuousNormalizingFlow(
             input_dim=output_dim,
             hidden_dims=flow_hidden_dims,
-            context_dim=num_layers * tree_output_dim * num_trees,
+            context_dim=num_layers * tree_output_dim * num_trees, # + input_dim,
             num_blocks=flow_num_blocks,
             conditional=True,  # It must be true as we are using Conditional CNF model.
             layer_type=flow_layer_type,
@@ -213,15 +213,11 @@ class NodeFlow(pl.LightningModule):
         return x
     
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0, num_samples: int = 1000) -> Any:
-        Xs, y = batch
-        all_samples: List[torch.Tensor] = []
-        for x in tqdm(torch.unbind(Xs, dim=0)):
-            x = x.reshape(1, -1)
-            samples = self._sample(x, num_samples)
-            all_samples.append(samples)
+        X, y = batch
+        samples = self._sample(X, num_samples)
         
         # Inverse target transformation
-        samples: torch.Tensor = torch.cat(all_samples, dim=0)
+        # samples: torch.Tensor = torch.cat(all_samples, dim=0)
         samples_size = samples.shape
         samples: np.ndarray = samples.detach().cpu().numpy()
         samples: np.ndarray = samples.reshape((samples_size[0] * samples_size[1], samples_size[2]))

@@ -1,1 +1,1 @@
-from .cnf import ContinuousNormalizingFlowRegressor
+from .cnf import ContinuousNormalizingFlowRegressor, CNFDataModule

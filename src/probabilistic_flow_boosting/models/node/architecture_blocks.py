@@ -54,6 +54,7 @@ class DenseODSTBlock(nn.Sequential):
             num_trees,
             tree_output_dim,
         )
+        self.input_dim = input_dim
         self.max_features, self.flatten_output = max_features, flatten_output
         self.input_dropout = input_dropout
 
@@ -77,6 +78,7 @@ class DenseODSTBlock(nn.Sequential):
             x = torch.cat([x, h], dim=-1)
 
         outputs = x[..., initial_features:]
+        # outputs = x
         if not self.flatten_output:
-            outputs = outputs.view(*outputs.shape[:-1], self.num_layers * self.layer_dim, self.tree_dim)
+            outputs = outputs.view(*outputs.shape[:-1], self.num_layers * self.layer_dim, self.tree_dim) # self.input_dim + 
         return outputs

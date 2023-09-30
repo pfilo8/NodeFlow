@@ -97,7 +97,7 @@ def modeling_nodegmm(
     random_seed: int = 42,
 ):
     seed_everything(random_seed, workers=True) # sets seeds for numpy, torch and python.random.
-    torch.cuda.set_per_process_memory_fraction(0.5)
+    torch.cuda.set_per_process_memory_fraction(0.3)
     pruner = optuna.pruners.HyperbandPruner(min_resource=3,)
     # sampler = optuna.samplers.TPESampler(n_startup_trials=10)
     sampler = optuna.samplers.RandomSampler(seed=random_seed)

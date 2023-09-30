@@ -2,6 +2,7 @@ catboost
 flake8
 isort
 kedro==0.18.8
+kedro-datasets
 torch
 numpy
 nbstripout

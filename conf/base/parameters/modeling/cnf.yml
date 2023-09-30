@@ -2,131 +2,162 @@
 {% for i in range(20) %}
 uci_wine_quality_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0]
-    hidden_dims: [[32,32], [80, 40]]
+    embedding_dim: [0,0]
+    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
+    num_blocks: [3,3]
   #### Training ####
 
   n_epochs: 400
+  patience: 20
   split_size: 0.8
   random_seed: 42
-  batch_size: 2048
+  batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 32
+  sample_batch_size: 1
 {% endfor %}
 
-# kedro run --pipeline=uci_wine_quality_cnf && kedro run --pipeline=uci_concrete_cnf
+# kedro run --pipeline=uci_wine_quality_cnf
 
 {% for i in range(20) %}
 uci_concrete_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0]
-    hidden_dims: [[32,32], [80, 40]]
+    embedding_dim: [0,0]
+    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
+    num_blocks: [3,3]
   #### Training ####
 
   n_epochs: 400
+  patience: 20
   split_size: 0.8
   random_seed: 42
-  batch_size: 2024
+  batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 32
+  sample_batch_size: 1
 {% endfor %}
 # kedro run --pipeline=uci_concrete_cnf
 
 {% for i in range(20) %}
 uci_energy_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0]
-    hidden_dims: [[80, 40], [80, 80, 40]]
+    embedding_dim: [0,0]
+    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
+    num_blocks: [3,3]
   #### Training ####
 
-  n_epochs: 400
+  n_epochs: 100
+  patience: 10
   split_size: 0.8
   random_seed: 42
-  batch_size: 2024
+  batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 8
+  sample_batch_size: 1
 {% endfor %}
-# kedro run --pipeline=uci_energy_cnf && kedro run --pipeline=uci_kin8nm_cnf
+# kedro run --pipeline=uci_energy_cnf
 
 {% for i in range(20) %}
 uci_kin8nm_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0]
-    hidden_dims: [[80, 40], [80, 80, 40]]
+    embedding_dim: [0,0]
+    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
+    num_blocks: [3,3]
   #### Training ####
 
   n_epochs: 100
+  patience: 10
   split_size: 0.8
   random_seed: 42
-  batch_size: 1024
+  batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 4
+  sample_batch_size: 1
 {% endfor %}
 # kedro run --pipeline=uci_kin8nm_cnf
 
 {% for i in range(20) %}
 uci_naval_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0]
-    hidden_dims: [[80, 40], [100, 100, 50]]
+    embedding_dim: [0,0]
+    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
+    num_blocks: [3,3]
   #### Training ####
 
-  n_epochs: 200
+  n_epochs: 100
+  patience: 10
   split_size: 0.8
   random_seed: 42
   batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 8
+  sample_batch_size: 1
 {% endfor %}
 # kedro run --pipeline=uci_naval_cnf
 
 {% for i in range(20) %}
 uci_power_plant_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0]
-    hidden_dims: [[100, 50], [100, 100, 50], [200, 100, 100, 50]]
+    embedding_dim: [0,0]
+    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
+    num_blocks: [3,3]
   #### Training ####
 
   n_epochs: 100
+  patience: 10
   split_size: 0.8
   random_seed: 42
   batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 8
+  sample_batch_size: 1
 {% endfor %}
 # kedro run --pipeline=uci_power_plant_cnf
 
 {% for i in range(20) %}
 uci_protein_cnf_{{i}}:
   model_hyperparams:
-    num_layers: [6]
-    depth: [4]
-    tree_output_dim: [1]
-    num_trees: [300] # 50, 
-    flow_hidden_dims: [[32, 32, 32], [16, 16, 16]] # [64,64,32], 
+    embedding_dim: [0,0]
+    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
+    num_blocks: [3,3]
   #### Training ####
 
-  n_epochs: 75
+  n_epochs: 100
+  patience: 10
   split_size: 0.8
   random_seed: 42
   batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 4
+  sample_batch_size: 1
 {% endfor %}
 # kedro run --pipeline=uci_protein_cnf
 
 {% for i in range(20) %}
-uci_year_prediction_msd_cnf_{{i}}:
+uci_yacht_cnf_{{i}}:
   model_hyperparams:
-    embedding_dim: [0]
-    hidden_dims: [[80, 80, 80, 40], [80,40], [80, 80, 40]]
+    embedding_dim: [0,0]
+    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
+    num_blocks: [3,3]
   #### Training ####
 
-  n_epochs: 10
+  n_epochs: 400
+  patience: 20
   split_size: 0.8
   random_seed: 42
-  batch_size: 1024
+  batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 32
+  sample_batch_size: 1
+{% endfor %}
+# kedro run --pipeline=uci_yacht_cnf
+
+{% for i in range(20) %}
+uci_year_prediction_msd_cnf_{{i}}:
+  model_hyperparams:
+    embedding_dim: [0,0]
+    hidden_dims: [[4,4], [8,8], [16,16], [32,32]]
+    num_blocks: [3,3]
+  #### Training ####
+
+  n_epochs: 20
+  patience: 10
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 1
 {% endfor %}
 # kedro run --pipeline=uci_year_prediction_msd_cnf
