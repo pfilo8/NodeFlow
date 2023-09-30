@@ -103,7 +103,7 @@ def modeling_cnf(
 ):
     seed_everything(random_seed, workers=True) # sets seeds for numpy, torch and python.random.
     torch.cuda.set_per_process_memory_fraction(0.49)
-    pruner = optuna.pruners.HyperbandPruner(min_resource=5,)
+    pruner = optuna.pruners.HyperbandPruner(min_resource=5, max_resource=n_epochs)
     # sampler = optuna.samplers.TPESampler(n_startup_trials=10)
     sampler = optuna.samplers.RandomSampler(seed=random_seed)
     study = optuna.create_study(direction="minimize", pruner=pruner, sampler=sampler)
