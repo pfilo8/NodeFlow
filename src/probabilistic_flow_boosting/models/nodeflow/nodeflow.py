@@ -17,20 +17,21 @@ from probabilistic_flow_boosting.models.flow import ContinuousNormalizingFlow
 from probabilistic_flow_boosting.models.node import DenseODSTBlock
 from probabilistic_flow_boosting.models.node.activations import sparsemax, sparsemoid
 
+
 class NodeFlowDataModule(pl.LightningDataModule):
     def __init__(
-        self, 
-        X_train: pd.DataFrame,
-        y_train: pd.DataFrame,
-        X_test: Optional[pd.DataFrame] = None,
-        y_test: Optional[pd.DataFrame] = None,
-        split_size: float = 0.8,
-        batch_size: int = 1024
+            self,
+            X_train: pd.DataFrame,
+            y_train: pd.DataFrame,
+            X_test: Optional[pd.DataFrame] = None,
+            y_test: Optional[pd.DataFrame] = None,
+            split_size: float = 0.8,
+            batch_size: int = 1024
     ) -> None:
         super().__init__()
         self.batch_size = batch_size
         self.split_size = split_size
-        
+
         self.X_train = X_train.to_numpy() if isinstance(X_train, pd.DataFrame) else X_train
         self.y_train = y_train.to_numpy() if isinstance(y_train, pd.DataFrame) else y_train
 
@@ -45,7 +46,7 @@ class NodeFlowDataModule(pl.LightningDataModule):
         else:
             self.x_tr = self.X_train
             self.y_tr = self.y_train
-        
+
         self.feature_scaler = Pipeline(
             [
                 ("quantile", QuantileTransformer(output_distribution="normal")),
@@ -84,38 +85,37 @@ class NodeFlowDataModule(pl.LightningDataModule):
 
     def val_dataloader(self):
         return self._to_dataloader(X=self.x_val, y=self.y_val)
-    
+
     def test_dataloader(self):
         return self._to_dataloader(X=self.X_test, y=self.y_test)
-    
+
     def predict_dataloader(self):
         return self._to_dataloader(X=self.X_test, y=self.y_test)
-        
 
 
 class NodeFlow(pl.LightningModule):
     def __init__(
-        self,
-        input_dim: int,
-        output_dim: int,
-        num_trees: int = 200,
-        depth: int = 6,
-        tree_output_dim: int = 1,
-        choice_function: Callable = sparsemax,
-        bin_function: Callable = sparsemoid,
-        initialize_response_: Callable = nn.init.normal_,
-        initialize_selection_logits_: Callable = nn.init.uniform_,
-        threshold_init_beta: float = 1.0,
-        threshold_init_cutoff: float = 1.0,
-        num_layers: int = 6,
-        max_features: Union[None, int] = None,
-        input_dropout: float = 0.0,
-        flow_hidden_dims: Iterable[int] = (80, 40),
-        flow_num_blocks: int = 3,
-        flow_layer_type: str = "concatsquash",
-        flow_nonlinearity: str = "tanh",
-        device: str = None,
-        random_state: int = 0,
+            self,
+            input_dim: int,
+            output_dim: int,
+            num_trees: int = 200,
+            depth: int = 6,
+            tree_output_dim: int = 1,
+            choice_function: Callable = sparsemax,
+            bin_function: Callable = sparsemoid,
+            initialize_response_: Callable = nn.init.normal_,
+            initialize_selection_logits_: Callable = nn.init.uniform_,
+            threshold_init_beta: float = 1.0,
+            threshold_init_cutoff: float = 1.0,
+            num_layers: int = 6,
+            max_features: Union[None, int] = None,
+            input_dropout: float = 0.0,
+            flow_hidden_dims: Iterable[int] = (80, 40),
+            flow_num_blocks: int = 3,
+            flow_layer_type: str = "concatsquash",
+            flow_nonlinearity: str = "tanh",
+            device: str = None,
+            random_state: int = 0,
     ):
         super().__init__()
         self.input_dim = input_dim
@@ -139,7 +139,6 @@ class NodeFlow(pl.LightningModule):
         self.random_state = random_state
         self._best_epoch = None
 
-        
         self.tree_model = DenseODSTBlock(
             input_dim,
             num_trees,
@@ -160,28 +159,30 @@ class NodeFlow(pl.LightningModule):
         self.flow_model = ContinuousNormalizingFlow(
             input_dim=output_dim,
             hidden_dims=flow_hidden_dims,
-            context_dim=num_layers * tree_output_dim * num_trees, # + input_dim,
+            context_dim=num_layers * tree_output_dim * num_trees,  # + input_dim,
             num_blocks=flow_num_blocks,
             conditional=True,  # It must be true as we are using Conditional CNF model.
             layer_type=flow_layer_type,
             nonlinearity=flow_nonlinearity,
         )
 
-    @torch.enable_grad() 
+    @torch.enable_grad()
     def forward(self, X, y):
         """Calculate the log probability of the model (batch). Method used only for training and validation."""
         x = self.tree_model(X)
         x = self.flow_model.log_prob(y, x)
-        x += np.log(np.abs(np.prod(self.trainer.datamodule.target_scaler.scale_))) # Target scaling correction. log(abs(det(jacobian)))
+        x += np.log(np.abs(np.prod(
+            self.trainer.datamodule.target_scaler.scale_)))  # Target scaling correction. log(abs(det(jacobian)))
         return x
-    
+
     @torch.enable_grad()
     def _log_prob(self, X, y):
         """Calculate the log probability of the model (batch). Method used only for testing."""
         grad_x = X.clone().requires_grad_()
         x = self.tree_model(grad_x)
         x = self.flow_model.log_prob(y, x)
-        x += np.log(np.abs(np.prod(self.trainer.datamodule.target_scaler.scale_))) # Target scaling correction. log(abs(det(jacobian)))
+        x += np.log(np.abs(np.prod(
+            self.trainer.datamodule.target_scaler.scale_)))  # Target scaling correction. log(abs(det(jacobian)))
         return x
 
     def training_step(self, batch, batch_idx):
@@ -190,7 +191,7 @@ class NodeFlow(pl.LightningModule):
         loss = -logpx.mean()
         self.log("train_nll", loss, on_step=False, on_epoch=True, prog_bar=True, logger=False)
         return loss
-    
+
     def validation_step(self, batch, batch_idx):
         x, y = batch
         logpx = self(x, y)
@@ -211,11 +212,11 @@ class NodeFlow(pl.LightningModule):
         x = self.tree_model(grad_x)
         x = self.flow_model.sample(x, num_samples=num_samples)
         return x
-    
+
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0, num_samples: int = 1000) -> Any:
         X, y = batch
         samples = self._sample(X, num_samples)
-        
+
         # Inverse target transformation
         # samples: torch.Tensor = torch.cat(all_samples, dim=0)
         samples_size = samples.shape
@@ -234,5 +235,5 @@ class NodeFlow(pl.LightningModule):
         torch.save(self, f"{filename}-nodeflow.pt")
 
     @classmethod
-    def load(cls, filename: str):
-        return torch.load(f"{filename}-nodeflow.pt")
+    def load(cls, filename: str, map_location=None):
+        return torch.load(f"{filename}-nodeflow.pt", map_location=map_location)

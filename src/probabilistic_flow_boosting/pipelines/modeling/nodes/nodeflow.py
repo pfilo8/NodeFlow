@@ -38,7 +38,7 @@ def train_nodeflow(x_train, y_train, n_epochs, patience, split_size, batch_size,
         max_epochs=n_epochs,
         devices=1,
         check_val_every_n_epoch=1,
-        accelerator="cuda",
+        accelerator="auto",
         callbacks=callbacks,
     )
     trainer.fit(model, datamodule=datamodule)
