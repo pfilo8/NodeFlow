@@ -247,7 +247,7 @@ def create_pipeline_calculate_metrics_nodeflow(**kwargs):
         node(
             func=calculate_metrics_nodeflow,
             inputs=["model", "x_train", "y_train", "x_test", "y_test", "params:num_samples", "params:batch_size", "params:sample_batch_size"],
-            outputs=["results_nll", "results_rmse_1", "results_rmse_2", "results_crps"]
+            outputs=["results_nll", "results_rmse_1", "results_rmse_2", "results_crps", "nll_time", "rmse_2_time", "crps_time"]
         ),
     ])
 
@@ -266,6 +266,9 @@ def create_pipeline_report_train_nodeflow():
             "results_rmse_1": "train_results_rmse_1",
             "results_rmse_2": "train_results_rmse_2",
             "results_crps": "train_results_crps",
+            "nll_time": "train_nll_time",
+            "rmse_2_time": "train_rmse_2_time",
+            "crps_time": "train_crps_time",
         }
     )
 
@@ -284,6 +287,9 @@ def create_pipeline_report_test_nodeflow():
             "results_rmse_1": "test_results_rmse_1",
             "results_rmse_2": "test_results_rmse_2",
             "results_crps": "test_results_crps",
+            "nll_time": "test_nll_time",
+            "rmse_2_time": "test_rmse_2_time",
+            "crps_time": "test_crps_time",
         }
     )
 
@@ -296,13 +302,19 @@ def create_pipeline_report_nodeflow():
             func=summary_nodeflow,
             inputs=[
                 "train_results_nll",
+                "train_nll_time",
                 "test_results_nll",
+                "test_nll_time",
                 "train_results_rmse_1",
                 "test_results_rmse_1",
                 "train_results_rmse_2",
+                "train_rmse_2_time",
                 "test_results_rmse_2",
+                "test_rmse_2_time",
                 "train_results_crps",
                 "test_results_crps",
+                "train_crps_time",
+                "test_crps_time",
             ],
             outputs="summary"
         )
@@ -333,6 +345,9 @@ def create_pipeline_report_train_cnf():
             "results_rmse_1": "train_results_rmse_1",
             "results_rmse_2": "train_results_rmse_2",
             "results_crps": "train_results_crps",
+            "nll_time": "train_nll_time",
+            "rmse_2_time": "train_rmse_2_time",
+            "crps_time": "train_crps_time",
         }
     )
 
@@ -351,6 +366,9 @@ def create_pipeline_report_test_cnf():
             "results_rmse_1": "test_results_rmse_1",
             "results_rmse_2": "test_results_rmse_2",
             "results_crps": "test_results_crps",
+            "nll_time": "test_nll_time",
+            "rmse_2_time": "test_rmse_2_time",
+            "crps_time": "test_crps_time",
         }
     )
 
@@ -363,13 +381,19 @@ def create_pipeline_report_cnf():
             func=summary_nodeflow,
             inputs=[
                 "train_results_nll",
+                "train_nll_time",
                 "test_results_nll",
+                "test_nll_time",
                 "train_results_rmse_1",
                 "test_results_rmse_1",
                 "train_results_rmse_2",
+                "train_rmse_2_time",
                 "test_results_rmse_2",
+                "test_rmse_2_time",
                 "train_results_crps",
                 "test_results_crps",
+                "train_crps_time",
+                "test_crps_time",
             ],
             outputs="summary"
         )

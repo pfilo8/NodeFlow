@@ -14,7 +14,7 @@ uci_wine_quality_cnf_{{i}}:
   random_seed: 42
   batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 1
+  sample_batch_size: 32
 {% endfor %}
 
 # kedro run --pipeline=uci_wine_quality_cnf
@@ -34,7 +34,7 @@ uci_concrete_cnf_{{i}}:
   random_seed: 42
   batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 1
+  sample_batch_size: 32
 {% endfor %}
 # kedro run --pipeline=uci_concrete_cnf
 
@@ -53,7 +53,7 @@ uci_energy_cnf_{{i}}:
   random_seed: 42
   batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 1
+  sample_batch_size: 32
 {% endfor %}
 # kedro run --pipeline=uci_energy_cnf
 
@@ -72,7 +72,7 @@ uci_kin8nm_cnf_{{i}}:
   random_seed: 42
   batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 1
+  sample_batch_size: 32
 {% endfor %}
 # kedro run --pipeline=uci_kin8nm_cnf
 
@@ -91,7 +91,7 @@ uci_naval_cnf_{{i}}:
   random_seed: 42
   batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 1
+  sample_batch_size: 32
 {% endfor %}
 # kedro run --pipeline=uci_naval_cnf
 
@@ -110,7 +110,7 @@ uci_power_plant_cnf_{{i}}:
   random_seed: 42
   batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 1
+  sample_batch_size: 32
 {% endfor %}
 # kedro run --pipeline=uci_power_plant_cnf
 
@@ -129,7 +129,7 @@ uci_protein_cnf_{{i}}:
   random_seed: 42
   batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 1
+  sample_batch_size: 32
 {% endfor %}
 # kedro run --pipeline=uci_protein_cnf
 
@@ -148,7 +148,7 @@ uci_yacht_cnf_{{i}}:
   random_seed: 42
   batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 1
+  sample_batch_size: 32
 {% endfor %}
 # kedro run --pipeline=uci_yacht_cnf
 
@@ -167,6 +167,6 @@ uci_year_prediction_msd_cnf_{{i}}:
   random_seed: 42
   batch_size: 4096
   num_samples: 1000
-  sample_batch_size: 1
+  sample_batch_size: 32
 {% endfor %}
 # kedro run --pipeline=uci_year_prediction_msd_cnf

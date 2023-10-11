@@ -1,12 +1,9 @@
 import os
-from typing import Optional, List, Any
-from dataclasses import dataclass
 import uuid
 import logging
 import torch
-import numpy as np
-import pandas as pd
 import optuna
+import pandas as pd
 
 from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping, StochasticWeightAveraging
@@ -98,7 +95,7 @@ def modeling_nodegmm(
 ):
     seed_everything(random_seed, workers=True) # sets seeds for numpy, torch and python.random.
     torch.cuda.set_per_process_memory_fraction(0.3)
-    pruner = optuna.pruners.HyperbandPruner(min_resource=3,max_resource=n_epochs)
+    pruner = optuna.pruners.HyperbandPruner(min_resource=10,max_resource=n_epochs)
     # sampler = optuna.samplers.TPESampler(n_startup_trials=10)
     sampler = optuna.samplers.RandomSampler(seed=random_seed)
     study = optuna.create_study(direction="minimize", pruner=pruner, sampler=sampler)
@@ -114,7 +111,7 @@ def modeling_nodegmm(
             hparams=model_hyperparams,
             trial=trial
         ),
-        n_trials=3000,
+        n_trials=500,
         timeout=3600,
         show_progress_bar=True,
         gc_after_trial=True,

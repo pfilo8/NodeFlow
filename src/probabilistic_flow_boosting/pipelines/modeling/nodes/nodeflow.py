@@ -1,12 +1,9 @@
 import os
-from typing import Optional, List, Any
-from dataclasses import dataclass
 import uuid
 import logging
 import torch
-import numpy as np
-import pandas as pd
 import optuna
+import pandas as pd
 
 import warnings
 from pytorch_lightning.utilities.warnings import PossibleUserWarning
@@ -31,7 +28,7 @@ def train_nodeflow(x_train, y_train, n_epochs, patience, split_size, batch_size,
 
     callbacks = [
         StochasticWeightAveraging(swa_lrs=1e-2),
-        EarlyStopping(monitor="val_nll", patience=patience, min_delta=0.001),
+        EarlyStopping(monitor="val_nll", patience=patience),
         ModelCheckpoint(monitor="val_nll", dirpath=f"tmp/", filename=f"model-{uuid.uuid4()}")
     ]
     trainer = Trainer(
@@ -46,14 +43,13 @@ def train_nodeflow(x_train, y_train, n_epochs, patience, split_size, batch_size,
     return best_model_path
 
 def objective(x_train, y_train, n_epochs, patience, split_size, batch_size, hparams, trial: optuna.trial.Trial) -> float:
-    # We optimize the number of layers, hidden units in each layer and dropouts.
     num_layers = trial.suggest_int("num_layers", *hparams["num_layers"])
     depth = trial.suggest_int("depth", *hparams["depth"])
     tree_output_dim = trial.suggest_int("tree_output_dim", *hparams["tree_output_dim"])
     num_trees = trial.suggest_int("num_trees", *hparams["num_trees"])
 
-    flow_hidden_dims_size = trial.suggest_categorical("flow_hidden_dims_size", [4, 8, 16, 32])
-    flow_hidden_dims_shape = trial.suggest_int("flow_hidden_dims_shape", 2, 2)
+    flow_hidden_dims_size = trial.suggest_categorical("flow_hidden_dims_size", *hparams["flow_hidden_dims_size"])
+    flow_hidden_dims_shape = trial.suggest_int("flow_hidden_dims_shape", *hparams["flow_hidden_dims_shape"])
     flow_hidden_dims = [flow_hidden_dims_size]*flow_hidden_dims_shape
 
     model_hyperparams = dict(
@@ -77,7 +73,7 @@ def objective(x_train, y_train, n_epochs, patience, split_size, batch_size, hpar
             devices=1,
             callbacks=[
                 StochasticWeightAveraging(swa_lrs=1e-2),
-                EarlyStopping(monitor="val_nll", patience=patience, min_delta=0.001),
+                EarlyStopping(monitor="val_nll", patience=patience),
                 PyTorchLightningPruningCallback(trial, monitor="val_nll")
             ],
         )
@@ -89,7 +85,6 @@ def objective(x_train, y_train, n_epochs, patience, split_size, batch_size, hpar
         return trainer.early_stopping_callback.best_score.item()
     except RuntimeError as exc:
         raise CudaOutOfMemory(str(exc))
-        return float('inf') # return any high 
 
 def modeling_nodeflow(
     x_train: pd.DataFrame,
@@ -119,8 +114,8 @@ def modeling_nodeflow(
             hparams=model_hyperparams,
             trial=trial
         ),
-        n_trials=2000,
-        timeout=10800,
+        n_trials=500,
+        timeout=7200,
         show_progress_bar=True,
         gc_after_trial=True,
         catch=(CudaOutOfMemory)

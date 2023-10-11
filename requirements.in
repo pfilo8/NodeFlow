@@ -15,7 +15,7 @@ pyarrow
 pytest-cov
 pytest-mock
 pytest
-# seaborn
+seaborn
 scikit-learn
 gcsfs
 torchdiffeq

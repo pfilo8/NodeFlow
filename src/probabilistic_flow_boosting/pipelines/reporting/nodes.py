@@ -31,7 +31,7 @@ generated using Kedro 0.17.5
 """
 from typing import Any, Dict, List, Tuple, Union
 
-import datetime
+import time
 
 import catboost
 import matplotlib.pyplot as plt
@@ -139,6 +139,7 @@ def calculate_metrics_nodeflow(
         sample_batch_size: int,
         find_peaks_parameters: Dict[Any, Any] = None
     ):
+    torch.cuda.set_per_process_memory_fraction(0.49)
     y_test = y_test.to_numpy()
     torch.cuda.empty_cache()
     # NLL
@@ -151,12 +152,15 @@ def calculate_metrics_nodeflow(
         enable_checkpointing=False,
         inference_mode=False,
     )
+    start_nll = time.time()
     test_results = trainer.test(model, datamodule=datamodule)
     nll = np.mean([val["test_nll"] for val in test_results])
+    nll_time = time.time() - start_nll
 
+    start_rmse = time.time()
     samples = trainer.predict(model, datamodule=datamodule, return_predictions=True)
+    samples[-1] = np.atleast_2d(samples[-1])
     samples = np.concatenate(samples).reshape(-1, 1000)
-    print(samples.shape)
 
     if find_peaks_parameters is None:
         find_peaks_parameters = {"height": 0.1}  # Proposed default
@@ -165,8 +169,10 @@ def calculate_metrics_nodeflow(
     peaks_2 = calculate_peaks(samples, find_peaks_parameters, n_peaks=2)
     rmse_1 = np.sqrt(np.mean((y_test-peaks_1)**2))
     rmse_2 = np.sqrt(np.mean(np.min((np.tile(y_test, 2)-peaks_2)**2, axis=1)))
+    rmse_time = time.time() - start_rmse
 
     # CRPS
+    start_crps = time.time()
     y_test = y_test.reshape(-1)
     crpss = []
     for o, f in zip(batch(y_test, 100), batch(samples, 100)):
@@ -175,7 +181,8 @@ def calculate_metrics_nodeflow(
             forecasts=f
         ))
     crpss = np.concatenate(crpss)
-    return nll, rmse_1, rmse_2, crpss.mean()
+    crps_time = time.time() - start_crps
+    return nll, rmse_1, rmse_2, crpss.mean(), nll_time, rmse_time, crps_time
 
 def calculate_metrics_cnf(
         model: ContinuousNormalizingFlowRegressor,
@@ -201,12 +208,15 @@ def calculate_metrics_cnf(
         enable_checkpointing=False,
         inference_mode=False,
     )
+    start_nll = time.time()
     test_results = trainer.test(model, datamodule=datamodule)
     nll = np.mean([val["test_nll"] for val in test_results])
+    nll_time = time.time() - start_nll
 
+    start_rmse = time.time()
     samples = trainer.predict(model, datamodule=datamodule, return_predictions=True)
+    samples[-1] = np.atleast_2d(samples[-1])
     samples = np.concatenate(samples).reshape(-1, 1000)
-    print(samples.shape)
 
     if find_peaks_parameters is None:
         find_peaks_parameters = {"height": 0.1}  # Proposed default
@@ -215,8 +225,10 @@ def calculate_metrics_cnf(
     peaks_2 = calculate_peaks(samples, find_peaks_parameters, n_peaks=2)
     rmse_1 = np.sqrt(np.mean((y_test-peaks_1)**2))
     rmse_2 = np.sqrt(np.mean(np.min((np.tile(y_test, 2)-peaks_2)**2, axis=1)))
+    rmse_time = time.time() - start_rmse
 
     # CRPS
+    start_crps = time.time()
     y_test = y_test.reshape(-1)
     crpss = []
     for o, f in zip(batch(y_test, 100), batch(samples, 100)):
@@ -225,7 +237,8 @@ def calculate_metrics_cnf(
             forecasts=f
         ))
     crpss = np.concatenate(crpss)
-    return nll, rmse_1, rmse_2, crpss.mean()
+    crps_time = time.time() - start_crps
+    return nll, rmse_1, rmse_2, crpss.mean(), nll_time, rmse_time, crps_time
 
 def calculate_rmse_at_1(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
     return _calculate_rmse_at_k(model=model, x=x, y=y, num_samples=num_samples, batch_size=batch_size, k=1,
@@ -468,13 +481,19 @@ def summary_ngboost(
 
 def summary_nodeflow(
         train_results_nll: float,
+        train_nll_time: float,
         test_results_nll: float,
+        test_nll_time: float,
         train_results_rmse_1: float,
         test_results_rmse_1: float,
         train_results_rmse_2: float,
+        train_rmse_2_time: float,
         test_results_rmse_2: float,
+        test_rmse_2_time: float,
         train_results_crps: float,
+        train_crps_time: float,
         test_results_crps: float,
+        test_crps_time: float,
 ):
     results = pd.DataFrame([
         ['train', 'nll', train_results_nll],
@@ -485,6 +504,12 @@ def summary_nodeflow(
         ['test', 'rmse_2', test_results_rmse_2],
         ['train', 'crps', train_results_crps],
         ['test', 'crps', test_results_crps],
+        ['train', 'nll_time', train_nll_time],
+        ['test', 'nll_time', test_nll_time],
+        ['train', 'rmse_2_time', train_rmse_2_time],
+        ['test', 'rmse_2_time', test_rmse_2_time],
+        ['train', 'crps_time', train_crps_time],
+        ['test', 'crps_time', test_crps_time],
     ],
         columns=[
             'set', 'metric', 'value'
