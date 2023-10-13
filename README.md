@@ -1,6 +1,6 @@
 # NodeFlow: Towards End-to-end Flexible Probabilistic Regression on Tabular Data
 
-This repository contains the code and resources related to the research paper titled **"NodeFlow: Towards End-to-end Flexible Probabilistic Regression on Tabular Data"** by **Patryk Wielopolski**, **Maciej Zięba** and **Oleksii Furman**.
+This repository contains the code and resources related to the research paper titled **"NodeFlow: Towards End-to-end Flexible Probabilistic Regression on Tabular Data"** by **Patryk Wielopolski**, **Oleksii Furman**, and **Maciej Zięba**.
 
 ## Abstract
 
@@ -13,14 +13,14 @@ In conclusion, NodeFlow's end-to-end training process and strong performance mak
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Code Structure](#code-structure)
-- [Data](#data)
+- [Data](#data-and-models)
 - [Experiments](#experiments)
 - [Citation](#citation)
 - [Contact](#contact)
 
 ## Prerequisites
 
-Nodeflow and other models in this repository use [Pytorch Lightning](https://lightning.ai/pytorch-lightning) for training and inference. Furthermore, we used [Optuna](https://optuna.readthedocs.io/en/stable/) framework to perform gridsearch.
+Nodeflow and other models in this repository use [Pytorch Lightning](https://lightning.ai/pytorch-lightning) for training and inference. Furthermore, we used [Optuna](https://optuna.readthedocs.io/en/stable/) framework to perform hyperparamter tuning.
 Full list of requirements is provided in the`requirements.in` file.
 Use `pip-tools` to compile requirements:
 
@@ -52,11 +52,11 @@ x_train, x_test, y_train, y_test = train_test_split(x, y)
 datamodule = NodeFlowDataModule(x_train, y_train, x_test, y_test, split_size=0.8, batch_size=2048)
 
 model_hyperparameters = {
-        "num_layers": 3,
-        "depth": 2,
-        "tree_output_dim": 1,
-        "num_trees": 100,
-        "flow_hidden_dims": [8,8]
+    "num_layers": 3,
+    "depth": 2,
+    "tree_output_dim": 1,
+    "num_trees": 100,
+    "flow_hidden_dims": [8, 8]
 }
 model = NodeFlow(input_dim=10, output_dim=1, **model_hyperparameters)
 
@@ -95,9 +95,10 @@ Source code in `src/probabilistic_flow_boosting` directory contains the followin
   * `pipelines` - Kedro pipelines for the experiments.
 
 
-## Data
+## Data and Models
 
 The full data folder can be found under the following link: [Link](https://drive.google.com/file/d/1c95eJeJS0P8Ts24G6hfQgx7RPKl9AF3D/view?usp=sharing).
+The full trained models can be found under the following link: [Link](https://drive.google.com/drive/folders/1zVEcveDyGPYrXsV3QKsMMzEkITijt6d5?usp=sharing)
 More details regarding the datasets can be found in the paper in the appendix directory.
 
 ## Experiments
@@ -111,21 +112,11 @@ Inside the container run the following command.
 ```shell
 python -m kedro run --pipeline <pipeline_name>
 ```
-where pipeline_name is the name of the pipeline defined in the `src/probabilistic_flow_boosting/pipeline_registry.py` file.
+where `pipeline_name` is the name of the pipeline defined in the `src/probabilistic_flow_boosting/pipeline_registry.py` file.
 
 ## Citation
 If you use this code or the research findings in your work, please cite our paper:
 
-```
-@article{wielopolski2023treeflow,
-      title={TreeFlow: Going beyond Tree-based Gaussian Probabilistic Regression}, 
-      author={Patryk Wielopolski and Maciej Zięba},
-      year={2023},
-      eprint={2206.04140},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
-}
-```
 
 ## Contact
 In case of questions or comments please contact using LinkedIn: [Patryk Wielopolski](https://www.linkedin.com/in/patryk-wielopolski/)
