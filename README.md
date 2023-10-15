@@ -1,6 +1,6 @@
 # NodeFlow: Towards End-to-end Flexible Probabilistic Regression on Tabular Data
 
-This repository contains the code and resources related to the research paper titled **"NodeFlow: Towards End-to-end Flexible Probabilistic Regression on Tabular Data"** by **Patryk Wielopolski**, **Oleksii Furman**, and **Maciej Zięba**.
+This repository contains the code and resources related to the research paper titled **"NodeFlow: Towards End-to-end Flexible Probabilistic Regression on Tabular Data"** by Anonymous Authors.
 
 ## Abstract
 
@@ -97,8 +97,8 @@ Source code in `src/probabilistic_flow_boosting` directory contains the followin
 
 ## Data and Models
 
-The full data folder can be found under the following link: [Link](https://drive.google.com/file/d/1c95eJeJS0P8Ts24G6hfQgx7RPKl9AF3D/view?usp=sharing).
-The full trained models can be found under the following link: [Link](https://drive.google.com/drive/folders/1zVEcveDyGPYrXsV3QKsMMzEkITijt6d5?usp=sharing)
+The full data folder can be found under the following link: [Link](https://example.com).
+The full trained models can be found under the following link: [Link](https://example.com)
 More details regarding the datasets can be found in the paper in the appendix directory.
 
 ## Experiments
@@ -119,4 +119,4 @@ If you use this code or the research findings in your work, please cite our pape
 
 
 ## Contact
-In case of questions or comments please contact using LinkedIn: [Patryk Wielopolski](https://www.linkedin.com/in/patryk-wielopolski/)
+In case of questions or comments please contact using LinkedIn: 
