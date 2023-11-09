@@ -48,7 +48,7 @@ def objective(x_train, y_train, n_epochs, patience, split_size, batch_size, hpar
     tree_output_dim = trial.suggest_int("tree_output_dim", *hparams["tree_output_dim"])
     num_trees = trial.suggest_int("num_trees", *hparams["num_trees"])
 
-    flow_hidden_dims_size = trial.suggest_categorical("flow_hidden_dims_size", *hparams["flow_hidden_dims_size"])
+    flow_hidden_dims_size = trial.suggest_categorical("flow_hidden_dims_size", hparams["flow_hidden_dims_size"])
     flow_hidden_dims_shape = trial.suggest_int("flow_hidden_dims_shape", *hparams["flow_hidden_dims_shape"])
     flow_hidden_dims = [flow_hidden_dims_size]*flow_hidden_dims_shape
 

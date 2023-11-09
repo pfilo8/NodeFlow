@@ -326,7 +326,7 @@ def create_pipeline_calculate_metrics_cnf(**kwargs):
         node(
             func=calculate_metrics_cnf,
             inputs=["model", "x_train", "y_train", "x_test", "y_test", "params:num_samples", "params:batch_size", "params:sample_batch_size"],
-            outputs=["results_nll", "results_rmse_1", "results_rmse_2", "results_crps"]
+            outputs=["results_nll", "results_rmse_1", "results_rmse_2", "results_crps", "nll_time", "rmse_2_time", "crps_time"]
         ),
     ])
 

@@ -128,10 +128,10 @@ def register_pipelines() -> Dict[str, Pipeline]:
         ("uci_concrete", 20),
         ("uci_energy", 20),
         ("uci_kin8nm", 20),
-        ("uci_naval", 20),
+        ("uci_naval_propulsion_plant", 20),
         ("uci_power_plant", 20),
-        ("uci_protein", 5),
-        ("uci_wine_quality", 20),
+        ("uci_protein_tertiary_structure", 5),
+        ("uci_wine_quality_red", 20),
         ("uci_yacht", 20),
         ("uci_year_prediction_msd", 1)
     ]

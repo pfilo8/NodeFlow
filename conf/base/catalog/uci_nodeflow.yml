@@ -2,622 +2,77 @@
 # UCI Datasets for Single-output Regression #
 #############################################
 
-#### Boston ####
+#### Datasets ####
+{% for dataset_name in [
+  "boston",
+  "concrete",
+  "energy",
+  "kin8nm",
+  "naval_propulsion_plant",
+  "power_plant",
+  "protein_tertiary_structure",
+  "wine_quality_red",
+  "yacht",
+  "year_prediction_msd"
+] %}
 
 {% for i in range(20) %}
-uci_boston_nodeflow_{{i}}.x_train:
+uci_{{ dataset_name }}_nodeflow_{{i}}.x_train:
   type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/bostonHousing/data.txt
-  filepath_index_columns: data/01_raw/UCI/bostonHousing/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/bostonHousing/index_train_{{i}}.txt
+  filepath_data: data/01_raw/UCI/{{ dataset_name }}/data.txt
+  filepath_index_columns: data/01_raw/UCI/{{ dataset_name }}/index_features.txt
+  filepath_index_rows: data/01_raw/UCI/{{ dataset_name }}/index_train_{{i}}.txt
 
-uci_boston_nodeflow_{{i}}.y_train:
+uci_{{ dataset_name }}_nodeflow_{{i}}.y_train:
   type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/bostonHousing/data.txt
-  filepath_index_columns: data/01_raw/UCI/bostonHousing/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/bostonHousing/index_train_{{i}}.txt
+  filepath_data: data/01_raw/UCI/{{ dataset_name }}/data.txt
+  filepath_index_columns: data/01_raw/UCI/{{ dataset_name }}/index_target.txt
+  filepath_index_rows: data/01_raw/UCI/{{ dataset_name }}/index_train_{{i}}.txt
 
-uci_boston_nodeflow_{{i}}.x_test:
+uci_{{ dataset_name }}_nodeflow_{{i}}.x_test:
   type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/bostonHousing/data.txt
-  filepath_index_columns: data/01_raw/UCI/bostonHousing/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/bostonHousing/index_test_{{i}}.txt
+  filepath_data: data/01_raw/UCI/{{ dataset_name }}/data.txt
+  filepath_index_columns: data/01_raw/UCI/{{ dataset_name }}/index_features.txt
+  filepath_index_rows: data/01_raw/UCI/{{ dataset_name }}/index_test_{{i}}.txt
 
-uci_boston_nodeflow_{{i}}.y_test:
+uci_{{ dataset_name }}_nodeflow_{{i}}.y_test:
   type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/bostonHousing/data.txt
-  filepath_index_columns: data/01_raw/UCI/bostonHousing/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/bostonHousing/index_test_{{i}}.txt
+  filepath_data: data/01_raw/UCI/{{ dataset_name }}/data.txt
+  filepath_index_columns: data/01_raw/UCI/{{ dataset_name }}/index_target.txt
+  filepath_index_rows: data/01_raw/UCI/{{ dataset_name }}/index_test_{{i}}.txt
 
-uci_boston_nodeflow_{{i}}.hp_search:
+uci_{{ dataset_name }}_nodeflow_{{i}}.hp_search:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/07_model_output/UCI/bostonHousing/hp_search_boston_{{i}}.csv
+  filepath: gcs://nodeflow/nodeflow_entmax15/07_model_output/UCI/{{ dataset_name }}/hp_search_{{i}}.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
 
-uci_boston_nodeflow_{{i}}.model:
+uci_{{ dataset_name }}_nodeflow_{{i}}.model:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.NodeFlowDataSet
-  filepath: data/06_models/UCI/bostonHousing/model_{{i}}
+  filepath: data/06_models/UCI/{{ dataset_name }}/model_{{i}}
 
-uci_boston_nodeflow_{{i}}.summary:
+uci_{{ dataset_name }}_nodeflow_{{i}}.summary:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/bostonHousing/summary_{{i}}.csv
+  filepath: gcs://nodeflow/nodeflow_entmax15/08_reporting/UCI/{{ dataset_name }}/summary_{{i}}.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
 
-uci_boston_nodeflow_{{i}}.optuna_study:
+uci_{{ dataset_name }}_nodeflow_{{i}}.optuna_study:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
-  filepath: gcs://nodeflow/data/07_model_output_optuna_study/UCI/bostonHousing/optuna_study_{{i}}.pkl
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-
-
-{% endfor %}
-
-uci_boston_nodeflow.aggregated_summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/bostonHousing/summary.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-#### Concrete ####
-
-{% for i in range(20) %}
-uci_concrete_nodeflow_{{i}}.x_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/concrete/data.txt
-  filepath_index_columns: data/01_raw/UCI/concrete/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/concrete/index_train_{{i}}.txt
-
-uci_concrete_nodeflow_{{i}}.y_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/concrete/data.txt
-  filepath_index_columns: data/01_raw/UCI/concrete/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/concrete/index_train_{{i}}.txt
-
-uci_concrete_nodeflow_{{i}}.x_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/concrete/data.txt
-  filepath_index_columns: data/01_raw/UCI/concrete/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/concrete/index_test_{{i}}.txt
-
-uci_concrete_nodeflow_{{i}}.y_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/concrete/data.txt
-  filepath_index_columns: data/01_raw/UCI/concrete/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/concrete/index_test_{{i}}.txt
-
-uci_concrete_nodeflow_{{i}}.hp_search:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/07_model_output/UCI/concrete/hp_search_concrete_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_concrete_nodeflow_{{i}}.model:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.NodeFlowDataSet
-  filepath: data/06_models/UCI/concrete/model_{{i}}
-
-uci_concrete_nodeflow_{{i}}.summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/concrete/summary_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_concrete_nodeflow_{{i}}.optuna_study:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
-  filepath: gcs://nodeflow/data/07_model_output_optuna_study/UCI/concrete/optuna_study_{{i}}.pkl
+  filepath: gcs://nodeflow/nodeflow_entmax15/07_model_output_optuna_study/UCI/{{ dataset_name }}/optuna_study_{{i}}.pkl
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
 
 {% endfor %}
 
-uci_concrete_nodeflow.aggregated_summary:
+uci_{{ dataset_name }}_nodeflow.aggregated_summary:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/concrete/summary.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-#### Energy ####
-
-{% for i in range(20) %}
-uci_energy_nodeflow_{{i}}.x_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/energy/data.txt
-  filepath_index_columns: data/01_raw/UCI/energy/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/energy/index_train_{{i}}.txt
-
-uci_energy_nodeflow_{{i}}.y_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/energy/data.txt
-  filepath_index_columns: data/01_raw/UCI/energy/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/energy/index_train_{{i}}.txt
-
-uci_energy_nodeflow_{{i}}.x_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/energy/data.txt
-  filepath_index_columns: data/01_raw/UCI/energy/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/energy/index_test_{{i}}.txt
-
-uci_energy_nodeflow_{{i}}.y_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/energy/data.txt
-  filepath_index_columns: data/01_raw/UCI/energy/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/energy/index_test_{{i}}.txt
-
-uci_energy_nodeflow_{{i}}.hp_search:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/07_model_output/UCI/energy/hp_search_energy_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_energy_nodeflow_{{i}}.model:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.NodeFlowDataSet
-  filepath: data/06_models/UCI/energy/model_{{i}}
-
-uci_energy_nodeflow_{{i}}.summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/energy/summary_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_energy_nodeflow_{{i}}.optuna_study:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
-  filepath: gcs://nodeflow/data/07_model_output_optuna_study/UCI/energy/optuna_study_{{i}}.pkl
+  filepath: gcs://nodeflow/nodeflow_entmax15/08_reporting/UCI/{{ dataset_name }}/summary.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
 
 {% endfor %}
-
-uci_energy_nodeflow.aggregated_summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/energy/summary.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-#### kin8nm ####
-
-{% for i in range(20) %}
-uci_kin8nm_nodeflow_{{i}}.x_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/kin8nm/data.txt
-  filepath_index_columns: data/01_raw/UCI/kin8nm/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/kin8nm/index_train_{{i}}.txt
-
-uci_kin8nm_nodeflow_{{i}}.y_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/kin8nm/data.txt
-  filepath_index_columns: data/01_raw/UCI/kin8nm/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/kin8nm/index_train_{{i}}.txt
-
-uci_kin8nm_nodeflow_{{i}}.x_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/kin8nm/data.txt
-  filepath_index_columns: data/01_raw/UCI/kin8nm/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/kin8nm/index_test_{{i}}.txt
-
-uci_kin8nm_nodeflow_{{i}}.y_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/kin8nm/data.txt
-  filepath_index_columns: data/01_raw/UCI/kin8nm/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/kin8nm/index_test_{{i}}.txt
-
-uci_kin8nm_nodeflow_{{i}}.hp_search:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/07_model_output/UCI/kin8nm/hp_search_kin8nm_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_kin8nm_nodeflow_{{i}}.model:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.NodeFlowDataSet
-  filepath: data/06_models/UCI/kin8nm/model_{{i}}
-
-uci_kin8nm_nodeflow_{{i}}.summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/kin8nm/summary_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_kin8nm_nodeflow_{{i}}.optuna_study:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
-  filepath: gcs://nodeflow/data/07_model_output_optuna_study/UCI/kin8nm/optuna_study_{{i}}.pkl
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-{% endfor %}
-
-uci_kin8nm_nodeflow.aggregated_summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/kin8nm/summary.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-#### Naval Propulsion Plant ####
-
-{% for i in range(20) %}
-uci_naval_nodeflow_{{i}}.x_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/naval-propulsion-plant/data.txt
-  filepath_index_columns: data/01_raw/UCI/naval-propulsion-plant/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/naval-propulsion-plant/index_train_{{i}}.txt
-
-uci_naval_nodeflow_{{i}}.y_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/naval-propulsion-plant/data.txt
-  filepath_index_columns: data/01_raw/UCI/naval-propulsion-plant/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/naval-propulsion-plant/index_train_{{i}}.txt
-
-uci_naval_nodeflow_{{i}}.x_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/naval-propulsion-plant/data.txt
-  filepath_index_columns: data/01_raw/UCI/naval-propulsion-plant/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/naval-propulsion-plant/index_test_{{i}}.txt
-
-uci_naval_nodeflow_{{i}}.y_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/naval-propulsion-plant/data.txt
-  filepath_index_columns: data/01_raw/UCI/naval-propulsion-plant/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/naval-propulsion-plant/index_test_{{i}}.txt
-
-uci_naval_nodeflow_{{i}}.hp_search:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/07_model_output/UCI/naval-propulsion-plant/hp_search_naval_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_naval_nodeflow_{{i}}.model:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.NodeFlowDataSet
-  filepath: data/06_models/UCI/naval-propulsion-plant/model_{{i}}
-
-uci_naval_nodeflow_{{i}}.summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/naval-propulsion-plant/summary_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_naval_nodeflow_{{i}}.optuna_study:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
-  filepath: gcs://nodeflow/data/07_model_output_optuna_study/UCI/naval-propulsion-plant/optuna_study_{{i}}.pkl
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-{% endfor %}
-
-uci_naval_nodeflow.aggregated_summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/naval-propulsion-plant/summary.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-#### Power Plant ####
-
-{% for i in range(20) %}
-uci_power_plant_nodeflow_{{i}}.x_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/power-plant/data.txt
-  filepath_index_columns: data/01_raw/UCI/power-plant/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/power-plant/index_train_{{i}}.txt
-
-uci_power_plant_nodeflow_{{i}}.y_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/power-plant/data.txt
-  filepath_index_columns: data/01_raw/UCI/power-plant/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/power-plant/index_train_{{i}}.txt
-
-uci_power_plant_nodeflow_{{i}}.x_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/power-plant/data.txt
-  filepath_index_columns: data/01_raw/UCI/power-plant/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/power-plant/index_test_{{i}}.txt
-
-uci_power_plant_nodeflow_{{i}}.y_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/power-plant/data.txt
-  filepath_index_columns: data/01_raw/UCI/power-plant/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/power-plant/index_test_{{i}}.txt
-
-uci_power_plant_nodeflow_{{i}}.hp_search:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/07_model_output/UCI/power-plant/hp_search_power_plant_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_power_plant_nodeflow_{{i}}.model:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.NodeFlowDataSet
-  filepath: data/06_models/UCI/power-plant/model_{{i}}
-
-uci_power_plant_nodeflow_{{i}}.summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/power-plant/summary_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_power_plant_nodeflow_{{i}}.optuna_study:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
-  filepath: gcs://nodeflow/data/07_model_output_optuna_study/UCI/power-plant/optuna_study_{{i}}.pkl
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-{% endfor %}
-
-uci_power_plant_nodeflow.aggregated_summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/power-plant/summary.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-#### Protein Tertiary Structure ####
-
-{% for i in range(5) %}
-uci_protein_nodeflow_{{i}}.x_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/protein-tertiary-structure/data.txt
-  filepath_index_columns: data/01_raw/UCI/protein-tertiary-structure/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/protein-tertiary-structure/index_train_{{i}}.txt
-
-uci_protein_nodeflow_{{i}}.y_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/protein-tertiary-structure/data.txt
-  filepath_index_columns: data/01_raw/UCI/protein-tertiary-structure/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/protein-tertiary-structure/index_train_{{i}}.txt
-
-uci_protein_nodeflow_{{i}}.x_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/protein-tertiary-structure/data.txt
-  filepath_index_columns: data/01_raw/UCI/protein-tertiary-structure/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/protein-tertiary-structure/index_test_{{i}}.txt
-
-uci_protein_nodeflow_{{i}}.y_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/protein-tertiary-structure/data.txt
-  filepath_index_columns: data/01_raw/UCI/protein-tertiary-structure/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/protein-tertiary-structure/index_test_{{i}}.txt
-
-uci_protein_nodeflow_{{i}}.hp_search:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/07_model_output/UCI/protein-tertiary-structure/hp_search_protein_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_protein_nodeflow_{{i}}.model:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.NodeFlowDataSet
-  filepath: data/06_models/UCI/protein-tertiary-structure/model_{{i}}
-
-uci_protein_nodeflow_{{i}}.summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/protein-tertiary-structure/summary_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_protein_nodeflow_{{i}}.optuna_study:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
-  filepath: gcs://nodeflow/data/07_model_output_optuna_study/UCI/protein-tertiary-structure/optuna_study_{{i}}.pkl
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-{% endfor %}
-
-uci_protein_nodeflow.aggregated_summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/protein-tertiary-structure/summary.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-#### Wine Quality Red ####
-
-{% for i in range(20) %}
-uci_wine_quality_nodeflow_{{i}}.x_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/wine-quality-red/data.txt
-  filepath_index_columns: data/01_raw/UCI/wine-quality-red/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/wine-quality-red/index_train_{{i}}.txt
-
-uci_wine_quality_nodeflow_{{i}}.y_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/wine-quality-red/data.txt
-  filepath_index_columns: data/01_raw/UCI/wine-quality-red/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/wine-quality-red/index_train_{{i}}.txt
-
-uci_wine_quality_nodeflow_{{i}}.x_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/wine-quality-red/data.txt
-  filepath_index_columns: data/01_raw/UCI/wine-quality-red/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/wine-quality-red/index_test_{{i}}.txt
-
-uci_wine_quality_nodeflow_{{i}}.y_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/wine-quality-red/data.txt
-  filepath_index_columns: data/01_raw/UCI/wine-quality-red/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/wine-quality-red/index_test_{{i}}.txt
-
-uci_wine_quality_nodeflow_{{i}}.hp_search:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/07_model_output/UCI/wine-quality-red/hp_search_wine_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_wine_quality_nodeflow_{{i}}.model:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.NodeFlowDataSet
-  filepath: data/06_models/UCI/wine-quality-red/model_{{i}}
-
-uci_wine_quality_nodeflow_{{i}}.summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/wine-quality-red/summary_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_wine_quality_nodeflow_{{i}}.optuna_study:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
-  filepath: gcs://nodeflow/data/07_model_output_optuna_study/UCI/wine-quality-red/optuna_study_{{i}}.pkl
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-{% endfor %}
-
-uci_wine_quality_nodeflow.aggregated_summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/wine-quality-red/summary.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-#### Yacht ####
-
-{% for i in range(20) %}
-uci_yacht_nodeflow_{{i}}.x_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/yacht/data.txt
-  filepath_index_columns: data/01_raw/UCI/yacht/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/yacht/index_train_{{i}}.txt
-
-uci_yacht_nodeflow_{{i}}.y_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/yacht/data.txt
-  filepath_index_columns: data/01_raw/UCI/yacht/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/yacht/index_train_{{i}}.txt
-
-uci_yacht_nodeflow_{{i}}.x_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/yacht/data.txt
-  filepath_index_columns: data/01_raw/UCI/yacht/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/yacht/index_test_{{i}}.txt
-
-uci_yacht_nodeflow_{{i}}.y_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/yacht/data.txt
-  filepath_index_columns: data/01_raw/UCI/yacht/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/yacht/index_test_{{i}}.txt
-
-uci_yacht_nodeflow_{{i}}.hp_search:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/07_model_output/UCI/yacht/hp_search_yacht_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_yacht_nodeflow_{{i}}.model:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.NodeFlowDataSet
-  filepath: data/06_models/UCI/yacht/model_{{i}}
-
-uci_yacht_nodeflow_{{i}}.summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/yacht/summary_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_yacht_nodeflow_{{i}}.optuna_study:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
-  filepath: gcs://nodeflow/data/07_model_output_optuna_study/UCI/yacht/optuna_study_{{i}}.pkl
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-{% endfor %}
-
-uci_yacht_nodeflow.aggregated_summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/yacht/summary.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-#### Year Prediction MSD ####
-
-{% for i in range(1) %}
-uci_year_prediction_msd_nodeflow_{{i}}.x_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/year-prediction-msd/data.txt
-  filepath_index_columns: data/01_raw/UCI/year-prediction-msd/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/year-prediction-msd/index_train_{{i}}.txt
-  load_args:
-    data_delimiter: ","
-
-uci_year_prediction_msd_nodeflow_{{i}}.y_train:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/year-prediction-msd/data.txt
-  filepath_index_columns: data/01_raw/UCI/year-prediction-msd/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/year-prediction-msd/index_train_{{i}}.txt
-  load_args:
-    data_delimiter: ","
-
-uci_year_prediction_msd_nodeflow_{{i}}.x_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/year-prediction-msd/data.txt
-  filepath_index_columns: data/01_raw/UCI/year-prediction-msd/index_features.txt
-  filepath_index_rows: data/01_raw/UCI/year-prediction-msd/index_test_{{i}}.txt
-  load_args:
-    data_delimiter: ","
-
-uci_year_prediction_msd_nodeflow_{{i}}.y_test:
-  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
-  filepath_data: data/01_raw/UCI/year-prediction-msd/data.txt
-  filepath_index_columns: data/01_raw/UCI/year-prediction-msd/index_target.txt
-  filepath_index_rows: data/01_raw/UCI/year-prediction-msd/index_test_{{i}}.txt
-  load_args:
-    data_delimiter: ","
-
-uci_year_prediction_msd_nodeflow_{{i}}.hp_search:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/07_model_output/UCI/year-prediction-msd/hp_search_year_prediction_msd_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_year_prediction_msd_nodeflow_{{i}}.model:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.NodeFlowDataSet
-  filepath: data/06_models/UCI/year-prediction-msd/model_{{i}}
-
-uci_year_prediction_msd_nodeflow_{{i}}.summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/year-prediction-msd/summary_{{i}}.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-uci_year_prediction_msd_nodeflow_{{i}}.optuna_study:
-  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
-  filepath: gcs://nodeflow/data/07_model_output_optuna_study/UCI/year-prediction-msd/optuna_study_{{i}}.pkl
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
-
-{% endfor %}
-
-uci_year_prediction_msd_nodeflow.aggregated_summary:
-  type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/data/08_reporting/UCI/year-prediction-msd/summary.csv
-  fs_args:
-    project: theta-kingdom-385217
-  credentials: creds_sa
