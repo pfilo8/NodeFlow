@@ -60,6 +60,14 @@ def create_general_momogp_pipeline(namespace):
         )
     ])
 
+def create_general_momogp_nodeflow_pipeline(namespace):
+    return Pipeline([
+        create_general_pipeline_nodeflow(namespace),
+        create_pipeline_aggregated_report(
+            inputs=[f"{namespace}.summary"],
+            outputs=f"{namespace}.aggregated_summary"
+        )
+    ])
 
 def create_general_momogp_ngboost_pipeline(namespace):
     return Pipeline([
@@ -115,6 +123,10 @@ def register_pipelines() -> Dict[str, Pipeline]:
         d: create_general_momogp_pipeline(d) for d in momogp_datasets
     }
 
+    momogp_pipelines_nodeflow = {
+        f"{d}_nodeflow": create_general_momogp_nodeflow_pipeline(f"{d}_nodeflow") for d in momogp_datasets
+    }
+
     momogp_ngboost_pipelines = {
         f"{d}_ngboost": create_general_momogp_ngboost_pipeline(f"{d}_ngboost") for d in momogp_datasets
     }
@@ -160,5 +172,6 @@ def register_pipelines() -> Dict[str, Pipeline]:
         **uci_nodeflow_pipelines,
         **oceanographic_pipelines,
         **uci_cnf_pipelines,
-        **uci_nodegmm_pipelines
+        **uci_nodegmm_pipelines,
+        **momogp_pipelines_nodeflow,
     }

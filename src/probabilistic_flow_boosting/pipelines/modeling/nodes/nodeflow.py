@@ -97,7 +97,7 @@ def modeling_nodeflow(
     random_seed: int = 42,
 ):
     seed_everything(random_seed, workers=True) # sets seeds for numpy, torch and python.random.
-    torch.cuda.set_per_process_memory_fraction(0.49)
+    # torch.cuda.set_per_process_memory_fraction(0.49)
     pruner = optuna.pruners.HyperbandPruner(min_resource=5, max_resource=n_epochs)
     # sampler = optuna.samplers.TPESampler(n_startup_trials=10)
     sampler = optuna.samplers.RandomSampler(seed=random_seed)
@@ -115,7 +115,7 @@ def modeling_nodeflow(
             trial=trial
         ),
         n_trials=500,
-        timeout=7200,
+        timeout=10800,
         show_progress_bar=True,
         gc_after_trial=True,
         catch=(CudaOutOfMemory)

@@ -139,7 +139,7 @@ def calculate_metrics_nodeflow(
         sample_batch_size: int,
         find_peaks_parameters: Dict[Any, Any] = None
     ):
-    torch.cuda.set_per_process_memory_fraction(0.49)
+    # torch.cuda.set_per_process_memory_fraction(0.49)
     y_test = y_test.to_numpy()
     torch.cuda.empty_cache()
     # NLL
@@ -156,6 +156,8 @@ def calculate_metrics_nodeflow(
     test_results = trainer.test(model, datamodule=datamodule)
     nll = np.mean([val["test_nll"] for val in test_results])
     nll_time = time.time() - start_nll
+    if y_test.shape[-1] != 1:
+        return nll, -1, -1, -1, nll_time, -1, -1
 
     start_rmse = time.time()
     samples = trainer.predict(model, datamodule=datamodule, return_predictions=True)
