@@ -135,6 +135,10 @@ def register_pipelines() -> Dict[str, Pipeline]:
         "oceanographic": create_general_uci_pipeline("oceanographic", 20)
     }
 
+    oceanographic_pipelines = {
+        "oceanographic_nodeflow": create_general_uci_nodeflow_pipeline("oceanographic", 20)
+    }
+
     uci_datasets = [
         ("uci_boston", 20),
         ("uci_concrete", 20),
