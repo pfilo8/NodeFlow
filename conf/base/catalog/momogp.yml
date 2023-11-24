@@ -32,28 +32,28 @@ momogp_{{ dataset_name }}_nodeflow.model:
 
 momogp_{{ dataset_name }}_nodeflow.hp_search:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/momogp_nodeflow/07_model_output/UCI/{{ dataset_name }}/hp_search.csv
+  filepath: gcs://nodeflow/momogp_nodeflow/07_model_output/{{ dataset_name }}/hp_search.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
 
 momogp_{{ dataset_name }}_nodeflow.summary:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/momogp_nodeflow/08_reporting/UCI/{{ dataset_name }}/summary.csv
+  filepath: gcs://nodeflow/momogp_nodeflow/08_reporting/{{ dataset_name }}/summary.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
 
 momogp_{{ dataset_name }}_nodeflow.optuna_study:
   type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
-  filepath: gcs://nodeflow/momogp_nodeflow/07_model_output_optuna_study/UCI/{{ dataset_name }}/optuna_study.pkl
+  filepath: gcs://nodeflow/momogp_nodeflow/07_model_output_optuna_study/{{ dataset_name }}/optuna_study.pkl
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
 
 momogp_{{ dataset_name }}_nodeflow.aggregated_summary:
   type: pandas.CSVDataSet
-  filepath: gcs://nodeflow/momogp_nodeflow/08_reporting/UCI/{{ dataset_name }}/summary.csv
+  filepath: gcs://nodeflow/momogp_nodeflow/08_reporting/{{ dataset_name }}/summary.csv
   fs_args:
     project: theta-kingdom-385217
   credentials: creds_sa
