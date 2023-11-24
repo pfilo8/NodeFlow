@@ -1,26 +1,37 @@
+import logging
 import os
 import uuid
-import logging
-import torch
+import warnings
+from functools import partial
+
 import optuna
 import pandas as pd
-
-import warnings
+import torch
 from pytorch_lightning.utilities.warnings import PossibleUserWarning
+
 warnings.filterwarnings("ignore", category=PossibleUserWarning)
 
 from lightning.pytorch import Trainer, seed_everything
-from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping, StochasticWeightAveraging
+from lightning.pytorch.callbacks import (
+    EarlyStopping,
+    ModelCheckpoint,
+    StochasticWeightAveraging,
+)
 
-from probabilistic_flow_boosting.pipelines.modeling.pytorch_lightning import PyTorchLightningPruningCallback
 from probabilistic_flow_boosting.models.nodeflow import NodeFlow, NodeFlowDataModule
+from probabilistic_flow_boosting.pipelines.modeling.pytorch_lightning import (
+    PyTorchLightningPruningCallback,
+)
+from probabilistic_flow_boosting.pipelines.modeling.utils import JoblibStudy
 
 optuna.logging.enable_propagation()
 logging.basicConfig(level=logging.INFO)
 
+
 class CudaOutOfMemory(optuna.exceptions.OptunaError):
     def __init__(self, message):
         super().__init__(message)
+
 
 def train_nodeflow(x_train, y_train, n_epochs, patience, split_size, batch_size, model_hyperparams):
     model = NodeFlow(input_dim=x_train.shape[1], output_dim=y_train.shape[1], **model_hyperparams)
@@ -29,7 +40,7 @@ def train_nodeflow(x_train, y_train, n_epochs, patience, split_size, batch_size,
     callbacks = [
         StochasticWeightAveraging(swa_lrs=1e-2),
         EarlyStopping(monitor="val_nll", patience=patience),
-        ModelCheckpoint(monitor="val_nll", dirpath=f"tmp/", filename=f"model-{uuid.uuid4()}")
+        ModelCheckpoint(monitor="val_nll", dirpath=f"tmp/", filename=f"model-{uuid.uuid4()}"),
     ]
     trainer = Trainer(
         max_epochs=n_epochs,
@@ -42,7 +53,9 @@ def train_nodeflow(x_train, y_train, n_epochs, patience, split_size, batch_size,
     best_model_path = trainer.checkpoint_callback.best_model_path
     return best_model_path
 
-def objective(x_train, y_train, n_epochs, patience, split_size, batch_size, hparams, trial: optuna.trial.Trial) -> float:
+
+def objective(trial, x_train, y_train, n_epochs, patience, split_size, batch_size, hparams) -> float:
+    torch.cuda.set_per_process_memory_fraction(0.49)
     num_layers = trial.suggest_int("num_layers", *hparams["num_layers"])
     depth = trial.suggest_int("depth", *hparams["depth"])
     tree_output_dim = trial.suggest_int("tree_output_dim", *hparams["tree_output_dim"])
@@ -50,7 +63,7 @@ def objective(x_train, y_train, n_epochs, patience, split_size, batch_size, hpar
 
     flow_hidden_dims_size = trial.suggest_categorical("flow_hidden_dims_size", hparams["flow_hidden_dims_size"])
     flow_hidden_dims_shape = trial.suggest_int("flow_hidden_dims_shape", *hparams["flow_hidden_dims_shape"])
-    flow_hidden_dims = [flow_hidden_dims_size]*flow_hidden_dims_shape
+    flow_hidden_dims = [flow_hidden_dims_size] * flow_hidden_dims_shape
 
     model_hyperparams = dict(
         num_layers=num_layers,
@@ -74,7 +87,7 @@ def objective(x_train, y_train, n_epochs, patience, split_size, batch_size, hpar
             callbacks=[
                 StochasticWeightAveraging(swa_lrs=1e-2),
                 EarlyStopping(monitor="val_nll", patience=patience),
-                PyTorchLightningPruningCallback(trial, monitor="val_nll")
+                PyTorchLightningPruningCallback(trial, monitor="val_nll"),
             ],
         )
 
@@ -86,6 +99,7 @@ def objective(x_train, y_train, n_epochs, patience, split_size, batch_size, hpar
     except RuntimeError as exc:
         raise CudaOutOfMemory(str(exc))
 
+
 def modeling_nodeflow(
     x_train: pd.DataFrame,
     y_train: pd.DataFrame,
@@ -96,30 +110,28 @@ def modeling_nodeflow(
     batch_size: int = 1000,
     random_seed: int = 42,
 ):
-    seed_everything(random_seed, workers=True) # sets seeds for numpy, torch and python.random.
-    # torch.cuda.set_per_process_memory_fraction(0.49)
+    seed_everything(random_seed, workers=True)  # sets seeds for numpy, torch and python.random.
+
+    objective_func = partial(
+        objective,
+        x_train=x_train,
+        y_train=y_train,
+        n_epochs=n_epochs,
+        patience=patience,
+        split_size=split_size,
+        batch_size=batch_size,
+        hparams=model_hyperparams,
+    )
+
     pruner = optuna.pruners.HyperbandPruner(min_resource=5, max_resource=n_epochs)
     # sampler = optuna.samplers.TPESampler(n_startup_trials=10)
-    sampler = optuna.samplers.RandomSampler(seed=random_seed)
-    study = optuna.create_study(direction="minimize", pruner=pruner, sampler=sampler)
-
-    study.optimize(
-        lambda trial: objective(
-            x_train=x_train,
-            y_train=y_train,
-            n_epochs=n_epochs,
-            patience=patience,
-            split_size=split_size,
-            batch_size=batch_size,
-            hparams=model_hyperparams,
-            trial=trial
-        ),
-        n_trials=500,
-        timeout=10800,
-        show_progress_bar=True,
-        gc_after_trial=True,
-        catch=(CudaOutOfMemory)
+    sampler = optuna.samplers.RandomSampler()
+    study = JoblibStudy(
+        direction="minimize", pruner=pruner, sampler=sampler, storage=f"sqlite:///db-{uuid.uuid4()}.sqlite3"
     )
+
+    study.optimize(objective_func, n_trials=500, timeout=60 * 60 * 3, catch=(CudaOutOfMemory), n_jobs=2)
+
     results = study.trials_dataframe()
     print(results)
 
@@ -128,9 +140,9 @@ def modeling_nodeflow(
     print("  Params: ")
     for key, value in trial.params.items():
         print("    {}: {}".format(key, value))
-    
+
     model_params = trial.params
-    model_params["flow_hidden_dims"] = [trial.params["flow_hidden_dims_size"]]*trial.params["flow_hidden_dims_shape"]
+    model_params["flow_hidden_dims"] = [trial.params["flow_hidden_dims_size"]] * trial.params["flow_hidden_dims_shape"]
     del model_params["flow_hidden_dims_size"]
     del model_params["flow_hidden_dims_shape"]
 
@@ -141,9 +153,11 @@ def modeling_nodeflow(
         patience=patience,
         split_size=split_size,
         batch_size=batch_size,
-        model_hyperparams=model_params
+        model_hyperparams=model_params,
     )
-    model = NodeFlow.load_from_checkpoint(best_model_path, input_dim=x_train.shape[1], output_dim=y_train.shape[1], **model_params)
+    model = NodeFlow.load_from_checkpoint(
+        best_model_path, input_dim=x_train.shape[1], output_dim=y_train.shape[1], **model_params
+    )
     os.remove(best_model_path)
-    
+
     return model, results, study
