@@ -1,6 +1,6 @@
 # NodeFlow: Towards End-to-end Flexible Probabilistic Regression on Tabular Data
 
-This repository contains the code and resources related to the research paper titled **"NodeFlow: Towards End-to-end Flexible Probabilistic Regression on Tabular Data"** by Anonymous Authors.
+This repository contains the code and resources related to the research paper titled **"NodeFlow: Towards End-to-end Flexible Probabilistic Regression on Tabular Data"** by Patryk Wielopolski, Oleksii Furman, and Maciej Zięba.
 
 ## Abstract
 
@@ -115,8 +115,8 @@ python -m kedro run --pipeline <pipeline_name>
 where `pipeline_name` is the name of the pipeline defined in the `src/probabilistic_flow_boosting/pipeline_registry.py` file.
 
 ## Citation
-If you use this code or the research findings in your work, please cite our paper:
+If you use this code or the research findings in your work, please cite our paper: TBA
 
 
 ## Contact
-In case of questions or comments please contact using LinkedIn: 
+In case of questions or comments, please contact using LinkedIn: [Patryk Wielopolski](https://www.linkedin.com/in/patryk-wielopolski/)
