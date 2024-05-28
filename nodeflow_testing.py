@@ -1,6 +1,4 @@
-from itertools import product
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
 
 from src.probabilistic_flow_boosting.extras.datasets.uci_dataset import UCIDataSet
 from src.probabilistic_flow_boosting.nodeflow import NodeFlow
