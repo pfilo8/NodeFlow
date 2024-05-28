@@ -1,0 +1,78 @@
+#############################################
+# UCI Datasets for Single-output Regression #
+#############################################
+
+#### Datasets ####
+{% for dataset_name in [
+  "boston",
+  "concrete",
+  "energy",
+  "kin8nm",
+  "naval_propulsion_plant",
+  "power_plant",
+  "protein_tertiary_structure",
+  "wine_quality_red",
+  "yacht",
+  "year_prediction_msd"
+] %}
+
+{% for i in range(20) %}
+uci_{{ dataset_name }}_nodeflow_{{i}}.x_train:
+  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
+  filepath_data: data/01_raw/UCI/{{ dataset_name }}/data.txt
+  filepath_index_columns: data/01_raw/UCI/{{ dataset_name }}/index_features.txt
+  filepath_index_rows: data/01_raw/UCI/{{ dataset_name }}/index_train_{{i}}.txt
+
+uci_{{ dataset_name }}_nodeflow_{{i}}.y_train:
+  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
+  filepath_data: data/01_raw/UCI/{{ dataset_name }}/data.txt
+  filepath_index_columns: data/01_raw/UCI/{{ dataset_name }}/index_target.txt
+  filepath_index_rows: data/01_raw/UCI/{{ dataset_name }}/index_train_{{i}}.txt
+
+uci_{{ dataset_name }}_nodeflow_{{i}}.x_test:
+  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
+  filepath_data: data/01_raw/UCI/{{ dataset_name }}/data.txt
+  filepath_index_columns: data/01_raw/UCI/{{ dataset_name }}/index_features.txt
+  filepath_index_rows: data/01_raw/UCI/{{ dataset_name }}/index_test_{{i}}.txt
+
+uci_{{ dataset_name }}_nodeflow_{{i}}.y_test:
+  type: probabilistic_flow_boosting.extras.datasets.uci_dataset.UCIDataSet
+  filepath_data: data/01_raw/UCI/{{ dataset_name }}/data.txt
+  filepath_index_columns: data/01_raw/UCI/{{ dataset_name }}/index_target.txt
+  filepath_index_rows: data/01_raw/UCI/{{ dataset_name }}/index_test_{{i}}.txt
+
+uci_{{ dataset_name }}_nodeflow_{{i}}.hp_search:
+  type: pandas.CSVDataSet
+  filepath: gcs://nodeflow/nodeflow_entmax15/07_model_output/UCI/{{ dataset_name }}/hp_search_{{i}}.csv
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
+
+uci_{{ dataset_name }}_nodeflow_{{i}}.model:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.NodeFlowDataSet
+  filepath: data/06_models/UCI/{{ dataset_name }}/model_{{i}}
+
+uci_{{ dataset_name }}_nodeflow_{{i}}.summary:
+  type: pandas.CSVDataSet
+  filepath: gcs://nodeflow/nodeflow_entmax15/08_reporting/UCI/{{ dataset_name }}/summary_{{i}}.csv
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
+
+uci_{{ dataset_name }}_nodeflow_{{i}}.optuna_study:
+  type: probabilistic_flow_boosting.extras.datasets.nodeflow_dataset.OptunaStudyDataSet
+  filepath: gcs://nodeflow/nodeflow_entmax15/07_model_output_optuna_study/UCI/{{ dataset_name }}/optuna_study_{{i}}.pkl
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
+
+{% endfor %}
+
+uci_{{ dataset_name }}_nodeflow.aggregated_summary:
+  type: pandas.CSVDataSet
+  filepath: gcs://nodeflow/nodeflow_entmax15/08_reporting/UCI/{{ dataset_name }}/summary.csv
+  fs_args:
+    project: theta-kingdom-385217
+  credentials: creds_sa
+
+{% endfor %}

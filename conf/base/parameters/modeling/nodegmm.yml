@@ -1,0 +1,181 @@
+#### Models ####
+{% for i in range(20) %}
+uci_wine_quality_nodegmm_{{i}}:
+  model_hyperparams:
+    num_layers: [1,8]
+    depth: [1, 6]
+    tree_output_dim: [1,3]
+    num_trees: [100, 600, 100]
+    n_components: [1,6]
+  #### Training ####
+
+  n_epochs: 300
+  patience: 40
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+
+# kedro run --pipeline=uci_wine_quality_nodegmm
+
+{% for i in range(20) %}
+uci_concrete_nodegmm_{{i}}:
+  model_hyperparams:
+    num_layers: [1,8]
+    depth: [1, 6]
+    tree_output_dim: [1,3]
+    num_trees: [50, 600, 50]
+    n_components: [1,6]
+  #### Training ####
+
+  n_epochs: 400
+  patience: 60
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2048
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_concrete_nodegmm
+
+{% for i in range(20) %}
+uci_energy_nodegmm_{{i}}:
+  model_hyperparams:
+    num_layers: [1,8]
+    depth: [2, 6]
+    tree_output_dim: [1,3]
+    num_trees: [50, 600, 50]
+    n_components: [1,6]
+  #### Training ####
+
+  n_epochs: 400
+  patience: 20
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2048
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_energy_nodegmm
+
+{% for i in range(20) %}
+uci_naval_nodegmm_{{i}}:
+  model_hyperparams:
+    num_layers: [1,8]
+    depth: [1, 6]
+    tree_output_dim: [1,3]
+    num_trees: [50, 600, 50]
+    n_components: [1,6]
+  #### Training ####
+
+  n_epochs: 100
+  patience: 10
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2048
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_naval_nodegmm
+
+{% for i in range(20) %}
+uci_power_plant_nodegmm_{{i}}:
+  model_hyperparams:
+    num_layers: [1,8]
+    depth: [1, 6]
+    tree_output_dim: [1,3]
+    num_trees: [50, 600, 50]
+    n_components: [1,6]
+  #### Training ####
+
+  n_epochs: 100
+  patience: 10
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_power_plant_nodegmm
+
+{% for i in range(20) %}
+uci_kin8nm_nodegmm_{{i}}:
+  model_hyperparams:
+    num_layers: [1,8]
+    depth: [1, 6]
+    tree_output_dim: [1,3]
+    num_trees: [50, 600, 50]
+    n_components: [1,6]
+  #### Training ####
+
+  n_epochs: 100
+  patience: 10
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_kin8nm_nodegmm
+
+{% for i in range(20) %}
+uci_protein_nodegmm_{{i}}:
+  model_hyperparams:
+    num_layers: [1,8]
+    depth: [1, 6]
+    tree_output_dim: [1,3]
+    num_trees: [50, 600, 50]
+    n_components: [1,6]
+  #### Training ####
+
+  n_epochs: 100
+  patience: 10
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_protein_nodegmm
+
+{% for i in range(20) %}
+uci_yacht_nodegmm_{{i}}:
+  model_hyperparams:
+    num_layers: [1,8]
+    depth: [1, 6]
+    tree_output_dim: [1,3]
+    num_trees: [50, 600, 50]
+    n_components: [1,6]
+  #### Training ####
+
+  n_epochs: 400
+  patience: 40
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2048
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_yacht_nodegmm
+
+{% for i in range(20) %}
+uci_year_prediction_msd_nodegmm_{{i}}:
+  model_hyperparams:
+    num_layers: [1,8]
+    depth: [2, 6]
+    tree_output_dim: [1,3]
+    num_trees: [50, 600, 50]
+    n_components: [1,6]
+  #### Training ####
+
+  n_epochs: 400
+  patience: 20
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2048
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_year_prediction_msd_nodegmm

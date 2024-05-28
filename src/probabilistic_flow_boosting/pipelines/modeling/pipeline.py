@@ -33,7 +33,7 @@ generated using Kedro 0.17.5
 
 from kedro.pipeline import Pipeline, node
 
-from .nodes import modeling_multivariate, modeling_treeflow
+from .nodes import modeling_multivariate, modeling_treeflow, modeling_nodeflow, modeling_cnf, modeling_nodegmm
 
 
 def create_pipeline_train_model(**kwargs):
@@ -56,5 +56,35 @@ def create_pipeline_train_model_ngboost(**kwargs):
                     "params:ngboost_hyperparams", "params:base_tree_hyperparams", "params:independent",
                     "params:independent_model_type", "params:split_size", "params:random_seed"],
             outputs="model"
+        )
+    ])
+
+def create_pipeline_train_model_nodeflow(**kwargs):
+    return Pipeline([
+        node(
+            func=modeling_nodeflow,
+            inputs=["x_train", "y_train", "params:model_hyperparams",
+                    "params:split_size", "params:n_epochs", "params:patience", "params:batch_size", "params:random_seed"],
+            outputs=["model", "hp_search", "optuna_study"]
+        )
+    ])
+
+def create_pipeline_train_model_cnf(**kwargs):
+    return Pipeline([
+        node(
+            func=modeling_cnf,
+            inputs=["x_train", "y_train", "params:model_hyperparams",
+                    "params:split_size", "params:n_epochs", "params:patience", "params:batch_size", "params:random_seed"],
+            outputs=["model", "hp_search", "optuna_study"]
+        )
+    ])
+
+def create_pipeline_train_model_nodegmm(**kwargs):
+    return Pipeline([
+        node(
+            func=modeling_nodegmm,
+            inputs=["x_train", "y_train", "params:model_hyperparams",
+                    "params:split_size", "params:n_epochs", "params:patience", "params:batch_size", "params:random_seed"],
+            outputs=["model", "hp_search", "optuna_study"]
         )
     ])

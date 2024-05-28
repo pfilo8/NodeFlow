@@ -8,8 +8,8 @@ from sklearn.tree import DecisionTreeRegressor
 
 from ..utils import generate_params_for_grid_search, setup_random_seed, split_data
 from ...utils import log_dataframe_artifact
-from ...reporting.nodes import calculate_nll_ngboost
-from ....independent_multivariate_boosting import IndependentCatBoost, IndependentNGBoost
+from probabilistic_flow_boosting.pipelines.reporting.nodes import calculate_nll_ngboost
+from probabilistic_flow_boosting.models.independent_multivariate_boosting import IndependentCatBoost, IndependentNGBoost
 
 
 def train_multivariate(x_train, y_train, x_val, y_val, ngboost_p, ngboost_params, tree_p, tree_params, independent=False,

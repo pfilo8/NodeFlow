@@ -31,7 +31,14 @@ from typing import Dict
 
 from kedro.pipeline import Pipeline
 
-from .pipelines import create_general_pipeline, create_general_pipeline_ngboost, create_pipeline_aggregated_report
+from .pipelines import (
+    create_general_pipeline,
+    create_general_pipeline_ngboost,
+    create_pipeline_aggregated_report,
+    create_general_pipeline_nodeflow,
+    create_general_pipeline_cnf,
+    create_general_pipeline_nodegmm,
+) 
 
 
 def create_general_uci_pipeline(namespace, n):
@@ -53,6 +60,14 @@ def create_general_momogp_pipeline(namespace):
         )
     ])
 
+def create_general_momogp_nodeflow_pipeline(namespace):
+    return Pipeline([
+        create_general_pipeline_nodeflow(namespace),
+        create_pipeline_aggregated_report(
+            inputs=[f"{namespace}.summary"],
+            outputs=f"{namespace}.aggregated_summary"
+        )
+    ])
 
 def create_general_momogp_ngboost_pipeline(namespace):
     return Pipeline([
@@ -63,6 +78,32 @@ def create_general_momogp_ngboost_pipeline(namespace):
         )
     ])
 
+def create_general_uci_nodeflow_pipeline(namespace, n):
+    return Pipeline([
+        *[create_general_pipeline_nodeflow(f"{namespace}_{i}") for i in range(n)],
+        create_pipeline_aggregated_report(
+            inputs=[f"{namespace}_{i}.summary" for i in range(n)],
+            outputs=f"{namespace}.aggregated_summary"
+        )
+    ])
+
+def create_general_uci_cnf_pipeline(namespace, n):
+    return Pipeline([
+        *[create_general_pipeline_cnf(f"{namespace}_{i}") for i in range(n)],
+        create_pipeline_aggregated_report(
+            inputs=[f"{namespace}_{i}.summary" for i in range(n)],
+            outputs=f"{namespace}.aggregated_summary"
+        )
+    ])
+
+def create_general_uci_nodegmm_pipeline(namespace, n):
+    return Pipeline([
+        *[create_general_pipeline_nodegmm(f"{namespace}_{i}") for i in range(n)],
+        create_pipeline_aggregated_report(
+            inputs=[f"{namespace}_{i}.summary" for i in range(n)],
+            outputs=f"{namespace}.aggregated_summary"
+        )
+    ])
 
 def register_pipelines() -> Dict[str, Pipeline]:
     """Register the project's pipelines.
@@ -82,6 +123,10 @@ def register_pipelines() -> Dict[str, Pipeline]:
         d: create_general_momogp_pipeline(d) for d in momogp_datasets
     }
 
+    momogp_pipelines_nodeflow = {
+        f"{d}_nodeflow": create_general_momogp_nodeflow_pipeline(f"{d}_nodeflow") for d in momogp_datasets
+    }
+
     momogp_ngboost_pipelines = {
         f"{d}_ngboost": create_general_momogp_ngboost_pipeline(f"{d}_ngboost") for d in momogp_datasets
     }
@@ -90,15 +135,19 @@ def register_pipelines() -> Dict[str, Pipeline]:
         "oceanographic": create_general_uci_pipeline("oceanographic", 20)
     }
 
+    oceanographic_pipelines = {
+        "oceanographic_nodeflow": create_general_uci_nodeflow_pipeline("oceanographic", 20)
+    }
+
     uci_datasets = [
         ("uci_boston", 20),
         ("uci_concrete", 20),
         ("uci_energy", 20),
         ("uci_kin8nm", 20),
-        ("uci_naval", 20),
+        ("uci_naval_propulsion_plant", 20),
         ("uci_power_plant", 20),
-        ("uci_protein", 5),
-        ("uci_wine_quality", 20),
+        ("uci_protein_tertiary_structure", 5),
+        ("uci_wine_quality_red", 20),
         ("uci_yacht", 20),
         ("uci_year_prediction_msd", 1)
     ]
@@ -107,10 +156,26 @@ def register_pipelines() -> Dict[str, Pipeline]:
         d: create_general_uci_pipeline(d, n) for d, n in uci_datasets
     }
 
+    uci_nodeflow_pipelines = {
+        f"{d}_nodeflow": create_general_uci_nodeflow_pipeline(f"{d}_nodeflow", n) for d, n in uci_datasets
+    }
+
+    uci_cnf_pipelines = {
+        f"{d}_cnf": create_general_uci_cnf_pipeline(f"{d}_cnf", n) for d, n in uci_datasets
+    }
+
+    uci_nodegmm_pipelines = {
+        f"{d}_nodegmm": create_general_uci_nodegmm_pipeline(f"{d}_nodegmm", n) for d, n in uci_datasets
+    }
+
     return {
         "__default__": Pipeline([]),
         **momogp_pipelines,
         **momogp_ngboost_pipelines,
         **uci_pipelines,
-        **oceanographic_pipelines
+        **uci_nodeflow_pipelines,
+        **oceanographic_pipelines,
+        **uci_cnf_pipelines,
+        **uci_nodegmm_pipelines,
+        **momogp_pipelines_nodeflow,
     }

@@ -31,12 +31,12 @@ generated using Kedro 0.17.5
 """
 from typing import Any, Dict, List, Tuple, Union
 
-import datetime
+import time
 
 import catboost
 import matplotlib.pyplot as plt
-import mlflow
-import ngboost
+# import mlflow
+# import ngboost
 import numpy as np
 import pandas as pd
 import properscoring as ps
@@ -46,12 +46,16 @@ from scipy import signal
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from nflows.distributions import ConditionalDiagonalNormal
 
+from lightning.pytorch import Trainer, seed_everything
+
 from .utils import batch, KDE
 from ..utils import log_dataframe_artifact
 
-from ...pgbm import PGBM
-from ...tfboost.tfboost import TreeFlowBoost
-from ...independent_multivariate_boosting import IndependentNGBoost
+# from ...pgbm import PGBM
+from probabilistic_flow_boosting.models.tfboost.tfboost import TreeFlowBoost
+from probabilistic_flow_boosting.models.nodeflow import NodeFlow, NodeFlowDataModule
+from probabilistic_flow_boosting.models.cnf import ContinuousNormalizingFlowRegressor, CNFDataModule
+from probabilistic_flow_boosting.models.independent_multivariate_boosting import IndependentNGBoost
 
 
 def calculate_rmse(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
@@ -75,40 +79,35 @@ def calculate_nll(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, batch_
     y: np.ndarray = y.values
     return -model.log_prob(x, y, batch_size=batch_size).mean()
 
+def calculate_peaks_from_sample(sample, find_peaks_parameters, n_peaks=2):
+    kde = KDE()
+    density, support = kde(sample)
+    peaks_id, _ = signal.find_peaks(density, **find_peaks_parameters)
+    peaks_order = np.argsort(-density[peaks_id])  # Sort in descending order.
+    peaks = support[peaks_id]
+    peaks = peaks[peaks_order]
+    if len(peaks_id) == 0:
+        peaks = np.repeat(np.mean(sample), n_peaks)
+    peaks = np.resize(peaks, n_peaks)
+    return peaks
+
+def calculate_peaks(samples: np.ndarray, find_peaks_parameters: Dict[Any, Any] = None, n_peaks: int = 2):
+    if find_peaks_parameters is None:
+        find_peaks_parameters = {}
+    results = [calculate_peaks_from_sample(sample, find_peaks_parameters, n_peaks) for sample in samples]
+    results = np.array(results)
+    return results
+
+def rmse_at_k(y_true: np.ndarray, y_score: List[np.ndarray]):
+    results = []
+
+    for i in range(y_true.shape[0]):
+        results.append(np.min((y_score[i] - y_true[i]) ** 2))  # Take closer prediction
+
+    return np.sqrt(np.average(results))
 
 def _calculate_rmse_at_k(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int,
                          k: int = 2, find_peaks_parameters: Dict[Any, Any] = None):
-    def calculate_treeflow_peaks(samples: np.ndarray, find_peaks_parameters: Dict[Any, Any] = None):
-        if find_peaks_parameters is None:
-            find_peaks_parameters = {}
-
-        def calculate_peaks(sample, find_peaks_parameters):
-            kde = KDE()
-            density, support = kde(sample)
-
-            peaks_id, _ = signal.find_peaks(density, **find_peaks_parameters)
-            peaks = support[peaks_id]
-            peaks_order = np.argsort(-density[peaks_id])  # Sort in descending order.
-            if len(peaks_id) == 0:
-                return [np.mean(sample)]
-            return peaks[peaks_order]
-
-        results = []
-
-        for sample in samples:
-            peaks = calculate_peaks(sample, find_peaks_parameters)
-            results.append(peaks)
-
-        return results
-
-    def rmse_at_k(y_true: np.ndarray, y_score: List[np.ndarray]):
-        results = []
-
-        for i in range(y_true.shape[0]):
-            results.append(np.min((y_score[i] - y_true[i]) ** 2))  # Take closer prediction
-
-        return np.sqrt(np.average(results))
-
     if find_peaks_parameters is None:
         find_peaks_parameters = {"height": 0.1}  # Proposed default
 
@@ -124,11 +123,124 @@ def _calculate_rmse_at_k(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame,
     # For CNF
     # samples = model.sample(x, num_samples=num_samples, batch_size=batch_size)
 
-    y_test_treeflow_peaks = calculate_treeflow_peaks(samples, find_peaks_parameters)
+    y_test_treeflow_peaks = calculate_peaks(samples, find_peaks_parameters)
     y_test_treeflow_peaks = [s[:k] for s in y_test_treeflow_peaks]
 
     return rmse_at_k(y, y_test_treeflow_peaks)
 
+def calculate_metrics_nodeflow(
+        model: NodeFlow,
+        X_train: np.ndarray,
+        y_train: np.ndarray,
+        X_test: np.ndarray,
+        y_test: np.ndarray,
+        num_samples: int,
+        batch_size: int,
+        sample_batch_size: int,
+        find_peaks_parameters: Dict[Any, Any] = None
+    ):
+    # torch.cuda.set_per_process_memory_fraction(0.49)
+    y_test = y_test.to_numpy()
+    torch.cuda.empty_cache()
+    # NLL
+    datamodule = NodeFlowDataModule(X_train, y_train, X_test, y_test, split_size=0.8, batch_size=sample_batch_size)
+    trainer = Trainer(
+        max_epochs=100,
+        devices=1,
+        check_val_every_n_epoch=4,
+        accelerator="cuda",
+        enable_checkpointing=False,
+        inference_mode=False,
+    )
+    start_nll = time.time()
+    test_results = trainer.test(model, datamodule=datamodule)
+    nll = np.mean([val["test_nll"] for val in test_results])
+    nll_time = time.time() - start_nll
+    if y_test.shape[-1] != 1:
+        return nll, -1, -1, -1, nll_time, -1, -1
+
+    start_rmse = time.time()
+    samples = trainer.predict(model, datamodule=datamodule, return_predictions=True)
+    samples[-1] = np.atleast_2d(samples[-1])
+    samples = np.concatenate(samples).reshape(-1, 1000)
+
+    if find_peaks_parameters is None:
+        find_peaks_parameters = {"height": 0.1}  # Proposed default
+    # RMSE
+    peaks_1 = calculate_peaks(samples, find_peaks_parameters, n_peaks=1)
+    peaks_2 = calculate_peaks(samples, find_peaks_parameters, n_peaks=2)
+    rmse_1 = np.sqrt(np.mean((y_test-peaks_1)**2))
+    rmse_2 = np.sqrt(np.mean(np.min((np.tile(y_test, 2)-peaks_2)**2, axis=1)))
+    rmse_time = time.time() - start_rmse
+
+    # CRPS
+    start_crps = time.time()
+    y_test = y_test.reshape(-1)
+    crpss = []
+    for o, f in zip(batch(y_test, 100), batch(samples, 100)):
+        crpss.append(ps.crps_ensemble(
+            observations=o,
+            forecasts=f
+        ))
+    crpss = np.concatenate(crpss)
+    crps_time = time.time() - start_crps
+    return nll, rmse_1, rmse_2, crpss.mean(), nll_time, rmse_time, crps_time
+
+def calculate_metrics_cnf(
+        model: ContinuousNormalizingFlowRegressor,
+        X_train: np.ndarray,
+        y_train: np.ndarray,
+        X_test: np.ndarray,
+        y_test: np.ndarray,
+        num_samples: int,
+        batch_size: int,
+        sample_batch_size: int,
+        find_peaks_parameters: Dict[Any, Any] = None
+    ):
+    torch.cuda.set_per_process_memory_fraction(0.49)
+    y_test = y_test.to_numpy()
+    torch.cuda.empty_cache()
+    # NLL
+    datamodule = CNFDataModule(X_train, y_train, X_test, y_test, split_size=0.8, batch_size=sample_batch_size)
+    trainer = Trainer(
+        max_epochs=100,
+        devices=1,
+        check_val_every_n_epoch=4,
+        accelerator="cuda",
+        enable_checkpointing=False,
+        inference_mode=False,
+    )
+    start_nll = time.time()
+    test_results = trainer.test(model, datamodule=datamodule)
+    nll = np.mean([val["test_nll"] for val in test_results])
+    nll_time = time.time() - start_nll
+
+    start_rmse = time.time()
+    samples = trainer.predict(model, datamodule=datamodule, return_predictions=True)
+    samples[-1] = np.atleast_2d(samples[-1])
+    samples = np.concatenate(samples).reshape(-1, 1000)
+
+    if find_peaks_parameters is None:
+        find_peaks_parameters = {"height": 0.1}  # Proposed default
+    # RMSE
+    peaks_1 = calculate_peaks(samples, find_peaks_parameters, n_peaks=1)
+    peaks_2 = calculate_peaks(samples, find_peaks_parameters, n_peaks=2)
+    rmse_1 = np.sqrt(np.mean((y_test-peaks_1)**2))
+    rmse_2 = np.sqrt(np.mean(np.min((np.tile(y_test, 2)-peaks_2)**2, axis=1)))
+    rmse_time = time.time() - start_rmse
+
+    # CRPS
+    start_crps = time.time()
+    y_test = y_test.reshape(-1)
+    crpss = []
+    for o, f in zip(batch(y_test, 100), batch(samples, 100)):
+        crpss.append(ps.crps_ensemble(
+            observations=o,
+            forecasts=f
+        ))
+    crpss = np.concatenate(crpss)
+    crps_time = time.time() - start_crps
+    return nll, rmse_1, rmse_2, crpss.mean(), nll_time, rmse_time, crps_time
 
 def calculate_rmse_at_1(model: TreeFlowBoost, x: pd.DataFrame, y: pd.DataFrame, num_samples: int, batch_size: int):
     return _calculate_rmse_at_k(model=model, x=x, y=y, num_samples=num_samples, batch_size=batch_size, k=1,
@@ -285,10 +397,10 @@ def plot_loss_function(model: TreeFlowBoost):
     ax.plot(x, losses["train"])
     if len(losses["val"]) > 0:
         ax.plot(x, losses["val"])
-    mlflow.log_figure(fig, f'losses-{str(datetime.datetime.now()).replace(" ", "-")}.png')
+    # mlflow.log_figure(fig, f'losses-{str(datetime.datetime.now()).replace(" ", "-")}.png')
 
 
-def calculate_nll_ngboost(model: Union[ngboost.NGBoost, IndependentNGBoost], x: pd.DataFrame, y: pd.DataFrame,
+def calculate_nll_ngboost(model, x: pd.DataFrame, y: pd.DataFrame,
                           independent=False) -> float:
     x: np.ndarray = x.values
     y: np.ndarray = y.values
@@ -369,6 +481,46 @@ def summary_ngboost(
     log_dataframe_artifact(results, "test_results")
     return results
 
+def summary_nodeflow(
+        train_results_nll: float,
+        train_nll_time: float,
+        test_results_nll: float,
+        test_nll_time: float,
+        train_results_rmse_1: float,
+        test_results_rmse_1: float,
+        train_results_rmse_2: float,
+        train_rmse_2_time: float,
+        test_results_rmse_2: float,
+        test_rmse_2_time: float,
+        train_results_crps: float,
+        train_crps_time: float,
+        test_results_crps: float,
+        test_crps_time: float,
+):
+    results = pd.DataFrame([
+        ['train', 'nll', train_results_nll],
+        ['test', 'nll', test_results_nll],
+        ['train', 'rmse_1', train_results_rmse_1],
+        ['test', 'rmse_1', test_results_rmse_1],
+        ['train', 'rmse_2', train_results_rmse_2],
+        ['test', 'rmse_2', test_results_rmse_2],
+        ['train', 'crps', train_results_crps],
+        ['test', 'crps', test_results_crps],
+        ['train', 'nll_time', train_nll_time],
+        ['test', 'nll_time', test_nll_time],
+        ['train', 'rmse_2_time', train_rmse_2_time],
+        ['test', 'rmse_2_time', test_rmse_2_time],
+        ['train', 'crps_time', train_crps_time],
+        ['test', 'crps_time', test_crps_time],
+    ],
+        columns=[
+            'set', 'metric', 'value'
+        ]
+    )
+    # log_dataframe_artifact(results, "test_results")
+    return results
+    
+
 
 def aggregated_report(*inputs: Tuple[pd.DataFrame]) -> pd.DataFrame:
     df = pd.concat(inputs)
@@ -378,6 +530,6 @@ def aggregated_report(*inputs: Tuple[pd.DataFrame]) -> pd.DataFrame:
 
     # MLFlow
     results["set-metric"] = results["set"] + "_" + results["metric"]
-    mlflow.log_metrics({f"{k}_mean": v for k, v in zip(results["set-metric"].values, results["mean"].values)})
-    mlflow.log_metrics({f"{k}_std": v for k, v in zip(results["set-metric"].values, results["std"].values)})
+    # mlflow.log_metrics({f"{k}_mean": v for k, v in zip(results["set-metric"].values, results["mean"].values)})
+    # mlflow.log_metrics({f"{k}_std": v for k, v in zip(results["set-metric"].values, results["std"].values)})
     return results
