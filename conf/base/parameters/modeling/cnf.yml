@@ -1,0 +1,172 @@
+#### Models ####
+{% for i in range(20) %}
+uci_wine_quality_cnf_{{i}}:
+  model_hyperparams:
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
+  #### Training ####
+
+  n_epochs: 400
+  patience: 20
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+
+# kedro run --pipeline=uci_wine_quality_cnf
+
+{% for i in range(20) %}
+uci_concrete_cnf_{{i}}:
+  model_hyperparams:
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
+  #### Training ####
+
+  n_epochs: 400
+  patience: 20
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_concrete_cnf
+
+{% for i in range(20) %}
+uci_energy_cnf_{{i}}:
+  model_hyperparams:
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
+  #### Training ####
+
+  n_epochs: 100
+  patience: 10
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_energy_cnf
+
+{% for i in range(20) %}
+uci_kin8nm_cnf_{{i}}:
+  model_hyperparams:
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
+  #### Training ####
+
+  n_epochs: 100
+  patience: 10
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_kin8nm_cnf
+
+{% for i in range(20) %}
+uci_naval_cnf_{{i}}:
+  model_hyperparams:
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
+  #### Training ####
+
+  n_epochs: 100
+  patience: 10
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_naval_cnf
+
+{% for i in range(20) %}
+uci_power_plant_cnf_{{i}}:
+  model_hyperparams:
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
+  #### Training ####
+
+  n_epochs: 100
+  patience: 10
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_power_plant_cnf
+
+{% for i in range(20) %}
+uci_protein_cnf_{{i}}:
+  model_hyperparams:
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
+  #### Training ####
+
+  n_epochs: 50
+  patience: 10
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_protein_cnf
+
+{% for i in range(20) %}
+uci_yacht_cnf_{{i}}:
+  model_hyperparams:
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
+  #### Training ####
+
+  n_epochs: 400
+  patience: 20
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_yacht_cnf
+
+{% for i in range(20) %}
+uci_year_prediction_msd_cnf_{{i}}:
+  model_hyperparams:
+    embedding_dim: [0]
+    hidden_dims_shape: [2,3]
+    hidden_dims_size: [4,8,16,32]
+    num_blocks: [3]
+  #### Training ####
+
+  n_epochs: 20
+  patience: 10
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 4096
+  num_samples: 1000
+  sample_batch_size: 32
+{% endfor %}
+# kedro run --pipeline=uci_year_prediction_msd_cnf

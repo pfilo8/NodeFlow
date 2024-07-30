@@ -27,10 +27,12 @@
 # limitations under the License.
 
 """Project settings."""
-from probabilistic_flow_boosting.hooks import ProjectHooks
+from kedro.config import TemplatedConfigLoader
+
+CONFIG_LOADER_CLASS = TemplatedConfigLoader
 
 # Instantiate and list your project hooks here
-HOOKS = (ProjectHooks(),)
+HOOKS = ()
 
 # List the installed plugins for which to disable auto-registry
 # DISABLE_HOOKS_FOR_PLUGINS = ("kedro-viz",)

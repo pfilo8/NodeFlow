@@ -44,13 +44,16 @@ from .nodes import (
     calculate_rmse_at_3,
     calculate_nll_ngboost,
     plot_loss_function,
+    calculate_metrics_nodeflow,
+    calculate_metrics_cnf,
     summary,
     summary_ngboost,
-    aggregated_report
+    aggregated_report,
+    summary_nodeflow
 )
 
 
-def create_pipeline_report():
+def create_pipeline_report_treeflow():
     return Pipeline([
         create_pipeline_report_train(),
         create_pipeline_report_test(),
@@ -233,6 +236,164 @@ def create_pipeline_report_ngboost():
             inputs=[
                 "train_results_nll",
                 "test_results_nll",
+            ],
+            outputs="summary"
+        )
+    ])
+
+
+def create_pipeline_calculate_metrics_nodeflow(**kwargs):
+    return Pipeline([
+        node(
+            func=calculate_metrics_nodeflow,
+            inputs=["model", "x_train", "y_train", "x_test", "y_test", "params:num_samples", "params:batch_size", "params:sample_batch_size"],
+            outputs=["results_nll", "results_rmse_1", "results_rmse_2", "results_crps", "nll_time", "rmse_2_time", "crps_time"]
+        ),
+    ])
+
+
+def create_pipeline_report_train_nodeflow():
+    return pipeline(
+        create_pipeline_calculate_metrics_nodeflow(),
+        inputs={
+            "x_train": "x_train",
+            "y_train": "y_train",
+            "x_test": "x_train",
+            "y_test": "y_train"
+        },
+        outputs={
+            "results_nll": "train_results_nll",
+            "results_rmse_1": "train_results_rmse_1",
+            "results_rmse_2": "train_results_rmse_2",
+            "results_crps": "train_results_crps",
+            "nll_time": "train_nll_time",
+            "rmse_2_time": "train_rmse_2_time",
+            "crps_time": "train_crps_time",
+        }
+    )
+
+
+def create_pipeline_report_test_nodeflow():
+    return pipeline(
+        create_pipeline_calculate_metrics_nodeflow(),
+        inputs={
+            "x_train": "x_train",
+            "y_train": "y_train",
+            "x_test": "x_test",
+            "y_test": "y_test"
+        },
+        outputs={
+            "results_nll": "test_results_nll",
+            "results_rmse_1": "test_results_rmse_1",
+            "results_rmse_2": "test_results_rmse_2",
+            "results_crps": "test_results_crps",
+            "nll_time": "test_nll_time",
+            "rmse_2_time": "test_rmse_2_time",
+            "crps_time": "test_crps_time",
+        }
+    )
+
+
+def create_pipeline_report_nodeflow():
+    return Pipeline([
+        create_pipeline_report_train_nodeflow(),
+        create_pipeline_report_test_nodeflow(),
+        node(
+            func=summary_nodeflow,
+            inputs=[
+                "train_results_nll",
+                "train_nll_time",
+                "test_results_nll",
+                "test_nll_time",
+                "train_results_rmse_1",
+                "test_results_rmse_1",
+                "train_results_rmse_2",
+                "train_rmse_2_time",
+                "test_results_rmse_2",
+                "test_rmse_2_time",
+                "train_results_crps",
+                "test_results_crps",
+                "train_crps_time",
+                "test_crps_time",
+            ],
+            outputs="summary"
+        )
+    ])
+
+
+def create_pipeline_calculate_metrics_cnf(**kwargs):
+    return Pipeline([
+        node(
+            func=calculate_metrics_cnf,
+            inputs=["model", "x_train", "y_train", "x_test", "y_test", "params:num_samples", "params:batch_size", "params:sample_batch_size"],
+            outputs=["results_nll", "results_rmse_1", "results_rmse_2", "results_crps", "nll_time", "rmse_2_time", "crps_time"]
+        ),
+    ])
+
+
+def create_pipeline_report_train_cnf():
+    return pipeline(
+        create_pipeline_calculate_metrics_cnf(),
+        inputs={
+            "x_train": "x_train",
+            "y_train": "y_train",
+            "x_test": "x_train",
+            "y_test": "y_train"
+        },
+        outputs={
+            "results_nll": "train_results_nll",
+            "results_rmse_1": "train_results_rmse_1",
+            "results_rmse_2": "train_results_rmse_2",
+            "results_crps": "train_results_crps",
+            "nll_time": "train_nll_time",
+            "rmse_2_time": "train_rmse_2_time",
+            "crps_time": "train_crps_time",
+        }
+    )
+
+
+def create_pipeline_report_test_cnf():
+    return pipeline(
+        create_pipeline_calculate_metrics_cnf(),
+        inputs={
+            "x_train": "x_train",
+            "y_train": "y_train",
+            "x_test": "x_test",
+            "y_test": "y_test"
+        },
+        outputs={
+            "results_nll": "test_results_nll",
+            "results_rmse_1": "test_results_rmse_1",
+            "results_rmse_2": "test_results_rmse_2",
+            "results_crps": "test_results_crps",
+            "nll_time": "test_nll_time",
+            "rmse_2_time": "test_rmse_2_time",
+            "crps_time": "test_crps_time",
+        }
+    )
+
+
+def create_pipeline_report_cnf():
+    return Pipeline([
+        create_pipeline_report_train_cnf(),
+        create_pipeline_report_test_cnf(),
+        node(
+            func=summary_nodeflow,
+            inputs=[
+                "train_results_nll",
+                "train_nll_time",
+                "test_results_nll",
+                "test_nll_time",
+                "train_results_rmse_1",
+                "test_results_rmse_1",
+                "train_results_rmse_2",
+                "train_rmse_2_time",
+                "test_results_rmse_2",
+                "test_rmse_2_time",
+                "train_results_crps",
+                "test_results_crps",
+                "train_crps_time",
+                "test_crps_time",
             ],
             outputs="summary"
         )
