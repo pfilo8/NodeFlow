@@ -53,7 +53,7 @@ from .nodes import (
 )
 
 
-def create_pipeline_report():
+def create_pipeline_report_treeflow():
     return Pipeline([
         create_pipeline_report_train(),
         create_pipeline_report_test(),

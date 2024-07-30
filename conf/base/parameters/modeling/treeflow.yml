@@ -1,26 +1,294 @@
-#### Models ####
 
-flow_params:
-  input_dim: 1
-  # input_dim: 2
-
-flow_hyperparams:
-  context_dim: [16, 32]
-  hidden_dims: [[16, 16], [32, 32]]
-  num_blocks: [1, 2]
-
-tree_params:
-  loss_function: "RMSEWithUncertainty"
-  # loss_function: "MultiRMSE"
-  silent: True
-
-tree_hyperparams:
-  depth: [1, 2]
-  num_trees: [100, 300]
-
-tree_model_type: "CatBoostPriorNormal"
 #### Training ####
 
 # n_epochs: 10
 # batch_size: 128
 # num_samples: 1000
+
+#### Models ####
+{% for i in range(20) %}
+uci_wine_quality_red_{{i}}:
+  flow_params:
+    input_dim: 1
+    # input_dim: 2
+
+  flow_hyperparams:
+    context_dim: [16, 32]
+    hidden_dims: [[16, 16], [32, 32]]
+    num_blocks: [1, 2]
+
+  tree_params:
+    loss_function: "RMSEWithUncertainty"
+    # loss_function: "MultiRMSE"
+    silent: True
+
+  tree_hyperparams:
+    depth: [1, 2]
+    num_trees: [100, 300]
+
+  tree_model_type: "CatBoostPriorNormal"
+
+  n_epochs: 400
+  patience: 400
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2048
+  num_samples: 1000
+  sample_batch_size: 4
+{% endfor %}
+
+{% for i in range(20) %}
+uci_concrete_{{i}}:
+  flow_params:
+    input_dim: 1
+    # input_dim: 2
+
+  flow_hyperparams:
+    context_dim: [16, 32]
+    hidden_dims: [[16, 16], [32, 32]]
+    num_blocks: [1, 2]
+
+  tree_params:
+    loss_function: "RMSEWithUncertainty"
+    # loss_function: "MultiRMSE"
+    silent: True
+
+  tree_hyperparams:
+    depth: [1, 2]
+    num_trees: [100, 300]
+
+  tree_model_type: "CatBoostPriorNormal"
+  #### Training ####
+
+  n_epochs: 400
+  patience: 400
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2048
+  num_samples: 1000
+  sample_batch_size: 4
+{% endfor %}
+
+{% for i in range(20) %}
+uci_energy_{{i}}:
+  flow_params:
+    input_dim: 1
+    # input_dim: 2
+
+  flow_hyperparams:
+    context_dim: [16, 32]
+    hidden_dims: [[16, 16], [32, 32]]
+    num_blocks: [1, 2]
+
+  tree_params:
+    loss_function: "RMSEWithUncertainty"
+    # loss_function: "MultiRMSE"
+    silent: True
+
+  tree_hyperparams:
+    depth: [1, 2]
+    num_trees: [100, 300]
+
+  tree_model_type: "CatBoostPriorNormal"
+  #### Training ####
+
+  n_epochs: 400
+  patience: 400
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2024
+  num_samples: 1000
+  sample_batch_size: 4
+{% endfor %}
+
+{% for i in range(20) %}
+uci_naval_propulsion_plant_{{i}}:
+  flow_params:
+    input_dim: 1
+    # input_dim: 2
+
+  flow_hyperparams:
+    context_dim: [16, 32]
+    hidden_dims: [[16, 16], [32, 32]]
+    num_blocks: [1, 2]
+
+  tree_params:
+    loss_function: "RMSEWithUncertainty"
+    # loss_function: "MultiRMSE"
+    silent: True
+
+  tree_hyperparams:
+    depth: [1, 2]
+    num_trees: [100, 300]
+
+  tree_model_type: "CatBoostPriorNormal"
+  #### Training ####
+
+  n_epochs: 300
+  patience: 400
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2048
+  num_samples: 1000
+  sample_batch_size: 4
+{% endfor %}
+
+{% for i in range(20) %}
+uci_power_plant_{{i}}:
+  flow_params:
+    input_dim: 1
+    # input_dim: 2
+
+  flow_hyperparams:
+    context_dim: [16, 32]
+    hidden_dims: [[16, 16], [32, 32]]
+    num_blocks: [1, 2]
+
+  tree_params:
+    loss_function: "RMSEWithUncertainty"
+    # loss_function: "MultiRMSE"
+    silent: True
+
+  tree_hyperparams:
+    depth: [1, 2]
+    num_trees: [100, 300]
+
+  tree_model_type: "CatBoostPriorNormal"
+  #### Training ####
+
+  n_epochs: 200
+  patience: 400
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2048
+  num_samples: 1000
+  sample_batch_size: 4
+{% endfor %}
+
+{% for i in range(20) %}
+uci_kin8nm_{{i}}:
+  flow_params:
+    input_dim: 1
+    # input_dim: 2
+
+  flow_hyperparams:
+    context_dim: [16, 32]
+    hidden_dims: [[16, 16], [32, 32]]
+    num_blocks: [1, 2]
+
+  tree_params:
+    loss_function: "RMSEWithUncertainty"
+    # loss_function: "MultiRMSE"
+    silent: True
+
+  tree_hyperparams:
+    depth: [1, 2]
+    num_trees: [100, 300]
+
+  tree_model_type: "CatBoostPriorNormal"
+  #### Training ####
+
+  n_epochs: 60
+  patience: 400
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2048
+  num_samples: 1000
+  sample_batch_size: 4
+{% endfor %}
+
+{% for i in range(20) %}
+uci_protein_tertiary_structure_{{i}}:
+  flow_params:
+    input_dim: 1
+    # input_dim: 2
+
+  flow_hyperparams:
+    context_dim: [16, 32]
+    hidden_dims: [[16, 16], [32, 32]]
+    num_blocks: [1, 2]
+
+  tree_params:
+    loss_function: "RMSEWithUncertainty"
+    # loss_function: "MultiRMSE"
+    silent: True
+
+  tree_hyperparams:
+    depth: [1, 2]
+    num_trees: [100, 300]
+
+  tree_model_type: "CatBoostPriorNormal"
+  #### Training ####
+
+  n_epochs: 100
+  patience: 400
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 2048
+  num_samples: 1000
+  sample_batch_size: 4
+{% endfor %}
+
+{% for i in range(20) %}
+uci_yacht_{{i}}:
+  flow_params:
+    input_dim: 1
+    # input_dim: 2
+
+  flow_hyperparams:
+    context_dim: [16, 32]
+    hidden_dims: [[16, 16], [32, 32]]
+    num_blocks: [1, 2]
+
+  tree_params:
+    loss_function: "RMSEWithUncertainty"
+    # loss_function: "MultiRMSE"
+    silent: True
+
+  tree_hyperparams:
+    depth: [1, 2]
+    num_trees: [100, 300]
+
+  tree_model_type: "CatBoostPriorNormal"
+  #### Training ####
+
+  n_epochs: 400
+  patience: 400
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 1024
+  num_samples: 1000
+  sample_batch_size: 4
+{% endfor %}
+
+{% for i in range(20) %}
+uci_year_prediction_msd_{{i}}:
+  flow_params:
+    input_dim: 1
+    # input_dim: 2
+
+  flow_hyperparams:
+    context_dim: [16, 32]
+    hidden_dims: [[16, 16], [32, 32]]
+    num_blocks: [1, 2]
+
+  tree_params:
+    loss_function: "RMSEWithUncertainty"
+    # loss_function: "MultiRMSE"
+    silent: True
+
+  tree_hyperparams:
+    depth: [1, 2]
+    num_trees: [100, 300]
+
+  tree_model_type: "CatBoostPriorNormal"
+  #### Training ####
+
+  n_epochs: 10
+  patience: 400
+  split_size: 0.8
+  random_seed: 42
+  batch_size: 3048
+  num_samples: 1000
+  sample_batch_size: 4
+{% endfor %}

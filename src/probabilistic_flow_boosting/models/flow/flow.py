@@ -1,6 +1,13 @@
 import torch
 import torch.nn as nn
 
+import numpy as np
+import uuid
+from typing import Union
+
+from torch.utils.data import DataLoader, TensorDataset
+from torch import optim
+
 from nflows.distributions import StandardNormal
 from nflows.utils.torchutils import repeat_rows, split_leading_dim
 
@@ -108,6 +115,52 @@ class ContinuousNormalizingFlow(nn.Module):
             chain = bn_chain
         model = SequentialFlow(chain)
         return model
+    
+    def setup_context_encoder(self, context_encoder: nn.Module):
+        self.context_encoder = context_encoder.to(self.device)
+
+    def fit(self, X: np.ndarray, context: np.ndarray, params: np.ndarray, X_val: Union[np.ndarray, None] = None,
+            context_val: Union[np.ndarray, None] = None, params_val: Union[np.ndarray, None] = None,
+            n_epochs: int = 100, batch_size: int = 1000, verbose: bool = False):
+        X_t: torch.Tensor = torch.as_tensor(data=X, dtype=torch.float, device=self.device)
+        context_t: torch.Tensor = torch.as_tensor(data=context, dtype=torch.float, device=self.device)
+        params_t: torch.Tensor = torch.as_tensor(data=params, dtype=torch.float, device=self.device)
+
+        dataset: DataLoader = DataLoader(
+            dataset=TensorDataset(X_t, context_t, params_t),
+            shuffle=True,
+            batch_size=batch_size
+        )
+
+        self.optimizer = optim.Adam(list(self.flow.parameters()) + list(self.context_encoder.parameters()))
+
+        mid = uuid.uuid4()  # To be able to run multiple experiments in parallel.
+        loss_best = np.inf
+
+        for i in range(n_epochs):
+            for x, c, p in dataset:
+                self.optimizer.zero_grad()
+
+                logpx = self.log_prob(x, c, p)
+                loss = -logpx.mean()
+
+                loss.backward()
+                self.optimizer.step()
+
+            self._log(X, context, params, mode="train", batch_size=batch_size, verbose=verbose)
+
+            if X_val is not None and context_val is not None and params_val is not None:
+                loss_val = self._log(X_val, context_val, params_val, mode="val", batch_size=batch_size,
+                                     verbose=verbose)
+                # Save model if better
+                if loss_val < loss_best:
+                    self.epoch_best = i
+                    loss_best = loss_val
+                    self._save_temp(i, mid)
+
+        if X_val is not None and context_val is not None and params_val is not None:
+            return self._load_temp(self.epoch_best, mid)
+        return self
 
     def log_prob(self, X: torch.Tensor, context: torch.Tensor) -> torch.Tensor:
         """Calculate log probability on data (usually batch)."""

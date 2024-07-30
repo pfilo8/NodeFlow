@@ -32,7 +32,7 @@ from typing import Dict
 from kedro.pipeline import Pipeline
 
 from .pipelines import (
-    create_general_pipeline,
+    create_general_pipeline_treeflow,
     create_general_pipeline_ngboost,
     create_pipeline_aggregated_report,
     create_general_pipeline_nodeflow,
@@ -43,7 +43,7 @@ from .pipelines import (
 
 def create_general_uci_pipeline(namespace, n):
     return Pipeline([
-        *[create_general_pipeline(f"{namespace}_{i}") for i in range(n)],
+        *[create_general_pipeline_treeflow(f"{namespace}_{i}") for i in range(n)],
         create_pipeline_aggregated_report(
             inputs=[f"{namespace}_{i}.summary" for i in range(n)],
             outputs=f"{namespace}.aggregated_summary"
@@ -53,7 +53,7 @@ def create_general_uci_pipeline(namespace, n):
 
 def create_general_momogp_pipeline(namespace):
     return Pipeline([
-        create_general_pipeline(namespace),
+        create_general_pipeline_treeflow(namespace),
         create_pipeline_aggregated_report(
             inputs=[f"{namespace}.summary"],
             outputs=f"{namespace}.aggregated_summary"

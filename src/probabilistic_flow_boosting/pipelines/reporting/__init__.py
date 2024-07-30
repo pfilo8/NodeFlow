@@ -31,7 +31,7 @@ generated using Kedro 0.17.5
 """
 
 from .pipeline import (
-    create_pipeline_report,
+    create_pipeline_report_treeflow,
     create_pipeline_report_ngboost,
     create_pipeline_report_nodeflow,
     create_pipeline_report_cnf,
@@ -39,7 +39,7 @@ from .pipeline import (
 )
 
 __all__ = [
-    "create_pipeline_report",
+    "create_pipeline_report_treeflow",
     "create_pipeline_report_ngboost",
     "create_pipeline_report_nodeflow",
     "create_pipeline_report_cnf",

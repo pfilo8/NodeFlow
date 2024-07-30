@@ -55,7 +55,8 @@ def train_nodeflow(x_train, y_train, n_epochs, patience, split_size, batch_size,
 
 
 def objective(trial, x_train, y_train, n_epochs, patience, split_size, batch_size, hparams) -> float:
-    torch.cuda.set_per_process_memory_fraction(0.49)
+    if torch.cuda.is_available():
+        torch.cuda.set_per_process_memory_fraction(0.49)
     num_layers = trial.suggest_int("num_layers", *hparams["num_layers"])
     depth = trial.suggest_int("depth", *hparams["depth"])
     tree_output_dim = trial.suggest_int("tree_output_dim", *hparams["tree_output_dim"])
@@ -82,7 +83,7 @@ def objective(trial, x_train, y_train, n_epochs, patience, split_size, batch_siz
             log_every_n_steps=1,
             enable_checkpointing=False,
             max_epochs=n_epochs,
-            accelerator="auto",
+            accelerator="cpu",
             devices=1,
             callbacks=[
                 StochasticWeightAveraging(swa_lrs=1e-2),

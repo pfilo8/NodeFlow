@@ -36,7 +36,7 @@ from kedro.pipeline import Pipeline, node
 from .nodes import modeling_multivariate, modeling_treeflow, modeling_nodeflow, modeling_cnf, modeling_nodegmm
 
 
-def create_pipeline_train_model(**kwargs):
+def create_pipeline_train_model_treeflow(**kwargs):
     return Pipeline([
         node(
             func=modeling_treeflow,
