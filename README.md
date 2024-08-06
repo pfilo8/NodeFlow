@@ -117,6 +117,21 @@ where `pipeline_name` is the name of the pipeline defined in the `src/probabilis
 ## Citation
 If you use this code or the research findings in your work, please cite our paper:
 
+```latex
+@article{WielopolskiFZ24,
+    AUTHOR = {Wielopolski, Patryk and Furman, Oleksii and Zięba, Maciej},
+    TITLE = {NodeFlow: Towards End-to-End Flexible Probabilistic Regression on Tabular Data},
+    JOURNAL = {Entropy},
+    VOLUME = {26},
+    YEAR = {2024},
+    NUMBER = {7},
+    ARTICLE-NUMBER = {593},
+    URL = {https://www.mdpi.com/1099-4300/26/7/593},
+    PubMedID = {39056955},
+    ISSN = {1099-4300},
+    DOI = {10.3390/e26070593}
+}
+```
 
 ## Contact
-In case of questions or comments please contact using LinkedIn: 
+In case of questions or comments please contact using LinkedIn: [Patryk Wielopolski](https://www.linkedin.com/in/patryk-wielopolski/) 
